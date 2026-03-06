@@ -5,5 +5,6 @@
 // 3. shelby context list → shelbynet aktif mi
 // 4. Test upload + download round-trip
 
-console.log("check-shelby: not implemented yet");
-console.log("Phase 1'de Shelby CLI bağlantı doğrulaması eklenecek.");
+console.error("check-shelby: not implemented yet");
+console.error("Phase 1'de Shelby CLI bağlantı doğrulaması eklenecek.");
+process.exit(1);

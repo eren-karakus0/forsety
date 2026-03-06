@@ -1,12 +1,12 @@
-name: Preview
+name: Preview Build
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  preview:
-    name: Vercel Preview
+  preview-build:
+    name: Build Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,4 +23,6 @@ jobs:
 
       - name: Build
         run: pnpm build
-        # TODO: Phase 1'de Vercel deployment eklenecek
+
+      # TODO: Phase 1 — Vercel preview deployment step eklenecek
+      # Gereksinimler: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID secrets

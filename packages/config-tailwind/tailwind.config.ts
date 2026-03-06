@@ -39,9 +39,14 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Space Grotesk", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "monospace"],
+        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        display: [
+          "var(--font-space-grotesk)",
+          "Space Grotesk",
+          "system-ui",
+          "sans-serif",
+        ],
+        mono: ["var(--font-jetbrains-mono)", "JetBrains Mono", "monospace"],
       },
       keyframes: {
         "fade-in": {

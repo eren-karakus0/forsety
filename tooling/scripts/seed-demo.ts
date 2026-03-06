@@ -5,5 +5,6 @@
 // 3. Access policy oluştur
 // 4. Idempotent: tekrar çalıştırılabilir
 
-console.log("seed-demo: not implemented yet");
-console.log("Phase 1'de demo veri seed işlemi eklenecek.");
+console.error("seed-demo: not implemented yet");
+console.error("Phase 1'de demo veri seed işlemi eklenecek.");
+process.exit(1);
