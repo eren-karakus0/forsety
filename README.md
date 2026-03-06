@@ -44,7 +44,7 @@ pnpm dev
 | `pnpm lint` | Lint all packages |
 | `pnpm typecheck` | Type check all packages |
 | `pnpm test` | Run all tests |
-| `pnpm check:shelby` | Verify Shelby CLI connection |
+| `pnpm check:shelby` | Shelby CLI connection check (stub — Phase 1) |
 
 ## Tech Stack
 
