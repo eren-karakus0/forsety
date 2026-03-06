@@ -9,7 +9,7 @@
     "./globals.css": "./globals.css"
   },
   "dependencies": {
-    "tailwindcss": "^3.4.0",
+    "tailwindcss": "^4.2.1",
     "@tailwindcss/typography": "^0.5.15",
     "tailwindcss-animate": "^1.0.7"
   }
