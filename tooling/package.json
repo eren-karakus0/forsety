@@ -2,5 +2,10 @@
   "name": "@forsety/tooling",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@forsety/db": "workspace:*",
+    "drizzle-orm": "^0.38.0",
+    "@neondatabase/serverless": "^0.10.0"
+  }
 }

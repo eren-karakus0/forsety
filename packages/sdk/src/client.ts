@@ -1,31 +1,53 @@
-import type { ForsetyConfig, EvidencePack } from "./types.js";
+import { createDb } from "@forsety/db";
+import type { Database } from "@forsety/db";
+import type { ForsetyConfig } from "./types.js";
+import { ShelbyWrapper } from "./shelby/client.js";
+import { DatasetService } from "./services/dataset.service.js";
+import { LicenseService } from "./services/license.service.js";
+import { PolicyService } from "./services/policy.service.js";
+import { AccessService } from "./services/access.service.js";
+import { EvidenceService } from "./services/evidence.service.js";
 
 export class ForsetyClient {
   private config: ForsetyConfig;
+  private db: Database;
+  private shelby: ShelbyWrapper;
 
-  constructor(config: ForsetyConfig = {}) {
+  public readonly datasets: DatasetService;
+  public readonly licenses: LicenseService;
+  public readonly policies: PolicyService;
+  public readonly access: AccessService;
+  public readonly evidence: EvidenceService;
+
+  constructor(config: ForsetyConfig) {
     this.config = {
-      shelbyRpcUrl: config.shelbyRpcUrl ?? "https://rpc.shelbynet.shelby.xyz",
+      shelbyNetwork: config.shelbyNetwork ?? "shelbynet",
       apiBaseUrl: config.apiBaseUrl ?? "http://localhost:3000/api",
       ...config,
     };
+
+    if (!config.databaseUrl) {
+      throw new Error("databaseUrl is required in ForsetyConfig");
+    }
+
+    this.db = createDb(config.databaseUrl);
+    this.shelby = new ShelbyWrapper({
+      network: this.config.shelbyNetwork!,
+      walletAddress: this.config.shelbyWalletAddress,
+    });
+
+    this.datasets = new DatasetService(this.db, this.shelby);
+    this.licenses = new LicenseService(this.db);
+    this.policies = new PolicyService(this.db);
+    this.access = new AccessService(this.db, this.policies);
+    this.evidence = new EvidenceService(this.db);
   }
 
-  // Phase 1: Upload dataset and create evidence pack
-  async createEvidencePack(
-    _datasetPath: string,
-    _policyId: string
-  ): Promise<EvidencePack> {
-    throw new Error("Not implemented — Phase 1");
+  getDb(): Database {
+    return this.db;
   }
 
-  // Phase 1: Verify an evidence pack
-  async verifyEvidencePack(_evidencePackId: string): Promise<boolean> {
-    throw new Error("Not implemented — Phase 1");
-  }
-
-  // Phase 1: Get evidence pack by ID
-  async getEvidencePack(_id: string): Promise<EvidencePack | null> {
-    throw new Error("Not implemented — Phase 1");
+  getShelby(): ShelbyWrapper {
+    return this.shelby;
   }
 }

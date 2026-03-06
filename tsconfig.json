@@ -4,6 +4,7 @@
     "baseUrl": "."
   },
   "references": [
+    { "path": "packages/db" },
     { "path": "packages/sdk" },
     { "path": "packages/ui" },
     { "path": "apps/web" }

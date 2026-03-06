@@ -1,0 +1,32 @@
+{
+  "name": "@forsety/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.38.0",
+    "@neondatabase/serverless": "^0.10.0"
+  },
+  "devDependencies": {
+    "@forsety/config-eslint": "workspace:*",
+    "@forsety/config-typescript": "workspace:*",
+    "drizzle-kit": "^0.30.0",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.0"
+  }
+}

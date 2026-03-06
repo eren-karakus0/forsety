@@ -16,7 +16,10 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@forsety/ui": "workspace:*",
-    "@forsety/sdk": "workspace:*"
+    "@forsety/sdk": "workspace:*",
+    "@forsety/db": "workspace:*",
+    "zod": "^3.24.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@forsety/config-eslint": "workspace:*",

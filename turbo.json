@@ -1,9 +1,21 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL",
+    "FORSETY_API_KEY",
+    "SHELBY_WALLET_ADDRESS",
+    "NEXT_PUBLIC_APP_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "DATABASE_URL",
+        "FORSETY_API_KEY",
+        "SHELBY_WALLET_ADDRESS",
+        "NEXT_PUBLIC_APP_URL"
+      ]
     },
     "dev": {
       "cache": false,
@@ -19,6 +31,12 @@
       "dependsOn": ["^build"]
     },
     "clean": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
       "cache": false
     }
   }
