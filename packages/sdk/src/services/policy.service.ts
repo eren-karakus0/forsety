@@ -1,4 +1,4 @@
-import { eq, max } from "drizzle-orm";
+import { eq, max, desc } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { policies } from "@forsety/db";
@@ -22,35 +22,41 @@ export class PolicyService {
       );
     }
 
-    const maxVersionResult = await this.db
-      .select({ maxVersion: max(policies.version) })
-      .from(policies)
-      .where(eq(policies.datasetId, input.datasetId));
+    // Use transaction to prevent race conditions on version increment.
+    // The unique(dataset_id, version) constraint is the final safety net.
+    const result = await this.db.transaction(async (tx) => {
+      const maxVersionResult = await tx
+        .select({ maxVersion: max(policies.version) })
+        .from(policies)
+        .where(eq(policies.datasetId, input.datasetId));
 
-    const nextVersion = (maxVersionResult[0]?.maxVersion ?? 0) + 1;
+      const nextVersion = (maxVersionResult[0]?.maxVersion ?? 0) + 1;
 
-    const policyData = {
-      datasetId: input.datasetId,
-      allowedAccessors: input.allowedAccessors,
-      maxReads: input.maxReads,
-      expiresAt: input.expiresAt,
-      version: nextVersion,
-    };
+      const policyData = {
+        datasetId: input.datasetId,
+        allowedAccessors: input.allowedAccessors,
+        maxReads: input.maxReads,
+        expiresAt: input.expiresAt,
+        version: nextVersion,
+      };
 
-    const hash = createHash("sha256")
-      .update(JSON.stringify(policyData))
-      .digest("hex");
+      const hash = createHash("sha256")
+        .update(JSON.stringify(policyData))
+        .digest("hex");
 
-    const [policy] = await this.db
-      .insert(policies)
-      .values({
-        ...policyData,
-        hash,
-        createdBy: input.createdBy,
-      })
-      .returning();
+      const [policy] = await tx
+        .insert(policies)
+        .values({
+          ...policyData,
+          hash,
+          createdBy: input.createdBy,
+        })
+        .returning();
 
-    return policy!;
+      return policy!;
+    });
+
+    return result;
   }
 
   async getByDatasetId(datasetId: string) {
@@ -66,7 +72,7 @@ export class PolicyService {
       .select()
       .from(policies)
       .where(eq(policies.datasetId, datasetId))
-      .orderBy(policies.version)
+      .orderBy(desc(policies.version))
       .limit(1);
 
     return result[0] ?? null;

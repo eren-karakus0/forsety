@@ -76,10 +76,11 @@ describe("EvidenceService", () => {
           id: "log-1",
           accessorAddress: "0xdef",
           operationType: "read",
-          blobHashAtRead: null,
-          readProof: null,
+          blobHashAtRead: "sha256:abc",
+          readProof: "proof123",
           policyVersion: 1,
           policyHash: "polhash",
+          licenseHash: "hash1",
           timestamp: new Date("2026-03-06T12:00:00Z"),
         },
       ];
@@ -130,6 +131,9 @@ describe("EvidenceService", () => {
       expect(result.json.licenses).toHaveLength(1);
       expect(result.json.policies).toHaveLength(1);
       expect(result.json.accessLog).toHaveLength(1);
+      expect(result.json.accessLog[0]?.licenseHash).toBe("hash1");
+      expect(result.json.accessLog[0]?.readProof).toBe("proof123");
+      expect(result.json.accessLog[0]?.blobHashAtRead).toBe("sha256:abc");
     });
   });
 });

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import { readFileSync, statSync } from "node:fs";
 import type {
   ShelbyWrapperConfig,
   UploadResult,
@@ -8,6 +9,31 @@ import type {
 } from "./types.js";
 import { ForsetyUploadError, ForsetyError } from "../errors.js";
 
+function toWslPath(windowsPath: string): string {
+  return windowsPath
+    .replace(/\\/g, "/")
+    .replace(/^([A-Za-z]):/, (_m, d: string) => `/mnt/${d.toLowerCase()}`);
+}
+
+/** Shell-quote a single argument for bash (POSIX single-quote escaping). */
+function shellQuote(arg: string): string {
+  if (/^[A-Za-z0-9_./:@=-]+$/.test(arg)) return arg;
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
+/**
+ * Shelby CLI wrapper — all commands match `shelby <cmd> --help` contract.
+ *
+ * CLI contract (v0.0.26):
+ *   upload   [source] [destination] -e <expiration> [--output-commitments <file>] [--assume-yes]
+ *   download [source] [destination] [-f]
+ *   delete   [destination] [--assume-yes]
+ *   commitment <input> <output>
+ *   account blobs [-a <account-name>]
+ *   account balance [address]
+ *   context list
+ *   --version
+ */
 export class ShelbyWrapper {
   private config: ShelbyWrapperConfig;
 
@@ -15,13 +41,14 @@ export class ShelbyWrapper {
     this.config = config;
   }
 
-  private exec(command: string): string {
+  private exec(args: string[]): string {
     try {
-      const fullCommand = `wsl -e bash -l -c 'shelby ${command}'`;
-      return execSync(fullCommand, {
+      const cmd = ["shelby", ...args].map(shellQuote).join(" ");
+      const result = execFileSync("wsl", ["-e", "bash", "-lc", cmd], {
         encoding: "utf-8",
         timeout: 60_000,
-      }).trim();
+      });
+      return result.trim();
     } catch (error) {
       throw new ForsetyError(
         `Shelby CLI error: ${error instanceof Error ? error.message : String(error)}`,
@@ -31,27 +58,37 @@ export class ShelbyWrapper {
     }
   }
 
+  /**
+   * Upload a file to Shelby.
+   * CLI: shelby upload [source] [destination] -e <expiration> [--output-commitments <file>]
+   */
   async uploadDataset(
     filePath: string,
-    blobName: string
+    blobName: string,
+    expiration: string = "in 30 days"
   ): Promise<UploadResult> {
     try {
-      const wslPath = filePath.replace(/\\/g, "/").replace(/^([A-Z]):/, (_m, d) => `/mnt/${d.toLowerCase()}`);
-      const output = this.exec(
-        `upload ${wslPath} --name ${blobName} --output-commitments /tmp/forsety-commitments.json`
-      );
+      const wslPath = toWslPath(filePath);
+      const commitmentsPath = "/tmp/forsety-commitments.json";
+
+      // CLI contract: shelby upload [source] [destination] -e <expiration>
+      const output = this.exec([
+        "upload", wslPath, blobName,
+        "-e", expiration,
+        "--output-commitments", commitmentsPath,
+        "--assume-yes",
+      ]);
 
       const hash = this.computeFileHash(filePath);
+      let sizeBytes = 0;
+      try {
+        sizeBytes = statSync(filePath).size;
+      } catch { /* ignore */ }
 
       const blobIdMatch = output.match(/blob[_\s]?id[:\s]+(\S+)/i);
       const blobId = blobIdMatch?.[1] ?? blobName;
 
-      return {
-        blobId,
-        blobName,
-        hash,
-        sizeBytes: 0,
-      };
+      return { blobId, blobName, hash, sizeBytes };
     } catch (error) {
       throw new ForsetyUploadError(
         `Failed to upload dataset: ${error instanceof Error ? error.message : String(error)}`,
@@ -60,17 +97,36 @@ export class ShelbyWrapper {
     }
   }
 
+  /**
+   * Download a blob from Shelby.
+   * CLI: shelby download [source] [destination] -f
+   */
   async downloadDataset(
-    account: string,
     blobName: string,
     outputPath: string
   ): Promise<void> {
-    const wslOutput = outputPath.replace(/\\/g, "/").replace(/^([A-Z]):/, (_m, d) => `/mnt/${d.toLowerCase()}`);
-    this.exec(`download ${account} ${blobName} ${wslOutput}`);
+    // CLI contract: shelby download [source] [destination]
+    this.exec(["download", blobName, toWslPath(outputPath), "-f"]);
   }
 
-  async getAccountBlobs(account: string): Promise<BlobMetadata[]> {
-    const output = this.exec(`account blobs --account ${account}`);
+  /**
+   * Delete a blob from Shelby.
+   * CLI: shelby delete [destination] --assume-yes
+   */
+  async deleteBlob(blobName: string): Promise<void> {
+    this.exec(["delete", blobName, "--assume-yes"]);
+  }
+
+  /**
+   * List blobs for an account.
+   * CLI: shelby account blobs [-a <account-name>]
+   */
+  async getAccountBlobs(account?: string): Promise<BlobMetadata[]> {
+    const args = ["account", "blobs"];
+    if (account) {
+      args.push("-a", account);
+    }
+    const output = this.exec(args);
     const lines = output.split("\n").filter((l) => l.trim().length > 0);
 
     return lines
@@ -87,14 +143,21 @@ export class ShelbyWrapper {
       .filter((b) => b.blobId.length > 0);
   }
 
+  /**
+   * Generate commitments for a file.
+   * CLI: shelby commitment <input> <output>
+   */
   async generateCommitments(filePath: string): Promise<BlobCommitments> {
-    const wslPath = filePath.replace(/\\/g, "/").replace(/^([A-Z]):/, (_m, d) => `/mnt/${d.toLowerCase()}`);
+    const wslPath = toWslPath(filePath);
     const outputPath = "/tmp/forsety-commitment-output.json";
-    this.exec(`commitment ${wslPath} ${outputPath}`);
+    this.exec(["commitment", wslPath, outputPath]);
 
-    const result = this.exec(`cat ${outputPath}`);
     try {
-      const parsed = JSON.parse(result);
+      const catResult = execFileSync("wsl", ["-e", "cat", outputPath], {
+        encoding: "utf-8",
+        timeout: 30_000,
+      }).trim();
+      const parsed = JSON.parse(catResult);
       return {
         commitments: parsed.commitments ?? [],
         hash: parsed.hash ?? this.computeFileHash(filePath),
@@ -107,14 +170,18 @@ export class ShelbyWrapper {
     }
   }
 
+  /**
+   * Check Shelby CLI health.
+   * CLI: shelby --version, shelby context list
+   */
   async checkHealth(): Promise<{
     cliVersion: string;
     context: string;
     connected: boolean;
   }> {
     try {
-      const version = this.exec("--version");
-      const contextOutput = this.exec("context list");
+      const version = this.exec(["--version"]);
+      const contextOutput = this.exec(["context", "list"]);
       const hasContext = contextOutput
         .toLowerCase()
         .includes(this.config.network);
@@ -133,8 +200,12 @@ export class ShelbyWrapper {
     }
   }
 
+  /**
+   * Get account balance.
+   * CLI: shelby account balance [address]
+   */
   async getBalance(): Promise<{ apt: string; shelbyUsd: string }> {
-    const output = this.exec("account balance");
+    const output = this.exec(["account", "balance"]);
     const aptMatch = output.match(/APT[:\s]+([\d.]+)/i);
     const usdMatch = output.match(/ShelbyUSD[:\s]+([\d.]+)/i);
     return {
@@ -143,16 +214,20 @@ export class ShelbyWrapper {
     };
   }
 
-  private computeFileHash(filePath: string): string {
-    const wslPath = filePath.replace(/\\/g, "/").replace(/^([A-Z]):/, (_m, d) => `/mnt/${d.toLowerCase()}`);
+  computeFileHash(filePath: string): string {
     try {
-      const result = execSync(
-        `wsl -e bash -l -c 'sha256sum ${wslPath}'`,
-        { encoding: "utf-8", timeout: 30_000 }
-      ).trim();
-      return result.split(/\s+/)[0] ?? "";
+      const buffer = readFileSync(filePath);
+      return createHash("sha256").update(buffer).digest("hex");
     } catch {
-      return createHash("sha256").update(filePath).digest("hex");
+      try {
+        const result = execFileSync(
+          "wsl", ["-e", "sha256sum", toWslPath(filePath)],
+          { encoding: "utf-8", timeout: 30_000 }
+        ).trim();
+        return result.split(/\s+/)[0] ?? "";
+      } catch {
+        return "";
+      }
     }
   }
 }

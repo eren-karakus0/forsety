@@ -3,15 +3,30 @@ import { AccessService } from "../../src/services/access.service.js";
 import { ForsetyValidationError, ForsetyAuthError } from "../../src/errors.js";
 
 const mockInsert = vi.fn();
+const mockSelect = vi.fn();
 const mockDb = {
   insert: mockInsert,
-  select: vi.fn(),
+  select: mockSelect,
 } as any;
 
 const mockPolicyService = {
   checkAccess: vi.fn(),
   incrementReads: vi.fn(),
 } as any;
+
+function setupSelectChain(results: any[]) {
+  let callCount = 0;
+  mockSelect.mockImplementation(() => ({
+    from: vi.fn().mockImplementation(() => {
+      const idx = callCount++;
+      return {
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue(results[idx] ?? []),
+        }),
+      };
+    }),
+  }));
+}
 
 describe("AccessService", () => {
   let service: AccessService;
@@ -58,6 +73,12 @@ describe("AccessService", () => {
         readsConsumed: 1,
       });
 
+      // Mock select chains: 1st = dataset (blobHash), 2nd = license (termsHash)
+      setupSelectChain([
+        [{ blobHash: "sha256:abc123" }],
+        [{ termsHash: "termshash456" }],
+      ]);
+
       const mockLog = { id: "log-1", operationType: "read" };
       mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -73,6 +94,69 @@ describe("AccessService", () => {
 
       expect(result).toEqual(mockLog);
       expect(mockPolicyService.incrementReads).toHaveBeenCalledWith("p1");
+    });
+
+    it("should handle missing blobHash and licenseHash gracefully", async () => {
+      const mockPolicy = { id: "p1", version: 1, hash: "hash1" };
+      mockPolicyService.checkAccess.mockResolvedValue({
+        allowed: true,
+        policy: mockPolicy,
+      });
+      mockPolicyService.incrementReads.mockResolvedValue({
+        ...mockPolicy,
+        readsConsumed: 1,
+      });
+
+      // Mock select chains: empty results
+      setupSelectChain([[], []]);
+
+      const mockLog = { id: "log-2", operationType: "read" };
+      mockInsert.mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockLog]),
+        }),
+      });
+
+      const result = await service.logAccess({
+        datasetId: "uuid-1",
+        accessorAddress: "0xabc",
+        operationType: "read",
+      });
+
+      expect(result).toEqual(mockLog);
+    });
+
+    it("should use provided blobHashAtRead when supplied", async () => {
+      const mockPolicy = { id: "p1", version: 1, hash: "hash1" };
+      mockPolicyService.checkAccess.mockResolvedValue({
+        allowed: true,
+        policy: mockPolicy,
+      });
+      mockPolicyService.incrementReads.mockResolvedValue({
+        ...mockPolicy,
+        readsConsumed: 1,
+      });
+
+      // Only 1 select chain call (license), because blobHash is provided
+      setupSelectChain([
+        [{ termsHash: "termshash789" }],
+      ]);
+
+      const mockLog = { id: "log-3", operationType: "read" };
+      mockInsert.mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockLog]),
+        }),
+      });
+
+      const result = await service.logAccess({
+        datasetId: "uuid-1",
+        accessorAddress: "0xabc",
+        operationType: "read",
+        blobHashAtRead: "sha256:provided",
+      });
+
+      expect(result).toEqual(mockLog);
     });
   });
 });

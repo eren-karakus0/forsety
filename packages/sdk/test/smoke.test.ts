@@ -120,6 +120,7 @@ describe("Zod schemas", () => {
           readProof: null,
           policyVersion: 1,
           policyHash: "policyhash",
+          licenseHash: null,
           timestamp: "2026-03-06T12:00:00Z",
         },
       ],

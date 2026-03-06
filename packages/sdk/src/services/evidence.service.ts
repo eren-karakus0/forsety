@@ -48,6 +48,7 @@ export interface EvidencePackData {
     readProof: string | null;
     policyVersion: number | null;
     policyHash: string | null;
+    licenseHash: string | null;
     timestamp: string;
   }>;
 }
@@ -126,6 +127,7 @@ export class EvidenceService {
         readProof: a.readProof,
         policyVersion: a.policyVersion,
         policyHash: a.policyHash,
+        licenseHash: a.licenseHash,
         timestamp: a.timestamp.toISOString(),
       })),
     };

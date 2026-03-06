@@ -5,10 +5,17 @@ import { ForsetyValidationError } from "../../src/errors.js";
 const mockInsert = vi.fn();
 const mockSelect = vi.fn();
 const mockUpdate = vi.fn();
+
+// Transaction mock: calls callback with the same mock db (tx)
+const mockTransaction = vi.fn(async (cb: (tx: any) => Promise<any>) => {
+  return cb({ insert: mockInsert, select: mockSelect, update: mockUpdate });
+});
+
 const mockDb = {
   insert: mockInsert,
   select: mockSelect,
   update: mockUpdate,
+  transaction: mockTransaction,
 } as any;
 
 describe("PolicyService", () => {

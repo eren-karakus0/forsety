@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
@@ -47,7 +48,12 @@ export class DatasetService {
       })
       .returning();
 
-    const termsHash = uploadResult.hash;
+    const termsPayload = JSON.stringify({
+      spdxType: input.license.spdxType,
+      grantorAddress: input.license.grantorAddress,
+      terms: input.license.terms ?? {},
+    });
+    const termsHash = createHash("sha256").update(termsPayload).digest("hex");
 
     const [license] = await this.db
       .insert(licenses)
@@ -75,6 +81,27 @@ export class DatasetService {
 
   async list() {
     return this.db.select().from(datasets).orderBy(datasets.createdAt);
+  }
+
+  async listWithLicenses() {
+    const allDatasets = await this.list();
+    if (allDatasets.length === 0) return [];
+
+    const allLicenses = await this.db
+      .select()
+      .from(licenses)
+      .orderBy(licenses.createdAt);
+
+    const licenseMap = new Map<string, string>();
+    for (const lic of allLicenses) {
+      // Last license per dataset wins (latest)
+      licenseMap.set(lic.datasetId, lic.spdxType);
+    }
+
+    return allDatasets.map((d) => ({
+      ...d,
+      licenseSpdx: licenseMap.get(d.id) ?? null,
+    }));
   }
 
   async getWithLicense(id: string) {

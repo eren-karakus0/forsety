@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { uploadDataset } from "../actions";
 
 const LICENSE_OPTIONS = [
   { value: "CC-BY-4.0", label: "CC BY 4.0", desc: "Attribution" },
@@ -36,27 +37,17 @@ export default function UploadPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/datasets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "demo",
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          ownerAddress,
-          filePath: file?.name ?? "demo-upload",
-          license: {
-            spdxType: license,
-            grantorAddress: ownerAddress,
-          },
-        }),
-      });
+      const formData = new FormData();
+      formData.set("name", name);
+      formData.set("description", description);
+      formData.set("license", license);
+      formData.set("ownerAddress", ownerAddress);
+      if (file) formData.set("file", file);
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Upload failed");
+      const result = await uploadDataset(formData);
+
+      if (!result.success) {
+        throw new Error(result.error ?? "Upload failed");
       }
 
       router.push("/dashboard");
@@ -68,7 +59,7 @@ export default function UploadPage() {
     }
   };
 
-  const isValid = name && license && ownerAddress;
+  const isValid = name && license && ownerAddress && file;
 
   return (
     <div className="animate-fade-in">

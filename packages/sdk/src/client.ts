@@ -39,7 +39,7 @@ export class ForsetyClient {
     this.datasets = new DatasetService(this.db, this.shelby);
     this.licenses = new LicenseService(this.db);
     this.policies = new PolicyService(this.db);
-    this.access = new AccessService(this.db, this.policies);
+    this.access = new AccessService(this.db, this.policies, this.shelby);
     this.evidence = new EvidenceService(this.db);
   }
 

@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      '@forsety/db':
+        specifier: workspace:*
+        version: link:packages/db
+      drizzle-orm:
+        specifier: ^0.38.0
+        version: 0.38.4(@neondatabase/serverless@0.10.4)(@types/pg@8.11.6)(@types/react@19.2.14)(react@19.2.4)
       tsx:
         specifier: ^4.19.0
         version: 4.21.0

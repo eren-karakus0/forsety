@@ -1,8 +1,50 @@
+import { execFileSync } from "node:child_process";
+import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
 import { createDb } from "@forsety/db";
 import { datasets, licenses, policies, accessLogs } from "@forsety/db";
 import { eq } from "drizzle-orm";
 
-const DEMO_DATASETS = [
+function shellQuote(arg: string): string {
+  if (/^[A-Za-z0-9_./:@=-]+$/.test(arg)) return arg;
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
+function shelbyExec(args: string[]): string | null {
+  try {
+    const cmd = ["shelby", ...args].map(shellQuote).join(" ");
+    return execFileSync("wsl", ["-e", "bash", "-lc", cmd], {
+      encoding: "utf-8",
+      timeout: 60_000,
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function checkShelbyAvailable(): boolean {
+  const version = shelbyExec(["--version"]);
+  return version !== null;
+}
+
+interface DemoDataset {
+  name: string;
+  description: string;
+  ownerAddress: string;
+  license: {
+    spdxType: string;
+    terms: Record<string, unknown>;
+  };
+  policy: {
+    allowedAccessors: string[];
+    maxReads: number;
+  };
+  sampleContent: string;
+}
+
+const DEMO_DATASETS: DemoDataset[] = [
   {
     name: "ImageNet Validation Subset",
     description: "Curated subset of ImageNet for model validation",
@@ -13,6 +55,7 @@ const DEMO_DATASETS = [
       terms: { attribution: true, commercial: true },
     },
     policy: { allowedAccessors: ["*"], maxReads: 100 },
+    sampleContent: '{"type":"imagenet-subset","count":1000,"format":"JPEG","resolution":"224x224"}',
   },
   {
     name: "Common Crawl License Metadata",
@@ -24,6 +67,7 @@ const DEMO_DATASETS = [
       terms: { attribution: true, commercial: true, modification: true },
     },
     policy: { allowedAccessors: ["*"], maxReads: 500 },
+    sampleContent: '{"type":"license-metadata","source":"commoncrawl","records":5000}',
   },
   {
     name: "LAION Ethics Subset",
@@ -40,19 +84,36 @@ const DEMO_DATASETS = [
       ],
       maxReads: 50,
     },
+    sampleContent: '{"type":"laion-subset","filter":"ethical","count":2000}',
   },
 ];
 
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    console.error("❌ DATABASE_URL environment variable is required");
+    console.error("DATABASE_URL environment variable is required");
     process.exit(1);
   }
+
+  const localOnly = process.argv.includes("--local-only");
 
   console.log("\n🌱 Forsety — Seeding Demo Data\n");
 
   const db = createDb(databaseUrl);
+
+  if (localOnly) {
+    console.log("  --local-only flag set — skipping Shelby uploads\n");
+  } else {
+    const shelbyAvailable = checkShelbyAvailable();
+    if (!shelbyAvailable) {
+      console.error("  ✗ Shelby CLI not available. Use --local-only to seed without Shelby.\n");
+      process.exit(1);
+    }
+    console.log("  Shelby CLI detected — uploading to Shelby network\n");
+  }
+
+  const tmpDir = join(tmpdir(), "forsety-seed");
+  mkdirSync(tmpDir, { recursive: true });
 
   for (const demo of DEMO_DATASETS) {
     // Check if already exists (idempotent)
@@ -67,60 +128,134 @@ async function main() {
       continue;
     }
 
-    // Create dataset
+    const blobName = `forsety/${demo.name.toLowerCase().replace(/\s+/g, "-")}`;
+    let blobId: string | undefined;
+    let blobHash: string;
+    let sizeBytes: number;
+
+    // Create temp file with sample content
+    const tempFile = join(tmpDir, `${Date.now()}-seed.json`);
+    writeFileSync(tempFile, demo.sampleContent);
+    sizeBytes = Buffer.byteLength(demo.sampleContent);
+    blobHash = createHash("sha256").update(demo.sampleContent).digest("hex");
+
+    if (!localOnly) {
+      // Real Shelby upload
+      const wslPath = tempFile
+        .replace(/\\/g, "/")
+        .replace(/^([A-Za-z]):/, (_m, d: string) => `/mnt/${d.toLowerCase()}`);
+
+      // CLI contract: shelby upload [source] [destination] -e <expiration>
+      const output = shelbyExec([
+        "upload", wslPath, blobName,
+        "-e", "in 7 days",
+        "--assume-yes",
+      ]);
+
+      if (output) {
+        const idMatch = output.match(/blob[_\s]?id[:\s]+(\S+)/i);
+        blobId = idMatch?.[1] ?? blobName;
+        console.log(`  ✓ Uploaded to Shelby: ${blobName}`);
+      } else {
+        console.error(`  ✗ Shelby upload failed for ${blobName}. Aborting.`);
+        process.exit(1);
+      }
+    }
+
+    // Cleanup temp file
+    try { unlinkSync(tempFile); } catch { /* ignore */ }
+
+    // Create dataset in DB
     const [dataset] = await db
       .insert(datasets)
       .values({
         name: demo.name,
         description: demo.description,
         ownerAddress: demo.ownerAddress,
-        shelbyBlobName: `forsety/${demo.name.toLowerCase().replace(/\s+/g, "-")}`,
-        blobHash: `sha256:demo-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        shelbyBlobId: blobId,
+        shelbyBlobName: blobName,
+        blobHash: `sha256:${blobHash}`,
+        sizeBytes,
       })
       .returning();
 
     console.log(`  ✓ Created dataset: ${demo.name}`);
 
-    // Create license
+    // Create license with proper terms hash
+    const termsPayload = JSON.stringify({
+      spdxType: demo.license.spdxType,
+      grantorAddress: demo.ownerAddress,
+      terms: demo.license.terms,
+    });
+    const termsHash = createHash("sha256").update(termsPayload).digest("hex");
+
     await db.insert(licenses).values({
       datasetId: dataset!.id,
       spdxType: demo.license.spdxType,
       grantorAddress: demo.ownerAddress,
       terms: demo.license.terms,
+      termsHash,
     });
 
-    console.log(`    ✓ License: ${demo.license.spdxType}`);
+    console.log(`    ✓ License: ${demo.license.spdxType} (hash: ${termsHash.slice(0, 12)}...)`);
 
-    // Create policy
+    // Create policy with hash
+    const policyData = {
+      datasetId: dataset!.id,
+      allowedAccessors: demo.policy.allowedAccessors,
+      maxReads: demo.policy.maxReads,
+      version: 1,
+    };
+    const policyHash = createHash("sha256")
+      .update(JSON.stringify(policyData))
+      .digest("hex");
+
     const [policy] = await db
       .insert(policies)
       .values({
-        datasetId: dataset!.id,
-        allowedAccessors: demo.policy.allowedAccessors,
-        maxReads: demo.policy.maxReads,
-        version: 1,
+        ...policyData,
+        hash: policyHash,
         createdBy: "seed-demo",
       })
       .returning();
 
     console.log(`    ✓ Policy: v1, max ${demo.policy.maxReads} reads`);
 
-    // Create mock access log
+    // Create mock access log with read proof
+    // Use the same timestamp for both proof and DB insert (re-derivable)
+    const accessTimestamp = new Date();
+    const proofPayload = JSON.stringify({
+      datasetId: dataset!.id,
+      accessorAddress: demo.ownerAddress,
+      blobHash: `sha256:${blobHash}`,
+      blobName,
+      operationType: "read",
+      policyId: policy!.id,
+      licenseHash: termsHash,
+      timestamp: accessTimestamp.toISOString(),
+    });
+    const readProof = createHash("sha256").update(proofPayload).digest("hex");
+
     await db.insert(accessLogs).values({
       datasetId: dataset!.id,
       policyId: policy!.id,
       accessorAddress: demo.ownerAddress,
       operationType: "read",
+      blobHashAtRead: `sha256:${blobHash}`,
+      readProof,
       policyVersion: 1,
+      policyHash,
+      licenseHash: termsHash,
+      timestamp: accessTimestamp,
     });
 
-    console.log(`    ✓ Access log: 1 mock read`);
+    console.log(`    ✓ Access log: 1 read (proof: ${readProof.slice(0, 12)}...)`);
   }
 
   console.log("\n✅ Seed complete\n");
 }
 
 main().catch((err) => {
-  console.error("❌ Seed failed:", err);
+  console.error("Seed failed:", err);
   process.exit(1);
 });

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 
+const VALID_OPERATION_TYPES = ["read", "download", "verify"] as const;
+
 export async function POST(request: NextRequest) {
   if (!validateApiKey(request)) return unauthorizedResponse();
 
@@ -14,6 +16,15 @@ export async function POST(request: NextRequest) {
         {
           error:
             "Missing required fields: datasetId, accessorAddress, operationType",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!VALID_OPERATION_TYPES.includes(operationType)) {
+      return NextResponse.json(
+        {
+          error: `Invalid operationType: must be one of ${VALID_OPERATION_TYPES.join(", ")}`,
         },
         { status: 400 }
       );

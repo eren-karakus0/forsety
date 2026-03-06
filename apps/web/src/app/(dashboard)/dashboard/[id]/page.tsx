@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { fetchDatasetDetail, generateEvidencePack } from "../actions";
 
 interface DatasetDetail {
   dataset: {
@@ -24,7 +25,7 @@ interface DatasetDetail {
   }>;
 }
 
-interface EvidenceResult {
+interface EvidencePack {
   json: Record<string, unknown>;
   hash: string;
 }
@@ -50,35 +51,25 @@ export default function DatasetDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<DatasetDetail | null>(null);
-  const [evidence, setEvidence] = useState<EvidenceResult | null>(null);
+  const [evidence, setEvidence] = useState<EvidencePack | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/datasets/${id}`, {
-      headers: { "x-api-key": "demo" },
-    })
-      .then((res) => (res.ok ? res.json() : null))
+    fetchDatasetDetail(id)
       .then((d) => setData(d))
       .catch(() => setError("Failed to load dataset"))
       .finally(() => setLoading(false));
   }, [id]);
 
-  const generateEvidence = async () => {
+  const handleGenerateEvidence = async () => {
     setGenerating(true);
     setError(null);
     try {
-      const res = await fetch(`/api/datasets/${id}/evidence`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "demo",
-        },
-      });
-      if (!res.ok) throw new Error("Generation failed");
-      const result = await res.json();
-      setEvidence(result);
+      const result = await generateEvidencePack(id);
+      if (!result.success) throw new Error(result.error ?? "Generation failed");
+      setEvidence({ json: result.json!, hash: result.hash! });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
@@ -217,7 +208,7 @@ export default function DatasetDetailPage() {
 
             {!evidence ? (
               <button
-                onClick={generateEvidence}
+                onClick={handleGenerateEvidence}
                 disabled={generating}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-800 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-navy-700 hover:shadow-md active:scale-[0.98] disabled:opacity-50"
               >

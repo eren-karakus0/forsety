@@ -67,6 +67,7 @@ export const EvidencePackSchema = z.object({
       readProof: z.string().nullable(),
       policyVersion: z.number().nullable(),
       policyHash: z.string().nullable(),
+      licenseHash: z.string().nullable(),
       timestamp: z.string(),
     })
   ),

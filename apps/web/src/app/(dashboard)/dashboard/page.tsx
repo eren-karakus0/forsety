@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getForsetyClient } from "@/lib/forsety";
 
+export const dynamic = "force-dynamic";
+
 interface DatasetRow {
   id: string;
   name: string;
@@ -38,11 +40,12 @@ function StatusBadge({ status }: { status: DatasetRow["status"] }) {
 async function getDatasets(): Promise<DatasetRow[]> {
   try {
     const client = getForsetyClient();
-    const datasets = await client.datasets.list();
-    return datasets.map((d) => ({
+    const datasetsWithLicenses = await client.datasets.listWithLicenses();
+
+    return datasetsWithLicenses.map((d) => ({
       id: d.id,
       name: d.name,
-      license: "—",
+      license: d.licenseSpdx ?? "—",
       status: "active" as const,
       createdAt: d.createdAt
         ? new Date(d.createdAt).toLocaleDateString("en-US", {
