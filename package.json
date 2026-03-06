@@ -1,0 +1,21 @@
+{
+  "name": "forsety",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.8.1",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "seed": "tsx tooling/scripts/seed-demo.ts",
+    "check:shelby": "tsx tooling/scripts/check-shelby.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
