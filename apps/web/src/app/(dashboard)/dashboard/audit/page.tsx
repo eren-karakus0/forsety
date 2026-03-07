@@ -4,6 +4,24 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { fetchAgents, fetchAllAuditLogs } from "../actions";
+import {
+  Button,
+  Card,
+  Badge,
+  Skeleton,
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@forsety/ui";
+import { Download } from "lucide-react";
 
 interface AuditLog {
   id: string;
@@ -23,22 +41,26 @@ interface AgentInfo {
   name: string;
 }
 
-const statusColors: Record<string, string> = {
-  success: "bg-emerald-100 text-emerald-700",
-  denied: "bg-red-100 text-red-700",
-  error: "bg-amber-100 text-amber-700",
+const statusVariant: Record<string, "default" | "destructive" | "secondary"> = {
+  success: "default",
+  denied: "destructive",
+  error: "secondary",
 };
 
 export default function AuditPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <svg className="h-8 w-8 animate-spin text-navy-400" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-          <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-        </svg>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-40" />
+          <div className="flex gap-3">
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-9 w-36" />
+          </div>
+          <Skeleton className="h-96 rounded-xl" />
+        </div>
+      }
+    >
       <AuditPageContent />
     </Suspense>
   );
@@ -107,78 +129,79 @@ function AuditPageContent() {
             Complete audit log of all agent activities
           </p>
         </div>
-        <button
+        <Button
+          variant="outline"
           onClick={handleExport}
           disabled={logs.length === 0}
-          className="inline-flex items-center gap-2 rounded-lg border border-navy-200 bg-white px-4 py-2 text-sm font-medium text-navy-700 shadow-sm transition-all hover:bg-navy-50 disabled:opacity-50"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-          </svg>
+          <Download className="mr-2 h-4 w-4" />
           Export JSON
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
       <div className="flex gap-3">
-        <select
-          value={selectedAgent}
-          onChange={(e) => setSelectedAgent(e.target.value)}
-          className="rounded-lg border border-navy-200 bg-white px-3 py-2 text-sm text-navy-700 focus:border-navy-400 focus:outline-none"
-        >
-          <option value="all">All Agents</option>
-          <option value="anonymous">Anonymous (Auth Failed)</option>
-          {agents.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+        <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="All Agents" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Agents</SelectItem>
+            <SelectItem value="anonymous">Anonymous (Auth Failed)</SelectItem>
+            {agents.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-navy-200 bg-white px-3 py-2 text-sm text-navy-700 focus:border-navy-400 focus:outline-none"
-        >
-          <option value="all">All Statuses</option>
-          <option value="success">Success</option>
-          <option value="denied">Denied</option>
-          <option value="error">Error</option>
-        </select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="success">Success</SelectItem>
+            <SelectItem value="denied">Denied</SelectItem>
+            <SelectItem value="error">Error</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <div className="ml-auto text-sm text-navy-500 self-center">
+        <div className="ml-auto self-center text-sm text-navy-500">
           {logs.length} entries
         </div>
       </div>
 
       {/* Log Table */}
-      <div className="overflow-hidden rounded-xl border border-navy-200/60 bg-white shadow-sm">
+      <Card className="border-navy-200/60">
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <svg className="h-6 w-6 animate-spin text-navy-400" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-              <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-            </svg>
+          <div className="space-y-3 p-6">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
           </div>
         ) : logs.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-navy-400">No audit logs found</div>
+          <div className="px-5 py-16 text-center text-sm text-navy-400">
+            No audit logs found
+          </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-navy-100 bg-navy-50/50">
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-navy-500">Time</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-navy-500">Agent</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-navy-500">Action</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-navy-500">Tool</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-navy-500">Resource</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-navy-500">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-navy-500">Duration</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-navy-100/80">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-navy-100 bg-navy-50/50 hover:bg-navy-50/50">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Time</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Agent</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Action</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Tool</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Resource</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Status</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-navy-500">Duration</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {logs.map((log) => (
-                <tr key={log.id} className="transition-colors hover:bg-navy-50/30">
-                  <td className="px-4 py-3 text-xs text-navy-500 whitespace-nowrap">
+                <TableRow key={log.id}>
+                  <TableCell className="text-xs text-navy-500 whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -186,8 +209,8 @@ function AuditPageContent() {
                       minute: "2-digit",
                       second: "2-digit",
                     })}
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell>
                     {log.agentId ? (
                       <Link
                         href={`/dashboard/agents/${log.agentId}`}
@@ -198,20 +221,20 @@ function AuditPageContent() {
                     ) : (
                       <span className="text-xs font-medium text-red-500">Anonymous</span>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-xs font-medium text-navy-700">
+                  </TableCell>
+                  <TableCell className="text-xs font-medium text-navy-700">
                     {log.action}
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell>
                     {log.toolName ? (
-                      <span className="rounded bg-navy-100 px-1.5 py-0.5 font-mono text-[10px] text-navy-600">
+                      <Badge variant="secondary" className="font-mono text-[10px]">
                         {log.toolName}
-                      </span>
+                      </Badge>
                     ) : (
                       <span className="text-xs text-navy-400">—</span>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell>
                     {log.resourceType ? (
                       <span className="text-xs text-navy-600">
                         {log.resourceType}
@@ -224,26 +247,26 @@ function AuditPageContent() {
                     ) : (
                       <span className="text-xs text-navy-400">—</span>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${statusColors[log.status] ?? "bg-navy-100 text-navy-600"}`}>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant[log.status] ?? "secondary"}>
                       {log.status}
-                    </span>
+                    </Badge>
                     {log.errorMessage && (
                       <p className="mt-0.5 text-[10px] text-red-500 truncate max-w-[120px]" title={log.errorMessage}>
                         {log.errorMessage}
                       </p>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-right text-xs text-navy-500">
+                  </TableCell>
+                  <TableCell className="text-right text-xs text-navy-500">
                     {log.durationMs != null ? `${log.durationMs}ms` : "—"}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

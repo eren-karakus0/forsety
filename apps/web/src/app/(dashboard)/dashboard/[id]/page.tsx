@@ -4,6 +4,22 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchDatasetDetail, generateEvidencePack, fetchAccessLogs, fetchPolicies } from "../actions";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+  Skeleton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Alert,
+  AlertDescription,
+} from "@forsety/ui";
+import { Download, Layers, Check, ChevronRight, Eye, Loader2 } from "lucide-react";
 
 interface DatasetDetail {
   dataset: {
@@ -80,7 +96,6 @@ export default function DatasetDetailPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "access" | "policies">("overview");
 
   useEffect(() => {
     Promise.all([
@@ -126,11 +141,15 @@ export default function DatasetDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <svg className="h-8 w-8 animate-spin text-navy-400" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-          <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-        </svg>
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-48" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-64 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
+          </div>
+          <Skeleton className="h-48 rounded-xl" />
+        </div>
       </div>
     );
   }
@@ -139,9 +158,9 @@ export default function DatasetDetailPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
         <p className="text-sm text-navy-600">Dataset not found</p>
-        <Link href="/dashboard" className="text-sm text-gold-600 hover:underline">
-          Back to datasets
-        </Link>
+        <Button variant="link" asChild>
+          <Link href="/dashboard">Back to datasets</Link>
+        </Button>
       </div>
     );
   }
@@ -155,273 +174,267 @@ export default function DatasetDetailPage() {
         <Link href="/dashboard" className="transition-colors hover:text-navy-600">
           Datasets
         </Link>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
+        <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-navy-700">{dataset.name}</span>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-lg bg-navy-100/50 p-1">
-        {(["overview", "access", "policies"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-              activeTab === tab
-                ? "bg-white text-navy-800 shadow-sm"
-                : "text-navy-500 hover:text-navy-700"
-            }`}
-          >
-            {tab === "overview" ? "Overview" : tab === "access" ? `Access Log (${accessLogs.length})` : `Policies (${policies.length})`}
-          </button>
-        ))}
-      </div>
+      <Tabs defaultValue="overview">
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="access">
+            Access Log ({accessLogs.length})
+          </TabsTrigger>
+          <TabsTrigger value="policies">
+            Policies ({policies.length})
+          </TabsTrigger>
+        </TabsList>
 
-      {activeTab === "access" && (
-        <div className="rounded-xl border border-navy-200/60 bg-white shadow-sm">
-          <div className="border-b border-navy-100 bg-navy-50/50 px-5 py-3">
-            <h2 className="text-sm font-semibold text-navy-700">Access Log Timeline</h2>
-          </div>
-          {accessLogs.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-navy-400">No access logs yet</div>
-          ) : (
-            <div className="divide-y divide-navy-100/80">
-              {accessLogs.map((log: AccessLogEntry) => (
-                <div key={log.id} className="flex items-start gap-4 px-5 py-4">
-                  <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-navy-500">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-navy-100 px-1.5 py-0.5 font-mono text-[10px] font-medium text-navy-600 uppercase">
-                        {log.operationType}
-                      </span>
-                      <span className="text-xs text-navy-400">
-                        {new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
-                      </span>
-                    </div>
-                    <p className="mt-1 font-mono text-xs text-navy-500 truncate">
-                      Accessor: {log.accessorAddress}
-                    </p>
-                    {log.readProof && (
-                      <p className="mt-0.5 font-mono text-[10px] text-navy-400 truncate">
-                        Proof: {log.readProof.slice(0, 32)}...
-                      </p>
-                    )}
-                  </div>
+        <TabsContent value="access">
+          <Card className="border-navy-200/60">
+            <CardHeader className="border-b border-navy-100 bg-navy-50/50">
+              <CardTitle className="text-sm">Access Log Timeline</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {accessLogs.length === 0 ? (
+                <div className="px-5 py-12 text-center text-sm text-navy-400">
+                  No access logs yet
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "policies" && (
-        <div className="rounded-xl border border-navy-200/60 bg-white shadow-sm">
-          <div className="border-b border-navy-100 bg-navy-50/50 px-5 py-3">
-            <h2 className="text-sm font-semibold text-navy-700">Policy Versions</h2>
-          </div>
-          {policies.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-navy-400">No policies defined</div>
-          ) : (
-            <div className="divide-y divide-navy-100/80">
-              {policies.map((pol: PolicyEntry) => (
-                <div key={pol.id} className="px-5 py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-navy-800 px-2 py-0.5 text-[10px] font-bold text-white">
-                        v{pol.version}
-                      </span>
-                      <span className="text-xs text-navy-500">
-                        {pol.createdAt ? new Date(pol.createdAt).toLocaleDateString() : "—"}
-                      </span>
+              ) : (
+                <div className="divide-y divide-navy-100/80">
+                  {accessLogs.map((log: AccessLogEntry) => (
+                    <div key={log.id} className="flex items-start gap-4 px-5 py-4">
+                      <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100">
+                        <Eye className="h-3.5 w-3.5 text-navy-500" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+                            {log.operationType}
+                          </Badge>
+                          <span className="text-xs text-navy-400">
+                            {new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                          </span>
+                        </div>
+                        <p className="mt-1 font-mono text-xs text-navy-500 truncate">
+                          Accessor: {log.accessorAddress}
+                        </p>
+                        {log.readProof && (
+                          <p className="mt-0.5 font-mono text-[10px] text-navy-400 truncate">
+                            Proof: {log.readProof.slice(0, 32)}...
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-navy-500">
-                      <span>{pol.readsConsumed ?? 0}/{pol.maxReads ?? "∞"} reads</span>
-                      {pol.expiresAt && (
-                        <span className={new Date(pol.expiresAt) < new Date() ? "text-red-500" : ""}>
-                          Expires: {new Date(pol.expiresAt).toLocaleDateString()}
-                        </span>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="policies">
+          <Card className="border-navy-200/60">
+            <CardHeader className="border-b border-navy-100 bg-navy-50/50">
+              <CardTitle className="text-sm">Policy Versions</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {policies.length === 0 ? (
+                <div className="px-5 py-12 text-center text-sm text-navy-400">
+                  No policies defined
+                </div>
+              ) : (
+                <div className="divide-y divide-navy-100/80">
+                  {policies.map((pol: PolicyEntry) => (
+                    <div key={pol.id} className="px-5 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-navy-800 text-[10px]">
+                            v{pol.version}
+                          </Badge>
+                          <span className="text-xs text-navy-500">
+                            {pol.createdAt ? new Date(pol.createdAt).toLocaleDateString() : "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-navy-500">
+                          <span>{pol.readsConsumed ?? 0}/{pol.maxReads ?? "∞"} reads</span>
+                          {pol.expiresAt && (
+                            <span className={new Date(pol.expiresAt) < new Date() ? "text-red-500" : ""}>
+                              Expires: {new Date(pol.expiresAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {(pol.allowedAccessors ?? []).map((addr: string, i: number) => (
+                          <Badge key={i} variant="secondary" className="font-mono text-[10px]">
+                            {addr === "*" ? "* (all)" : `${addr.slice(0, 10)}...`}
+                          </Badge>
+                        ))}
+                      </div>
+                      {pol.hash && (
+                        <p className="mt-1 font-mono text-[10px] text-navy-400">
+                          Hash: {pol.hash.slice(0, 24)}...
+                        </p>
                       )}
                     </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="overview">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Left: Metadata */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="border-navy-200/60">
+                <CardContent className="pt-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h1 className="font-display text-xl font-bold text-navy-800">
+                      {dataset.name}
+                    </h1>
+                    <Badge variant="default">Active</Badge>
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {(pol.allowedAccessors ?? []).map((addr: string, i: number) => (
-                      <span key={i} className="rounded bg-navy-50 px-1.5 py-0.5 font-mono text-[10px] text-navy-500">
-                        {addr === "*" ? "* (all)" : `${addr.slice(0, 10)}...`}
-                      </span>
-                    ))}
-                  </div>
-                  {pol.hash && (
-                    <p className="mt-1 font-mono text-[10px] text-navy-400">
-                      Hash: {pol.hash.slice(0, 24)}...
-                    </p>
+
+                  {dataset.description && (
+                    <p className="mb-4 text-sm text-navy-600">{dataset.description}</p>
                   )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
-      {activeTab === "overview" && (
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: Metadata */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Dataset Info */}
-          <div className="rounded-xl border border-navy-200/60 bg-white p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h1 className="font-display text-xl font-bold text-navy-800">
-                {dataset.name}
-              </h1>
-              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Active
-              </span>
-            </div>
+                  <div className="rounded-lg bg-navy-50/50 p-4">
+                    <MetadataRow label="Dataset ID" value={dataset.id} mono />
+                    <MetadataRow label="Shelby Blob" value={dataset.shelbyBlobName} mono />
+                    <MetadataRow label="Blob Hash" value={dataset.blobHash} mono />
+                    <MetadataRow label="Size" value={dataset.sizeBytes ? `${dataset.sizeBytes} bytes` : null} />
+                    <MetadataRow label="Owner" value={dataset.ownerAddress} mono />
+                    <MetadataRow
+                      label="Created"
+                      value={new Date(dataset.createdAt).toLocaleString("en-US", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-            {dataset.description && (
-              <p className="mb-4 text-sm text-navy-600">{dataset.description}</p>
-            )}
-
-            <div className="rounded-lg bg-navy-50/50 p-4">
-              <MetadataRow label="Dataset ID" value={dataset.id} mono />
-              <MetadataRow label="Shelby Blob" value={dataset.shelbyBlobName} mono />
-              <MetadataRow label="Blob Hash" value={dataset.blobHash} mono />
-              <MetadataRow label="Size" value={dataset.sizeBytes ? `${dataset.sizeBytes} bytes` : null} />
-              <MetadataRow label="Owner" value={dataset.ownerAddress} mono />
-              <MetadataRow
-                label="Created"
-                value={new Date(dataset.createdAt).toLocaleString("en-US", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              />
-            </div>
-          </div>
-
-          {/* Licenses */}
-          <div className="rounded-xl border border-navy-200/60 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 font-display text-base font-semibold text-navy-800">
-              Licenses
-            </h2>
-            {licenses.length === 0 ? (
-              <p className="text-sm text-navy-400">No licenses attached</p>
-            ) : (
-              <div className="space-y-3">
-                {licenses.map((lic) => (
-                  <div
-                    key={lic.id}
-                    className="flex items-center justify-between rounded-lg border border-navy-100 bg-navy-50/30 px-4 py-3"
-                  >
-                    <div>
-                      <span className="rounded bg-gold-100 px-2 py-0.5 font-mono text-xs font-medium text-gold-800">
-                        {lic.spdxType}
-                      </span>
-                      <p className="mt-1 font-mono text-[11px] text-navy-400">
-                        Grantor: {lic.grantorAddress.slice(0, 10)}...
-                      </p>
+              {/* Licenses */}
+              <Card className="border-navy-200/60">
+                <CardContent className="pt-6">
+                  <h2 className="mb-4 font-display text-base font-semibold text-navy-800">
+                    Licenses
+                  </h2>
+                  {licenses.length === 0 ? (
+                    <p className="text-sm text-navy-400">No licenses attached</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {licenses.map((lic) => (
+                        <div
+                          key={lic.id}
+                          className="flex items-center justify-between rounded-lg border border-navy-100 bg-navy-50/30 px-4 py-3"
+                        >
+                          <div>
+                            <Badge variant="secondary" className="bg-gold-100 text-gold-800 font-mono">
+                              {lic.spdxType}
+                            </Badge>
+                            <p className="mt-1 font-mono text-[11px] text-navy-400">
+                              Grantor: {lic.grantorAddress.slice(0, 10)}...
+                            </p>
+                          </div>
+                          {lic.termsHash && (
+                            <span className="font-mono text-[10px] text-navy-400">
+                              {lic.termsHash.slice(0, 12)}...
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    {lic.termsHash && (
-                      <span className="font-mono text-[10px] text-navy-400">
-                        {lic.termsHash.slice(0, 12)}...
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right: Evidence Pack */}
-        <div className="space-y-6">
-          <div className="rounded-xl border border-gold-300/60 bg-gradient-to-b from-gold-50/60 to-white p-6 shadow-sm">
-            <h2 className="mb-1 font-display text-base font-semibold text-navy-800">
-              Evidence Pack
-            </h2>
-            <p className="mb-5 text-xs text-navy-500">
-              Generate a cryptographic evidence pack for this dataset
-            </p>
-
-            {!evidence ? (
-              <button
-                onClick={handleGenerateEvidence}
-                disabled={generating}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-800 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-navy-700 hover:shadow-md active:scale-[0.98] disabled:opacity-50"
-              >
-                {generating ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                      <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-                    </svg>
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                    Generate Evidence Pack
-                  </>
-                )}
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-600">
-                      <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="text-sm font-medium text-emerald-700">
-                      Pack Generated
-                    </span>
-                  </div>
-                  <p className="mt-1.5 font-mono text-[10px] text-emerald-600 break-all">
-                    Hash: {evidence.hash}
-                  </p>
-                </div>
-
-                <button
-                  onClick={downloadEvidence}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-navy-200 bg-white py-2.5 text-sm font-medium text-navy-700 transition-all hover:bg-navy-50 hover:border-navy-300"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                  </svg>
-                  Download JSON
-                </button>
-              </div>
-            )}
-
-            {error && (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                {error}
-              </div>
-            )}
-          </div>
-
-          {/* Evidence JSON Preview */}
-          {evidence && (
-            <div className="rounded-xl border border-navy-200/60 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-navy-100 bg-navy-50/50 px-4 py-2.5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-navy-500">
-                  JSON Preview
-                </span>
-              </div>
-              <pre className="max-h-80 overflow-auto p-4 font-mono text-[11px] leading-relaxed text-navy-600">
-                {JSON.stringify(evidence.json, null, 2)}
-              </pre>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-          )}
-        </div>
-      </div>
-      )}
+
+            {/* Right: Evidence Pack */}
+            <div className="space-y-6">
+              <Card className="border-gold-300/60 bg-gradient-to-b from-gold-50/60 to-white">
+                <CardContent className="pt-6">
+                  <h2 className="mb-1 font-display text-base font-semibold text-navy-800">
+                    Evidence Pack
+                  </h2>
+                  <p className="mb-5 text-xs text-navy-500">
+                    Generate a cryptographic evidence pack for this dataset
+                  </p>
+
+                  {!evidence ? (
+                    <Button
+                      onClick={handleGenerateEvidence}
+                      disabled={generating}
+                      className="w-full"
+                    >
+                      {generating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Layers className="mr-2 h-4 w-4" />
+                          Generate Evidence Pack
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm font-medium text-emerald-700">
+                            Pack Generated
+                          </span>
+                        </div>
+                        <p className="mt-1.5 font-mono text-[10px] text-emerald-600 break-all">
+                          Hash: {evidence.hash}
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={downloadEvidence}
+                        className="w-full"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download JSON
+                      </Button>
+                    </div>
+                  )}
+
+                  {error && (
+                    <Alert variant="destructive" className="mt-3">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Evidence JSON Preview */}
+              {evidence && (
+                <Card className="border-navy-200/60 overflow-hidden">
+                  <CardHeader className="border-b border-navy-100 bg-navy-50/50 py-2.5">
+                    <CardTitle className="text-xs uppercase tracking-wider">
+                      JSON Preview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <pre className="max-h-80 overflow-auto p-4 font-mono text-[11px] leading-relaxed text-navy-600">
+                      {JSON.stringify(evidence.json, null, 2)}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

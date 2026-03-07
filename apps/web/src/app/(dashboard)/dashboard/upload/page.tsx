@@ -4,6 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { uploadDataset } from "../actions";
+import {
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Label,
+  Textarea,
+  Alert,
+  AlertDescription,
+} from "@forsety/ui";
+import { Upload, Check, ChevronRight, Loader2, ArrowRight } from "lucide-react";
 
 const LICENSE_OPTIONS = [
   { value: "CC-BY-4.0", label: "CC BY 4.0", desc: "Attribution" },
@@ -68,9 +79,7 @@ export default function UploadPage() {
         <Link href="/dashboard" className="transition-colors hover:text-navy-600">
           Datasets
         </Link>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
+        <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-navy-700">Upload</span>
       </div>
 
@@ -86,89 +95,84 @@ export default function UploadPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Zone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-all ${
+          <Card
+            className={`cursor-pointer border-2 border-dashed transition-all ${
               dragOver
                 ? "border-gold-500 bg-gold-50/50"
                 : file
                   ? "border-emerald-300 bg-emerald-50/30"
-                  : "border-navy-200 bg-white hover:border-navy-300 hover:bg-navy-50/30"
+                  : "border-navy-200 hover:border-navy-300 hover:bg-navy-50/30"
             }`}
           >
-            <input
-              type="file"
-              className="absolute inset-0 cursor-pointer opacity-0"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
+            <CardContent className="relative py-10">
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                className="flex flex-col items-center justify-center"
+              >
+                <input
+                  type="file"
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
 
-            {file ? (
-              <>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-600">
-                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <p className="mt-3 text-sm font-medium text-navy-800">{file.name}</p>
-                <p className="mt-1 text-xs text-navy-400">
-                  {(file.size / 1024).toFixed(1)} KB
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-navy-100">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-navy-500">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <p className="mt-3 text-sm font-medium text-navy-700">
-                  Drop your file here, or click to browse
-                </p>
-                <p className="mt-1 text-xs text-navy-400">
-                  Any file type supported
-                </p>
-              </>
-            )}
-          </div>
+                {file ? (
+                  <>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                      <Check className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-navy-800">
+                      {file.name}
+                    </p>
+                    <p className="mt-1 text-xs text-navy-400">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-navy-100">
+                      <Upload className="h-5 w-5 text-navy-500" />
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-navy-700">
+                      Drop your file here, or click to browse
+                    </p>
+                    <p className="mt-1 text-xs text-navy-400">
+                      Any file type supported
+                    </p>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Name */}
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-navy-500">
-              Dataset Name
-            </label>
-            <input
-              type="text"
+          <div className="space-y-2">
+            <Label>Dataset Name</Label>
+            <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. ImageNet Training Subset"
-              className="w-full rounded-lg border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-800 outline-none transition-all placeholder:text-navy-300 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20"
             />
           </div>
 
           {/* Description */}
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-navy-500">
-              Description
-            </label>
-            <textarea
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of the dataset..."
               rows={3}
-              className="w-full rounded-lg border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-800 outline-none transition-all placeholder:text-navy-300 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 resize-none"
             />
           </div>
 
           {/* License Select */}
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-navy-500">
-              License Type
-            </label>
+          <div className="space-y-2">
+            <Label>License Type</Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {LICENSE_OPTIONS.map((opt) => (
                 <button
@@ -181,7 +185,11 @@ export default function UploadPage() {
                       : "border-navy-200 bg-white hover:border-navy-300 hover:bg-navy-50/50"
                   }`}
                 >
-                  <span className={`block text-sm font-medium ${license === opt.value ? "text-gold-700" : "text-navy-700"}`}>
+                  <span
+                    className={`block text-sm font-medium ${
+                      license === opt.value ? "text-gold-700" : "text-navy-700"
+                    }`}
+                  >
                     {opt.label}
                   </span>
                   <span className="mt-0.5 block text-[11px] text-navy-400">
@@ -193,56 +201,41 @@ export default function UploadPage() {
           </div>
 
           {/* Owner Address */}
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-navy-500">
-              Owner Address
-            </label>
-            <input
-              type="text"
+          <div className="space-y-2">
+            <Label>Owner Address</Label>
+            <Input
               value={ownerAddress}
               onChange={(e) => setOwnerAddress(e.target.value)}
               placeholder="0x..."
-              className="w-full rounded-lg border border-navy-200 bg-white px-4 py-2.5 font-mono text-sm text-navy-800 outline-none transition-all placeholder:text-navy-300 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20"
+              className="font-mono"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {/* Submit */}
           <div className="flex items-center justify-end gap-3 pt-2">
-            <Link
-              href="/dashboard"
-              className="rounded-lg px-4 py-2.5 text-sm font-medium text-navy-600 transition-colors hover:bg-navy-100"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={!isValid || submitting}
-              className="inline-flex items-center gap-2 rounded-lg bg-navy-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-navy-700 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button variant="ghost" asChild>
+              <Link href="/dashboard">Cancel</Link>
+            </Button>
+            <Button type="submit" disabled={!isValid || submitting}>
               {submitting ? (
                 <>
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                    <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-                  </svg>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading...
                 </>
               ) : (
                 <>
                   Upload & Register
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
