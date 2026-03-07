@@ -12,6 +12,12 @@ interface DatasetRow {
   blobHash: string | null;
 }
 
+interface DashboardStats {
+  totalDatasets: number;
+  registeredAgents: number;
+  activeAgents: number;
+}
+
 const statusStyles = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
   pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -35,6 +41,23 @@ function StatusBadge({ status }: { status: DatasetRow["status"] }) {
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
+}
+
+async function getStats(): Promise<DashboardStats> {
+  try {
+    const client = getForsetyClient();
+    const [datasets, agents] = await Promise.all([
+      client.datasets.list(),
+      client.agents.list(),
+    ]);
+    return {
+      totalDatasets: datasets.length,
+      registeredAgents: agents.length,
+      activeAgents: agents.filter((a) => a.isActive).length,
+    };
+  } catch {
+    return { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 };
+  }
 }
 
 async function getDatasets(): Promise<DatasetRow[]> {
@@ -62,7 +85,7 @@ async function getDatasets(): Promise<DatasetRow[]> {
 }
 
 export default async function DashboardPage() {
-  const datasets = await getDatasets();
+  const [datasets, stats] = await Promise.all([getDatasets(), getStats()]);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -88,10 +111,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Total Datasets", value: datasets.length.toString(), accent: false },
-          { label: "Active Policies", value: "—", accent: false },
+          { label: "Total Datasets", value: stats.totalDatasets.toString(), accent: false },
+          { label: "Registered Agents", value: stats.registeredAgents.toString(), accent: false },
+          { label: "Active Agents", value: stats.activeAgents.toString(), accent: false },
           { label: "Evidence Packs", value: "—", accent: true },
         ].map((stat) => (
           <div

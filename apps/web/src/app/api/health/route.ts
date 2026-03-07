@@ -8,11 +8,16 @@ export async function GET() {
     context: "unknown",
   };
 
+  let agentsCount = 0;
+
   try {
     const client = getForsetyClient();
     shelbyStatus = await client.getShelby().checkHealth();
+
+    const agents = await client.agents.list();
+    agentsCount = agents.length;
   } catch {
-    // Shelby check failed — report as disconnected
+    // checks failed — report defaults
   }
 
   const overall = shelbyStatus.connected ? "ok" : "degraded";
@@ -20,8 +25,11 @@ export async function GET() {
   return NextResponse.json({
     status: overall,
     service: "forsety",
-    version: "0.1.0",
+    version: "0.2.0",
     timestamp: new Date().toISOString(),
     shelby: shelbyStatus,
+    recallVault: {
+      registeredAgents: agentsCount,
+    },
   });
 }

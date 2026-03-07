@@ -10,6 +10,7 @@ export function getForsetyClient(): ForsetyClient {
       databaseUrl: env.DATABASE_URL,
       shelbyNetwork: "shelbynet",
       shelbyWalletAddress: env.SHELBY_WALLET_ADDRESS,
+      shelbyMode: process.env.SHELBY_MOCK === "true" ? "mock" : "live",
     });
   }
   return client;

@@ -1,0 +1,10 @@
+{
+  "extends": "../config-typescript/node-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test"]
+}

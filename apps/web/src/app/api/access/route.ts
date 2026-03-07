@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { datasetId, accessorAddress, operationType } = body;
+    const { datasetId, accessorAddress, operationType, agentId } = body;
 
     if (!datasetId || !accessorAddress || !operationType) {
       return NextResponse.json(
@@ -36,6 +36,18 @@ export async function POST(request: NextRequest) {
       accessorAddress,
       operationType,
     });
+
+    // Cross-reference audit log if agentId provided
+    if (agentId) {
+      await client.agentAudit.log({
+        agentId,
+        action: "dataset.access",
+        resourceType: "dataset",
+        resourceId: datasetId,
+        input: { operationType, accessorAddress },
+        output: { accessLogId: log.id },
+      }).catch(() => {});
+    }
 
     return NextResponse.json(log, { status: 201 });
   } catch (error) {

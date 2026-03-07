@@ -4,6 +4,7 @@
     "DATABASE_URL",
     "FORSETY_API_KEY",
     "SHELBY_WALLET_ADDRESS",
+    "SHELBY_MOCK",
     "NEXT_PUBLIC_APP_URL"
   ],
   "tasks": {
@@ -14,6 +15,7 @@
         "DATABASE_URL",
         "FORSETY_API_KEY",
         "SHELBY_WALLET_ADDRESS",
+        "SHELBY_MOCK",
         "NEXT_PUBLIC_APP_URL"
       ]
     },

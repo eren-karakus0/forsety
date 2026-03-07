@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { fetchDatasetDetail, generateEvidencePack } from "../actions";
+import { fetchDatasetDetail, generateEvidencePack, fetchAccessLogs, fetchPolicies } from "../actions";
 
 interface DatasetDetail {
   dataset: {
@@ -52,13 +52,24 @@ export default function DatasetDetailPage() {
   const id = params.id as string;
   const [data, setData] = useState<DatasetDetail | null>(null);
   const [evidence, setEvidence] = useState<EvidencePack | null>(null);
+  const [accessLogs, setAccessLogs] = useState<any[]>([]);
+  const [policies, setPolicies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "access" | "policies">("overview");
 
   useEffect(() => {
-    fetchDatasetDetail(id)
-      .then((d) => setData(d))
+    Promise.all([
+      fetchDatasetDetail(id),
+      fetchAccessLogs(id),
+      fetchPolicies(id),
+    ])
+      .then(([d, logs, pols]) => {
+        setData(d);
+        setAccessLogs(logs);
+        setPolicies(pols);
+      })
       .catch(() => setError("Failed to load dataset"))
       .finally(() => setLoading(false));
   }, [id]);
@@ -127,6 +138,114 @@ export default function DatasetDetailPage() {
         <span className="text-navy-700">{dataset.name}</span>
       </div>
 
+      {/* Tabs */}
+      <div className="mb-6 flex gap-1 rounded-lg bg-navy-100/50 p-1">
+        {(["overview", "access", "policies"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${
+              activeTab === tab
+                ? "bg-white text-navy-800 shadow-sm"
+                : "text-navy-500 hover:text-navy-700"
+            }`}
+          >
+            {tab === "overview" ? "Overview" : tab === "access" ? `Access Log (${accessLogs.length})` : `Policies (${policies.length})`}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "access" && (
+        <div className="rounded-xl border border-navy-200/60 bg-white shadow-sm">
+          <div className="border-b border-navy-100 bg-navy-50/50 px-5 py-3">
+            <h2 className="text-sm font-semibold text-navy-700">Access Log Timeline</h2>
+          </div>
+          {accessLogs.length === 0 ? (
+            <div className="px-5 py-12 text-center text-sm text-navy-400">No access logs yet</div>
+          ) : (
+            <div className="divide-y divide-navy-100/80">
+              {accessLogs.map((log: any) => (
+                <div key={log.id} className="flex items-start gap-4 px-5 py-4">
+                  <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-navy-500">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-navy-100 px-1.5 py-0.5 font-mono text-[10px] font-medium text-navy-600 uppercase">
+                        {log.operationType}
+                      </span>
+                      <span className="text-xs text-navy-400">
+                        {new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                      </span>
+                    </div>
+                    <p className="mt-1 font-mono text-xs text-navy-500 truncate">
+                      Accessor: {log.accessorAddress}
+                    </p>
+                    {log.readProof && (
+                      <p className="mt-0.5 font-mono text-[10px] text-navy-400 truncate">
+                        Proof: {log.readProof.slice(0, 32)}...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "policies" && (
+        <div className="rounded-xl border border-navy-200/60 bg-white shadow-sm">
+          <div className="border-b border-navy-100 bg-navy-50/50 px-5 py-3">
+            <h2 className="text-sm font-semibold text-navy-700">Policy Versions</h2>
+          </div>
+          {policies.length === 0 ? (
+            <div className="px-5 py-12 text-center text-sm text-navy-400">No policies defined</div>
+          ) : (
+            <div className="divide-y divide-navy-100/80">
+              {policies.map((pol: any) => (
+                <div key={pol.id} className="px-5 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-navy-800 px-2 py-0.5 text-[10px] font-bold text-white">
+                        v{pol.version}
+                      </span>
+                      <span className="text-xs text-navy-500">
+                        {pol.createdAt ? new Date(pol.createdAt).toLocaleDateString() : "—"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-navy-500">
+                      <span>{pol.readsConsumed ?? 0}/{pol.maxReads ?? "∞"} reads</span>
+                      {pol.expiresAt && (
+                        <span className={new Date(pol.expiresAt) < new Date() ? "text-red-500" : ""}>
+                          Expires: {new Date(pol.expiresAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {(pol.allowedAccessors ?? []).map((addr: string, i: number) => (
+                      <span key={i} className="rounded bg-navy-50 px-1.5 py-0.5 font-mono text-[10px] text-navy-500">
+                        {addr === "*" ? "* (all)" : `${addr.slice(0, 10)}...`}
+                      </span>
+                    ))}
+                  </div>
+                  {pol.hash && (
+                    <p className="mt-1 font-mono text-[10px] text-navy-400">
+                      Hash: {pol.hash.slice(0, 24)}...
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "overview" && (
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left: Metadata */}
         <div className="lg:col-span-2 space-y-6">
@@ -279,6 +398,7 @@ export default function DatasetDetailPage() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

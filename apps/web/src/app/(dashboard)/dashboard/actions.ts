@@ -108,3 +108,104 @@ export async function generateEvidencePack(datasetId: string): Promise<EvidenceR
     };
   }
 }
+
+// --- Phase 2: Agent & Audit actions ---
+
+export async function fetchDashboardStats() {
+  try {
+    const client = getForsetyClient();
+    const [datasets, agents] = await Promise.all([
+      client.datasets.listWithLicenses(),
+      client.agents.list(),
+    ]);
+
+    const activeAgents = agents.filter((a) => a.isActive).length;
+
+    return {
+      totalDatasets: datasets.length,
+      registeredAgents: agents.length,
+      activeAgents,
+    };
+  } catch {
+    return { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 };
+  }
+}
+
+export async function fetchAgents() {
+  try {
+    const client = getForsetyClient();
+    const agents = await client.agents.list();
+    return agents.map((a) => ({
+      ...a,
+      createdAt: a.createdAt.toISOString(),
+      lastSeenAt: a.lastSeenAt?.toISOString() ?? null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAgentDetail(id: string) {
+  try {
+    const client = getForsetyClient();
+    const agent = await client.agents.getById(id);
+    if (!agent) return null;
+
+    const auditSummary = await client.agentAudit.getSummary(id);
+
+    return {
+      agent: {
+        ...agent,
+        createdAt: agent.createdAt.toISOString(),
+        lastSeenAt: agent.lastSeenAt?.toISOString() ?? null,
+      },
+      auditSummary: {
+        ...auditSummary,
+        recentActions: auditSummary.recentActions.map((a) => ({
+          ...a,
+          timestamp: a.timestamp.toISOString(),
+        })),
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchAgentAuditLogs(
+  agentId: string,
+  filters?: { action?: string; status?: string; limit?: number }
+) {
+  try {
+    const client = getForsetyClient();
+    const logs = await client.agentAudit.getByAgent(agentId, filters);
+    return logs.map((l) => ({
+      ...l,
+      timestamp: l.timestamp.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAccessLogs(datasetId: string) {
+  try {
+    const client = getForsetyClient();
+    const logs = await client.access.getByDatasetId(datasetId);
+    return logs.map((l) => ({
+      ...l,
+      timestamp: l.timestamp?.toISOString() ?? new Date().toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchPolicies(datasetId: string) {
+  try {
+    const client = getForsetyClient();
+    return client.policies.getByDatasetId(datasetId);
+  } catch {
+    return [];
+  }
+}

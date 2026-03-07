@@ -1,0 +1,41 @@
+{
+  "name": "@forsety/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "forsety-mcp": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@forsety/sdk": "workspace:*",
+    "@forsety/db": "workspace:*",
+    "zod": "^3.24.0",
+    "drizzle-orm": "^0.38.0",
+    "@neondatabase/serverless": "^0.10.0"
+  },
+  "devDependencies": {
+    "@forsety/config-eslint": "workspace:*",
+    "@forsety/config-typescript": "workspace:*",
+    "eslint": "^9.18.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -12,3 +12,12 @@ export type { AccessLog, NewAccessLog } from "./access-logs";
 
 export { evidencePacks } from "./evidence-packs";
 export type { EvidencePack, NewEvidencePack } from "./evidence-packs";
+
+export { agents } from "./agents";
+export type { Agent, NewAgent } from "./agents";
+
+export { agentMemories } from "./agent-memories";
+export type { AgentMemory, NewAgentMemory } from "./agent-memories";
+
+export { agentAuditLogs } from "./agent-audit-logs";
+export type { AgentAuditLog, NewAgentAuditLog } from "./agent-audit-logs";

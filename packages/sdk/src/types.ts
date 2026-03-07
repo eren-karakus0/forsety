@@ -80,6 +80,7 @@ export interface ForsetyConfig {
   shelbyWalletAddress?: string;
   databaseUrl?: string;
   apiBaseUrl?: string;
+  shelbyMode?: "live" | "mock";
 }
 
 export const UploadDatasetInputSchema = z.object({
