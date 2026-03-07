@@ -19,8 +19,11 @@ export interface ForsetyMcpServerConfig {
   shelbyWalletAddress?: string;
 }
 
-export function createForsetyMcpServer(config: ForsetyMcpServerConfig) {
-  const client = new ForsetyClient({
+export function createForsetyMcpServer(
+  config: ForsetyMcpServerConfig,
+  existingClient?: ForsetyClient
+) {
+  const client = existingClient ?? new ForsetyClient({
     databaseUrl: config.databaseUrl,
     shelbyMode: config.shelbyMode ?? "mock",
     shelbyWalletAddress: config.shelbyWalletAddress,
