@@ -1,11 +1,16 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
+import { normalize } from "node:path";
 import type {
   UploadResult,
   BlobMetadata,
   BlobCommitments,
   ShelbyWrapperConfig,
 } from "./types.js";
+
+function isSafePath(filePath: string): boolean {
+  return !normalize(filePath).includes("..");
+}
 
 /**
  * Mock Shelby wrapper for development/testing when devnet is unavailable.
@@ -29,7 +34,7 @@ export class ShelbyMockWrapper {
     // Use actual file content for hash/size when file exists (dev mode)
     let hash: string;
     let sizeBytes: number;
-    if (existsSync(filePath)) {
+    if (isSafePath(filePath) && existsSync(filePath)) {
       const content = readFileSync(filePath);
       hash = createHash("sha256").update(content).digest("hex");
       sizeBytes = content.length;
@@ -65,7 +70,7 @@ export class ShelbyMockWrapper {
 
   async generateCommitments(filePath: string): Promise<BlobCommitments> {
     let hash: string;
-    if (existsSync(filePath)) {
+    if (isSafePath(filePath) && existsSync(filePath)) {
       const content = readFileSync(filePath);
       hash = createHash("sha256").update(content).digest("hex");
     } else {
@@ -92,7 +97,7 @@ export class ShelbyMockWrapper {
   }
 
   computeFileHash(filePath: string): string {
-    if (existsSync(filePath)) {
+    if (isSafePath(filePath) && existsSync(filePath)) {
       const content = readFileSync(filePath);
       return createHash("sha256").update(content).digest("hex");
     }

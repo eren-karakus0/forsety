@@ -1,13 +1,21 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
+import { normalize } from "node:path";
 import type {
   ShelbyWrapperConfig,
   UploadResult,
   BlobMetadata,
   BlobCommitments,
 } from "./types.js";
-import { ForsetyUploadError, ForsetyError } from "../errors.js";
+import { ForsetyUploadError, ForsetyError, ForsetyValidationError } from "../errors.js";
+
+/** Reject path traversal (.. segments). */
+function assertSafePath(filePath: string): void {
+  if (normalize(filePath).includes("..")) {
+    throw new ForsetyValidationError("Path traversal detected in file path");
+  }
+}
 
 function toWslPath(windowsPath: string): string {
   return windowsPath
@@ -67,6 +75,7 @@ export class ShelbyWrapper {
     blobName: string,
     expiration: string = "in 30 days"
   ): Promise<UploadResult> {
+    assertSafePath(filePath);
     try {
       const wslPath = toWslPath(filePath);
       const commitmentsPath = "/tmp/forsety-commitments.json";
@@ -215,6 +224,7 @@ export class ShelbyWrapper {
   }
 
   computeFileHash(filePath: string): string {
+    assertSafePath(filePath);
     try {
       const buffer = readFileSync(filePath);
       return createHash("sha256").update(buffer).digest("hex");

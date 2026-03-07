@@ -24,8 +24,8 @@ export function useForsetyAuth() {
     setAuthState({ isAuthenticated: false, isLoading: true, error: null });
 
     try {
-      // 1. Get nonce from server
-      const nonceRes = await fetch("/api/auth/nonce");
+      // 1. Get nonce from server (pass wallet address for message binding)
+      const nonceRes = await fetch(`/api/auth/nonce?address=${address}`);
       if (!nonceRes.ok) throw new Error("Failed to get nonce");
       const { nonce, message } = await nonceRes.json();
 

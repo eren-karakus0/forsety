@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "forsety-dev-secret-change-in-production-32ch"
-);
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("JWT_SECRET environment variable is required (min 32 chars)");
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export async function middleware(request: NextRequest) {
   // Only protect dashboard routes
@@ -18,7 +22,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    await jwtVerify(token, JWT_SECRET);
+    await jwtVerify(token, getJwtSecret());
     return NextResponse.next();
   } catch {
     // Invalid or expired token — clear cookie and redirect

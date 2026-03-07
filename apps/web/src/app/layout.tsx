@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@forsety/ui";
-import { Providers } from "./providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -60,9 +59,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <Providers>
-          {children}
-        </Providers>
+        {children}
         <Toaster />
       </body>
     </html>

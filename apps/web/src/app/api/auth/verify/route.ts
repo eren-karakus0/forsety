@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, and, gt } from "drizzle-orm";
 import { verifySiwaMessage, signJwt } from "@forsety/auth";
-
-const JWT_SECRET = process.env.JWT_SECRET ?? "forsety-dev-secret-change-in-production-32ch";
+import { createDb, sessions, users } from "@forsety/db";
+import { getEnv } from "@/lib/env";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,15 +18,51 @@ export async function POST(request: NextRequest) {
     // Verify SIWA signature
     const result = await verifySiwaMessage({ message, signature });
 
-    if (!result.success || !result.address) {
+    if (!result.success || !result.address || !result.nonce) {
       return NextResponse.json(
-        { error: result.error ?? "Verification failed" },
+        { error: "Verification failed" },
         { status: 401 }
       );
     }
 
+    const env = getEnv();
+    const db = createDb(env.DATABASE_URL);
+    const walletAddress = result.address.toLowerCase();
+
+    // Validate nonce from DB: must exist, not expired, match address
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.nonce, result.nonce),
+          eq(sessions.walletAddress, walletAddress),
+          gt(sessions.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "Invalid or expired nonce" },
+        { status: 401 }
+      );
+    }
+
+    // Delete nonce — one-time use (prevent replay)
+    await db.delete(sessions).where(eq(sessions.id, session.id));
+
+    // Upsert user record
+    await db
+      .insert(users)
+      .values({ walletAddress, lastLoginAt: new Date() })
+      .onConflictDoUpdate({
+        target: users.walletAddress,
+        set: { lastLoginAt: new Date() },
+      });
+
     // Sign JWT
-    const token = await signJwt(result.address, JWT_SECRET, {
+    const token = await signJwt(result.address, env.JWT_SECRET, {
       expiresIn: "1h",
       nonce: result.nonce,
     });
@@ -40,14 +77,14 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 3600, // 1 hour
+      maxAge: 3600,
       path: "/",
     });
 
     return response;
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Verification failed" },
+      { error: "Verification failed" },
       { status: 500 }
     );
   }

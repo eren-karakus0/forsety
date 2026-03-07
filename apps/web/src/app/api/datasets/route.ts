@@ -2,10 +2,26 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve, normalize } from "node:path";
 import { tmpdir } from "node:os";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+
+/** Reject path traversal attempts (.. segments, absolute paths outside allowed dirs). */
+function validateFilePath(filePath: string, allowedBase?: string): string {
+  const normalized = normalize(filePath);
+  if (normalized.includes("..")) {
+    throw new Error("Path traversal detected");
+  }
+  if (allowedBase) {
+    const resolved = resolve(allowedBase, normalized);
+    if (!resolved.startsWith(resolve(allowedBase))) {
+      throw new Error("Path outside allowed directory");
+    }
+    return resolved;
+  }
+  return normalized;
+}
 
 export async function GET(request: NextRequest) {
   if (!validateApiKey(request)) return unauthorizedResponse();
@@ -76,14 +92,14 @@ export async function POST(request: NextRequest) {
       spdxType = body.license?.spdxType;
       grantorAddress = body.license?.grantorAddress ?? ownerAddress;
       terms = body.license?.terms;
-      tempPath = body.filePath;
-
-      if (!name || !ownerAddress || !spdxType || !tempPath) {
+      if (!body.filePath || !name || !ownerAddress || !spdxType) {
         return NextResponse.json(
           { error: "Missing required fields: name, ownerAddress, license.spdxType, filePath" },
           { status: 400 }
         );
       }
+
+      tempPath = validateFilePath(body.filePath);
     }
 
     const client = getForsetyClient();

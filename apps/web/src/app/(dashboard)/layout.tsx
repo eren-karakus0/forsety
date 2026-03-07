@@ -19,6 +19,7 @@ import {
   Menu,
 } from "lucide-react";
 import { WalletDisplay } from "./components/wallet-display";
+import { Providers } from "../providers";
 
 const navLinks = [
   { href: "/dashboard", label: "Datasets", icon: Database },
@@ -66,6 +67,7 @@ export default function DashboardLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
+    <Providers>
     <div className="min-h-screen bg-navy-50/40">
       {/* Top Bar */}
       <header className="sticky top-0 z-50 border-b border-navy-200/60 bg-white/80 backdrop-blur-md">
@@ -120,5 +122,6 @@ export default function DashboardLayout({
       {/* Content */}
       <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
     </div>
+    </Providers>
   );
 }
