@@ -21,3 +21,6 @@ export type { AgentMemory, NewAgentMemory } from "./agent-memories";
 
 export { agentAuditLogs } from "./agent-audit-logs";
 export type { AgentAuditLog, NewAgentAuditLog } from "./agent-audit-logs";
+
+export { embeddings } from "./embeddings";
+export type { Embedding, NewEmbedding } from "./embeddings";

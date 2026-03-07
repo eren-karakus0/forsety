@@ -23,7 +23,8 @@
     "zod": "^3.24.0",
     "@forsety/db": "workspace:*",
     "drizzle-orm": "^0.38.0",
-    "@neondatabase/serverless": "^0.10.0"
+    "@neondatabase/serverless": "^0.10.0",
+    "@huggingface/transformers": "^3.3.0"
   },
   "devDependencies": {
     "@forsety/config-eslint": "workspace:*",

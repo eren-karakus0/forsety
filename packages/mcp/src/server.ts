@@ -11,6 +11,7 @@ import { memorySearchSchema, memorySearch } from "./tools/memory-search.js";
 import { memoryDeleteSchema, memoryDelete } from "./tools/memory-delete.js";
 import { datasetAccessSchema, datasetAccess } from "./tools/dataset-access.js";
 import { policyCheckSchema, policyCheck } from "./tools/policy-check.js";
+import { semanticSearchSchema, semanticSearch } from "./tools/semantic-search.js";
 
 export interface ForsetyMcpServerConfig {
   databaseUrl: string;
@@ -270,6 +271,22 @@ export function createForsetyMcpServer(config: ForsetyMcpServerConfig) {
         (ctx) => policyCheck(args, ctx, client),
         "policy",
         args.datasetId
+      );
+    }
+  );
+
+  server.tool(
+    "forsety_semantic_search",
+    "Search datasets or agent memories using natural language semantic similarity.",
+    semanticSearchSchema.shape,
+    async (args, extra) => {
+      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      return executeWithPipeline(
+        "forsety_semantic_search",
+        args as Record<string, unknown>,
+        apiKey,
+        (ctx) => semanticSearch(args, ctx, client.vectorSearch),
+        args.type === "memory" ? "memory" : "dataset"
       );
     }
   );

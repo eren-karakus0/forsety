@@ -56,3 +56,9 @@ export type {
   LogAuditInput,
   AuditSummary,
 } from "./services/agent-audit.service.js";
+
+export { VectorSearchService } from "./services/vector-search.service.js";
+export type { ScoredResult } from "./services/vector-search.service.js";
+
+export { LocalEmbedder } from "./embeddings/local-embedder.js";
+export type { Embedder } from "./embeddings/local-embedder.js";

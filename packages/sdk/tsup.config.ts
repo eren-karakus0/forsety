@@ -7,4 +7,5 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   noExternal: ["@forsety/db"],
+  external: ["@huggingface/transformers"],
 });
