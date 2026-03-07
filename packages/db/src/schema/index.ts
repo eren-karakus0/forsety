@@ -24,3 +24,9 @@ export type { AgentAuditLog, NewAgentAuditLog } from "./agent-audit-logs";
 
 export { embeddings } from "./embeddings";
 export type { Embedding, NewEmbedding } from "./embeddings";
+
+export { sessions } from "./sessions";
+export type { Session, NewSession } from "./sessions";
+
+export { users } from "./users";
+export type { User, NewUser } from "./users";

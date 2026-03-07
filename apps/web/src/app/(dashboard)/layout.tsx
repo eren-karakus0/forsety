@@ -10,8 +10,6 @@ import {
   SheetTrigger,
   SheetTitle,
   Separator,
-  Avatar,
-  AvatarFallback,
 } from "@forsety/ui";
 import {
   Database,
@@ -19,8 +17,8 @@ import {
   ClipboardList,
   Upload,
   Menu,
-  Home,
 } from "lucide-react";
+import { WalletDisplay } from "./components/wallet-display";
 
 const navLinks = [
   { href: "/dashboard", label: "Datasets", icon: Database },
@@ -114,17 +112,7 @@ export default function DashboardLayout({
               Shelbynet
             </span>
             <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/">
-                <Home className="mr-1.5 h-3.5 w-3.5" />
-                Home
-              </Link>
-            </Button>
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="bg-navy-200 text-xs text-navy-700">
-                FK
-              </AvatarFallback>
-            </Avatar>
+            <WalletDisplay />
           </div>
         </div>
       </header>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@forsety/ui";
 import { Menu, X } from "lucide-react";
+import { ConnectWallet } from "./connect-wallet";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -50,9 +51,7 @@ export function Navbar() {
               GitHub
             </Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link href="/dashboard">Get Started</Link>
-          </Button>
+          <ConnectWallet />
         </div>
 
         {/* Mobile Toggle */}

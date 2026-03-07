@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@forsety/ui", "@forsety/db"],
+  transpilePackages: ["@forsety/ui", "@forsety/db", "@forsety/auth"],
   serverExternalPackages: [
     "@huggingface/transformers",
     "onnxruntime-node",

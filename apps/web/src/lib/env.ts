@@ -5,6 +5,7 @@ const envSchema = z.object({
   SHELBY_WALLET_ADDRESS: z.string().optional(),
   FORSETY_API_KEY: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
+  JWT_SECRET: z.string().default("forsety-dev-secret-change-in-production-32ch"),
 });
 
 type Env = z.infer<typeof envSchema>;
