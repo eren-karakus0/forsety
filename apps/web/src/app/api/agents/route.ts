@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { sanitizeAgent } from "@forsety/sdk";
 
 export async function POST(request: NextRequest) {
   if (!validateApiKey(request)) return unauthorizedResponse();
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        agent: result.agent,
+        agent: sanitizeAgent(result.agent),
         apiKey: result.apiKey,
         warning: "Store this API key securely. It will not be shown again.",
       },
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
   try {
     const client = getForsetyClient();
     const agents = await client.agents.list();
-    return NextResponse.json({ agents });
+    return NextResponse.json({ agents: agents.map(sanitizeAgent) });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(

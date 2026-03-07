@@ -50,38 +50,7 @@ export class RecallVaultService {
       expiresAt = new Date(Date.now() + input.ttlSeconds * 1000);
     }
 
-    // Check if memory with same agentId+namespace+key exists (upsert)
-    const existing = await this.db
-      .select()
-      .from(agentMemories)
-      .where(
-        and(
-          eq(agentMemories.agentId, input.agentId),
-          eq(agentMemories.namespace, namespace),
-          eq(agentMemories.key, input.key)
-        )
-      )
-      .limit(1);
-
-    if (existing[0]) {
-      const [updated] = await this.db
-        .update(agentMemories)
-        .set({
-          content: input.content,
-          contentHash,
-          contentType: input.contentType ?? "json",
-          sizeBytes,
-          tags: input.tags ?? [],
-          ttlSeconds: input.ttlSeconds,
-          expiresAt,
-          updatedAt: new Date(),
-        })
-        .where(eq(agentMemories.id, existing[0].id))
-        .returning();
-
-      return updated!;
-    }
-
+    // Atomic upsert via unique constraint on (agentId, namespace, key)
     const [memory] = await this.db
       .insert(agentMemories)
       .values({
@@ -95,6 +64,19 @@ export class RecallVaultService {
         tags: input.tags ?? [],
         ttlSeconds: input.ttlSeconds,
         expiresAt,
+      })
+      .onConflictDoUpdate({
+        target: [agentMemories.agentId, agentMemories.namespace, agentMemories.key],
+        set: {
+          content: input.content,
+          contentHash,
+          contentType: input.contentType ?? "json",
+          sizeBytes,
+          tags: input.tags ?? [],
+          ttlSeconds: input.ttlSeconds,
+          expiresAt,
+          updatedAt: new Date(),
+        },
       })
       .returning();
 

@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   jsonb,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { agents } from "./agents";
 
@@ -29,7 +30,13 @@ export const agentMemories = pgTable("agent_memories", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+}, (table) => [
+  uniqueIndex("agent_memories_agent_ns_key_idx").on(
+    table.agentId,
+    table.namespace,
+    table.key
+  ),
+]);
 
 export type AgentMemory = typeof agentMemories.$inferSelect;
 export type NewAgentMemory = typeof agentMemories.$inferInsert;

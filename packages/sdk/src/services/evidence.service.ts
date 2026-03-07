@@ -7,6 +7,7 @@ import {
   accessLogs,
   policies,
   evidencePacks,
+  agentAuditLogs,
 } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
 
@@ -51,6 +52,13 @@ export interface EvidencePackData {
     licenseHash: string | null;
     timestamp: string;
   }>;
+  agentActivity: Array<{
+    agentId: string | null;
+    toolName: string | null;
+    status: string;
+    resourceType: string | null;
+    timestamp: string;
+  }>;
 }
 
 export class EvidenceService {
@@ -87,11 +95,18 @@ export class EvidenceService {
       .where(eq(accessLogs.datasetId, datasetId))
       .orderBy(accessLogs.timestamp);
 
+    // Agent audit logs related to this dataset
+    const datasetAuditLogs = await this.db
+      .select()
+      .from(agentAuditLogs)
+      .where(eq(agentAuditLogs.resourceId, datasetId))
+      .orderBy(agentAuditLogs.timestamp);
+
     const now = new Date().toISOString();
 
     const packJson: EvidencePackData = {
       id: crypto.randomUUID(),
-      version: "1.0.0",
+      version: "2.0.0",
       generatedAt: now,
       dataset: {
         id: dataset.id,
@@ -129,6 +144,13 @@ export class EvidenceService {
         policyHash: a.policyHash,
         licenseHash: a.licenseHash,
         timestamp: a.timestamp.toISOString(),
+      })),
+      agentActivity: datasetAuditLogs.map((l) => ({
+        agentId: l.agentId,
+        toolName: l.toolName,
+        status: l.status,
+        resourceType: l.resourceType,
+        timestamp: l.timestamp.toISOString(),
       })),
     };
 

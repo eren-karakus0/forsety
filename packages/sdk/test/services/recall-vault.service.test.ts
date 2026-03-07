@@ -35,20 +35,13 @@ describe("RecallVaultService", () => {
       ).rejects.toThrow(ForsetyValidationError);
     });
 
-    it("should insert new memory when no existing entry", async () => {
-      // Mock: no existing entry
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([]),
-          }),
-        }),
-      });
-
+    it("should insert or upsert memory atomically", async () => {
       const mockMemory = { id: "m1", key: "k1", contentHash: "abc" };
       mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([mockMemory]),
+          onConflictDoUpdate: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([mockMemory]),
+          }),
         }),
       });
 
@@ -59,49 +52,16 @@ describe("RecallVaultService", () => {
       });
 
       expect(result).toEqual(mockMemory);
-    });
-
-    it("should update existing memory (upsert)", async () => {
-      // Mock: existing entry found
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([{ id: "existing-m1" }]),
-          }),
-        }),
-      });
-
-      const updatedMemory = { id: "existing-m1", key: "k1" };
-      mockUpdate.mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([updatedMemory]),
-          }),
-        }),
-      });
-
-      const result = await service.store({
-        agentId: "a1",
-        key: "k1",
-        content: { data: "updated" },
-      });
-
-      expect(result).toEqual(updatedMemory);
+      expect(mockInsert).toHaveBeenCalled();
     });
 
     it("should compute TTL expiresAt when ttlSeconds provided", async () => {
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([]),
-          }),
-        }),
-      });
-
       const mockMemory = { id: "m2", expiresAt: new Date() };
       mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([mockMemory]),
+          onConflictDoUpdate: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([mockMemory]),
+          }),
         }),
       });
 

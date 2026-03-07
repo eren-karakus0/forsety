@@ -11,7 +11,6 @@ import { agents } from "./agents";
 export const agentAuditLogs = pgTable("agent_audit_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
   agentId: uuid("agent_id")
-    .notNull()
     .references(() => agents.id, { onDelete: "cascade" }),
   action: text("action").notNull(),
   toolName: text("tool_name"),

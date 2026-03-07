@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { sanitizeAgent } from "@forsety/sdk";
 
 export async function GET(
   request: NextRequest,
@@ -19,7 +20,7 @@ export async function GET(
 
     const auditSummary = await client.agentAudit.getSummary(id);
 
-    return NextResponse.json({ agent, auditSummary });
+    return NextResponse.json({ agent: sanitizeAgent(agent), auditSummary });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
@@ -48,7 +49,7 @@ export async function PATCH(
     if (body.isActive === false) {
       await client.agents.deactivate(id);
       const updated = await client.agents.getById(id);
-      return NextResponse.json({ agent: updated });
+      return NextResponse.json({ agent: updated ? sanitizeAgent(updated) : null });
     }
 
     if (body.permissions || body.allowedDatasets) {
@@ -57,10 +58,10 @@ export async function PATCH(
         body.permissions ?? existing.permissions,
         body.allowedDatasets
       );
-      return NextResponse.json({ agent: updated });
+      return NextResponse.json({ agent: updated ? sanitizeAgent(updated) : null });
     }
 
-    return NextResponse.json({ agent: existing });
+    return NextResponse.json({ agent: sanitizeAgent(existing) });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(

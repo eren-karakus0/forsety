@@ -3,11 +3,11 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { fetchAgents, fetchAgentAuditLogs } from "../actions";
+import { fetchAgents, fetchAllAuditLogs } from "../actions";
 
 interface AuditLog {
   id: string;
-  agentId: string;
+  agentId: string | null;
   action: string;
   toolName: string | null;
   resourceType: string | null;
@@ -56,46 +56,33 @@ function AuditPageContent() {
 
   useEffect(() => {
     fetchAgents().then((a) =>
-      setAgents(a.map((ag: any) => ({ id: ag.id, name: ag.name })))
+      setAgents(a.map((ag: { id: string; name: string }) => ({ id: ag.id, name: ag.name })))
     );
   }, []);
 
   useEffect(() => {
     setLoading(true);
-    if (selectedAgent === "all") {
-      // Fetch from all agents
-      Promise.all(
-        agents.map((a) =>
-          fetchAgentAuditLogs(a.id, {
-            limit: 50,
-            status: statusFilter !== "all" ? statusFilter : undefined,
-          })
-        )
-      )
-        .then((results) => {
-          const all = results
-            .flat()
-            .sort(
-              (a: any, b: any) =>
-                new Date(b.timestamp).getTime() -
-                new Date(a.timestamp).getTime()
-            )
-            .slice(0, 100);
-          setLogs(all as AuditLog[]);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      fetchAgentAuditLogs(selectedAgent, {
-        limit: 100,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-      })
-        .then((l) => setLogs(l as AuditLog[]))
-        .finally(() => setLoading(false));
-    }
-  }, [selectedAgent, statusFilter, agents]);
+    const filters: { agentId?: string | null; status?: string; limit?: number } = {
+      limit: 100,
+    };
 
-  const getAgentName = (agentId: string) =>
-    agents.find((a) => a.id === agentId)?.name ?? agentId.slice(0, 8);
+    if (selectedAgent === "anonymous") {
+      filters.agentId = null;
+    } else if (selectedAgent !== "all") {
+      filters.agentId = selectedAgent;
+    }
+
+    if (statusFilter !== "all") {
+      filters.status = statusFilter;
+    }
+
+    fetchAllAuditLogs(filters)
+      .then((l) => setLogs(l as AuditLog[]))
+      .finally(() => setLoading(false));
+  }, [selectedAgent, statusFilter]);
+
+  const getAgentName = (agentId: string | null) =>
+    agentId ? (agents.find((a) => a.id === agentId)?.name ?? agentId.slice(0, 8)) : "Anonymous";
 
   const handleExport = () => {
     const blob = new Blob([JSON.stringify(logs, null, 2)], {
@@ -140,6 +127,7 @@ function AuditPageContent() {
           className="rounded-lg border border-navy-200 bg-white px-3 py-2 text-sm text-navy-700 focus:border-navy-400 focus:outline-none"
         >
           <option value="all">All Agents</option>
+          <option value="anonymous">Anonymous (Auth Failed)</option>
           {agents.map((a) => (
             <option key={a.id} value={a.id}>
               {a.name}
@@ -200,12 +188,16 @@ function AuditPageContent() {
                     })}
                   </td>
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/dashboard/agents/${log.agentId}`}
-                      className="text-xs font-medium text-navy-700 hover:text-gold-600 transition-colors"
-                    >
-                      {getAgentName(log.agentId)}
-                    </Link>
+                    {log.agentId ? (
+                      <Link
+                        href={`/dashboard/agents/${log.agentId}`}
+                        className="text-xs font-medium text-navy-700 hover:text-gold-600 transition-colors"
+                      >
+                        {getAgentName(log.agentId)}
+                      </Link>
+                    ) : (
+                      <span className="text-xs font-medium text-red-500">Anonymous</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs font-medium text-navy-700">
                     {log.action}

@@ -19,16 +19,28 @@ describe("AgentAuditService", () => {
   });
 
   describe("log", () => {
-    it("should throw when agentId is missing", async () => {
-      await expect(
-        service.log({ agentId: "", action: "memory.store" })
-      ).rejects.toThrow(ForsetyValidationError);
-    });
-
     it("should throw when action is missing", async () => {
       await expect(
         service.log({ agentId: "a1", action: "" })
       ).rejects.toThrow(ForsetyValidationError);
+    });
+
+    it("should allow null agentId for auth failures", async () => {
+      const mockLog = { id: "log-2", action: "tool.forsety_memory_store", status: "denied" };
+      mockInsert.mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockLog]),
+        }),
+      });
+
+      const result = await service.log({
+        agentId: null,
+        action: "tool.forsety_memory_store",
+        status: "denied",
+        errorMessage: "Invalid or missing API key",
+      });
+
+      expect(result).toEqual(mockLog);
     });
 
     it("should create audit log with default status", async () => {
@@ -105,6 +117,85 @@ describe("AgentAuditService", () => {
       });
 
       const result = await service.getByAgent("a1", { action: "memory.store" });
+      expect(result).toEqual(logs);
+    });
+  });
+
+  describe("listAll", () => {
+    it("should return all logs without filters", async () => {
+      const logs = [
+        { id: "log-1", agentId: "a1", action: "tool.forsety_memory_store" },
+        { id: "log-2", agentId: null, action: "tool.forsety_memory_store" },
+      ];
+      mockSelect.mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                offset: vi.fn().mockResolvedValue(logs),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.listAll();
+      expect(result).toEqual(logs);
+      expect(result).toHaveLength(2);
+    });
+
+    it("should filter by specific agentId", async () => {
+      const logs = [{ id: "log-1", agentId: "a1" }];
+      mockSelect.mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                offset: vi.fn().mockResolvedValue(logs),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.listAll({ agentId: "a1" });
+      expect(result).toEqual(logs);
+    });
+
+    it("should filter anonymous (null agentId) logs", async () => {
+      const logs = [{ id: "log-2", agentId: null, status: "denied" }];
+      mockSelect.mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                offset: vi.fn().mockResolvedValue(logs),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.listAll({ agentId: null });
+      expect(result).toEqual(logs);
+      expect(result[0]?.agentId).toBeNull();
+    });
+
+    it("should filter by status", async () => {
+      const logs = [{ id: "log-3", status: "denied" }];
+      mockSelect.mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                offset: vi.fn().mockResolvedValue(logs),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.listAll({ status: "denied" });
       expect(result).toEqual(logs);
     });
   });

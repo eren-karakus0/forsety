@@ -30,6 +30,29 @@ interface EvidencePack {
   hash: string;
 }
 
+interface AccessLogEntry {
+  id: string;
+  accessorAddress: string;
+  operationType: string;
+  blobHashAtRead: string | null;
+  readProof: string | null;
+  policyVersion: number | null;
+  policyHash: string | null;
+  licenseHash: string | null;
+  timestamp: string;
+}
+
+interface PolicyEntry {
+  id: string;
+  version: number;
+  hash: string | null;
+  allowedAccessors: string[];
+  maxReads: number | null;
+  readsConsumed: number;
+  expiresAt: Date | string | null;
+  createdAt: Date | string;
+}
+
 function MetadataRow({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
   return (
     <div className="flex items-start justify-between border-b border-navy-100/80 py-3 last:border-0">
@@ -52,8 +75,8 @@ export default function DatasetDetailPage() {
   const id = params.id as string;
   const [data, setData] = useState<DatasetDetail | null>(null);
   const [evidence, setEvidence] = useState<EvidencePack | null>(null);
-  const [accessLogs, setAccessLogs] = useState<any[]>([]);
-  const [policies, setPolicies] = useState<any[]>([]);
+  const [accessLogs, setAccessLogs] = useState<AccessLogEntry[]>([]);
+  const [policies, setPolicies] = useState<PolicyEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -164,7 +187,7 @@ export default function DatasetDetailPage() {
             <div className="px-5 py-12 text-center text-sm text-navy-400">No access logs yet</div>
           ) : (
             <div className="divide-y divide-navy-100/80">
-              {accessLogs.map((log: any) => (
+              {accessLogs.map((log: AccessLogEntry) => (
                 <div key={log.id} className="flex items-start gap-4 px-5 py-4">
                   <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-navy-500">
@@ -206,7 +229,7 @@ export default function DatasetDetailPage() {
             <div className="px-5 py-12 text-center text-sm text-navy-400">No policies defined</div>
           ) : (
             <div className="divide-y divide-navy-100/80">
-              {policies.map((pol: any) => (
+              {policies.map((pol: PolicyEntry) => (
                 <div key={pol.id} className="px-5 py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

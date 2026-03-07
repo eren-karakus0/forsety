@@ -21,6 +21,14 @@ function generateApiKey(): string {
   return `fsy_${randomBytes(32).toString("hex")}`;
 }
 
+/** Strip agentApiKey hash from agent before sending to client */
+export function sanitizeAgent<T extends { agentApiKey?: unknown }>(
+  agent: T
+): Omit<T, "agentApiKey"> {
+  const { agentApiKey: _, ...safe } = agent;
+  return safe;
+}
+
 export class AgentService {
   constructor(private db: Database) {}
 

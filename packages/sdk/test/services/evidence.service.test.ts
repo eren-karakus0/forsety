@@ -85,7 +85,17 @@ describe("EvidenceService", () => {
         },
       ];
 
-      // Mock chained calls — dataset, licenses, policies, access logs
+      const mockAuditLogs = [
+        {
+          agentId: "agent-1",
+          toolName: "forsety_dataset_access",
+          status: "success",
+          resourceType: "dataset",
+          timestamp: new Date("2026-03-06T12:00:00Z"),
+        },
+      ];
+
+      // Mock chained calls — dataset, licenses, policies, access logs, audit logs
       let callCount = 0;
       mockSelect.mockImplementation(() => ({
         from: vi.fn().mockImplementation(() => {
@@ -112,10 +122,18 @@ describe("EvidenceService", () => {
               }),
             };
           }
-          // access logs
+          if (callCount === 4) {
+            // access logs
+            return {
+              where: vi.fn().mockReturnValue({
+                orderBy: vi.fn().mockResolvedValue(mockAccessLogs),
+              }),
+            };
+          }
+          // agent audit logs
           return {
             where: vi.fn().mockReturnValue({
-              orderBy: vi.fn().mockResolvedValue(mockAccessLogs),
+              orderBy: vi.fn().mockResolvedValue(mockAuditLogs),
             }),
           };
         }),
@@ -126,7 +144,7 @@ describe("EvidenceService", () => {
       expect(result.json).toBeDefined();
       expect(result.hash).toBeDefined();
       expect(result.hash.length).toBe(64); // SHA-256 hex
-      expect(result.json.version).toBe("1.0.0");
+      expect(result.json.version).toBe("2.0.0");
       expect(result.json.dataset.name).toBe("Test");
       expect(result.json.licenses).toHaveLength(1);
       expect(result.json.policies).toHaveLength(1);
@@ -134,6 +152,9 @@ describe("EvidenceService", () => {
       expect(result.json.accessLog[0]?.licenseHash).toBe("hash1");
       expect(result.json.accessLog[0]?.readProof).toBe("proof123");
       expect(result.json.accessLog[0]?.blobHashAtRead).toBe("sha256:abc");
+      expect(result.json.agentActivity).toHaveLength(1);
+      expect(result.json.agentActivity[0]?.agentId).toBe("agent-1");
+      expect(result.json.agentActivity[0]?.status).toBe("success");
     });
   });
 });

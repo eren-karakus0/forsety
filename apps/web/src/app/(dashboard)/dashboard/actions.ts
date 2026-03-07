@@ -4,6 +4,7 @@ import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { getForsetyClient } from "@/lib/forsety";
+import { sanitizeAgent } from "@forsety/sdk";
 
 export interface UploadResult {
   success: boolean;
@@ -136,7 +137,7 @@ export async function fetchAgents() {
     const client = getForsetyClient();
     const agents = await client.agents.list();
     return agents.map((a) => ({
-      ...a,
+      ...sanitizeAgent(a),
       createdAt: a.createdAt.toISOString(),
       lastSeenAt: a.lastSeenAt?.toISOString() ?? null,
     }));
@@ -155,7 +156,7 @@ export async function fetchAgentDetail(id: string) {
 
     return {
       agent: {
-        ...agent,
+        ...sanitizeAgent(agent),
         createdAt: agent.createdAt.toISOString(),
         lastSeenAt: agent.lastSeenAt?.toISOString() ?? null,
       },
@@ -179,6 +180,21 @@ export async function fetchAgentAuditLogs(
   try {
     const client = getForsetyClient();
     const logs = await client.agentAudit.getByAgent(agentId, filters);
+    return logs.map((l) => ({
+      ...l,
+      timestamp: l.timestamp.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAllAuditLogs(
+  filters?: { agentId?: string | null; status?: string; limit?: number }
+) {
+  try {
+    const client = getForsetyClient();
+    const logs = await client.agentAudit.listAll(filters);
     return logs.map((l) => ({
       ...l,
       timestamp: l.timestamp.toISOString(),

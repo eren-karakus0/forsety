@@ -31,6 +31,15 @@ interface AgentData {
   };
 }
 
+interface AuditLogEntry {
+  id: string;
+  action: string;
+  toolName: string | null;
+  status: string;
+  errorMessage: string | null;
+  timestamp: string;
+}
+
 const statusColors: Record<string, string> = {
   success: "bg-emerald-100 text-emerald-700",
   denied: "bg-red-100 text-red-700",
@@ -41,7 +50,7 @@ export default function AgentDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<AgentData | null>(null);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -169,7 +178,7 @@ export default function AgentDetailPage() {
               <div className="px-5 py-12 text-center text-sm text-navy-400">No activity yet</div>
             ) : (
               <div className="divide-y divide-navy-100/80">
-                {auditLogs.map((log: any) => (
+                {auditLogs.map((log: AuditLogEntry) => (
                   <div key={log.id} className="flex items-center gap-3 px-5 py-3">
                     <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${statusColors[log.status] ?? "bg-navy-100 text-navy-600"}`}>
                       {log.status}

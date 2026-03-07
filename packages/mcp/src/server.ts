@@ -49,7 +49,7 @@ export function createForsetyMcpServer(config: ForsetyMcpServerConfig) {
     const agent = await authMiddleware.authenticate(apiKey);
     if (!agent) {
       await auditMiddleware.logToolCall({
-        agentId: "unknown",
+        agentId: null,
         toolName,
         input: args,
         output: { error: "Authentication failed" },
@@ -194,12 +194,25 @@ export function createForsetyMcpServer(config: ForsetyMcpServerConfig) {
     "Access a dataset and log the access with a cryptographic proof.",
     datasetAccessSchema.shape,
     async (args, extra) => {
+      const scopeCheckStart = Date.now();
       const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
       // Dataset scope check
       const agent = await authMiddleware.authenticate(apiKey);
       if (agent) {
         const dsCheck = policyCheckMiddleware.checkDatasetAccess(agent, args.datasetId);
         if (!dsCheck.allowed) {
+          await auditMiddleware.logToolCall({
+            agentId: agent.id,
+            toolName: "forsety_dataset_access",
+            input: args as Record<string, unknown>,
+            output: { error: dsCheck.reason },
+            status: "denied",
+            errorMessage: dsCheck.reason,
+            durationMs: Date.now() - scopeCheckStart,
+            resourceType: "dataset",
+            resourceId: args.datasetId,
+          }).catch(() => {});
+
           return {
             content: [{ type: "text", text: JSON.stringify({ error: dsCheck.reason }) }],
             isError: true,
@@ -223,7 +236,33 @@ export function createForsetyMcpServer(config: ForsetyMcpServerConfig) {
     "Check if the agent has policy access to a dataset.",
     policyCheckSchema.shape,
     async (args, extra) => {
+      const scopeCheckStart = Date.now();
       const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+
+      // Dataset scope check (same as forsety_dataset_access)
+      const agent = await authMiddleware.authenticate(apiKey);
+      if (agent) {
+        const dsCheck = policyCheckMiddleware.checkDatasetAccess(agent, args.datasetId);
+        if (!dsCheck.allowed) {
+          await auditMiddleware.logToolCall({
+            agentId: agent.id,
+            toolName: "forsety_policy_check",
+            input: args as Record<string, unknown>,
+            output: { error: dsCheck.reason },
+            status: "denied",
+            errorMessage: dsCheck.reason,
+            durationMs: Date.now() - scopeCheckStart,
+            resourceType: "policy",
+            resourceId: args.datasetId,
+          }).catch(() => {});
+
+          return {
+            content: [{ type: "text", text: JSON.stringify({ error: dsCheck.reason }) }],
+            isError: true,
+          };
+        }
+      }
+
       return executeWithPipeline(
         "forsety_policy_check",
         args as Record<string, unknown>,

@@ -12,10 +12,12 @@ Forsety creates verifiable evidence packs that prove AI systems access datasets 
 
 ```
 forsety/
-├── apps/web          # Next.js 15 dashboard
-├── packages/sdk      # Core SDK (@forsety/sdk)
-├── packages/ui       # Shared UI components (@forsety/ui)
-└── tooling/scripts   # Development utilities
+├── apps/web          # Next.js 15 dashboard + API
+├── packages/sdk      # Core SDK — 8 services + Shelby wrapper
+├── packages/db       # Drizzle ORM + Neon PostgreSQL (8 tables)
+├── packages/mcp      # MCP server (stdio) — 6 tools, 3 middleware
+├── packages/ui       # Shared UI components
+└── tooling/scripts   # check-shelby, seed-demo
 ```
 
 ## Getting Started
@@ -44,7 +46,7 @@ pnpm dev
 | `pnpm lint` | Lint all packages |
 | `pnpm typecheck` | Type check all packages |
 | `pnpm test` | Run all tests |
-| `pnpm check:shelby` | Shelby CLI connection check (stub — Phase 1) |
+| `pnpm check:shelby` | Shelby CLI health check (stale lock detection, blob validation) |
 
 ## Tech Stack
 
@@ -52,8 +54,9 @@ pnpm dev
 - **Language:** TypeScript 5.7
 - **Styling:** Tailwind CSS + Living Justice design system
 - **Monorepo:** Turborepo + pnpm workspaces
+- **Database:** Neon PostgreSQL + Drizzle ORM
 - **Storage:** Shelby Protocol (devnet)
-- **Testing:** Vitest
+- **Testing:** Vitest (114 tests)
 
 ## License
 

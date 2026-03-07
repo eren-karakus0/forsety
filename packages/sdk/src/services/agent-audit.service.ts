@@ -1,10 +1,10 @@
-import { eq, and, desc, gte } from "drizzle-orm";
+import { eq, and, desc, gte, isNull } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { agentAuditLogs } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
 
 export interface LogAuditInput {
-  agentId: string;
+  agentId: string | null;
   action: string;
   toolName?: string;
   resourceType?: string;
@@ -32,8 +32,8 @@ export class AgentAuditService {
   constructor(private db: Database) {}
 
   async log(input: LogAuditInput) {
-    if (!input.agentId || !input.action) {
-      throw new ForsetyValidationError("agentId and action are required");
+    if (!input.action) {
+      throw new ForsetyValidationError("action is required");
     }
 
     const [log] = await this.db
@@ -53,6 +53,37 @@ export class AgentAuditService {
       .returning();
 
     return log!;
+  }
+
+  /** Global audit feed — includes anonymous (null agentId) records */
+  async listAll(filters?: {
+    agentId?: string | null;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const conditions = [];
+
+    if (filters?.agentId === null) {
+      conditions.push(isNull(agentAuditLogs.agentId));
+    } else if (filters?.agentId) {
+      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
+    }
+
+    if (filters?.status) {
+      conditions.push(eq(agentAuditLogs.status, filters.status));
+    }
+
+    const limit = filters?.limit ?? 100;
+    const offset = filters?.offset ?? 0;
+
+    return this.db
+      .select()
+      .from(agentAuditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(agentAuditLogs.timestamp))
+      .limit(limit)
+      .offset(offset);
   }
 
   async getByAgent(

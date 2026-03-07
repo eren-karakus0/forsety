@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import type {
   UploadResult,
   BlobMetadata,
@@ -19,21 +20,32 @@ export class ShelbyMockWrapper {
   }
 
   async uploadDataset(
-    _filePath: string,
+    filePath: string,
     blobName: string,
     _expiration: string = "in 30 days"
   ): Promise<UploadResult> {
     const blobId = `mock-${createHash("sha256").update(blobName + Date.now()).digest("hex").slice(0, 16)}`;
-    const hash = createHash("sha256").update(blobName).digest("hex");
+
+    // Use actual file content for hash/size when file exists (dev mode)
+    let hash: string;
+    let sizeBytes: number;
+    if (existsSync(filePath)) {
+      const content = readFileSync(filePath);
+      hash = createHash("sha256").update(content).digest("hex");
+      sizeBytes = content.length;
+    } else {
+      hash = createHash("sha256").update(blobName).digest("hex");
+      sizeBytes = 0;
+    }
 
     this.blobs.set(blobName, {
       blobId,
       blobName,
-      sizeBytes: 0,
+      sizeBytes,
       createdAt: new Date().toISOString(),
     });
 
-    return { blobId, blobName, hash, sizeBytes: 0 };
+    return { blobId, blobName, hash, sizeBytes };
   }
 
   async downloadDataset(
@@ -51,11 +63,16 @@ export class ShelbyMockWrapper {
     return Array.from(this.blobs.values());
   }
 
-  async generateCommitments(_filePath: string): Promise<BlobCommitments> {
-    return {
-      commitments: [],
-      hash: createHash("sha256").update("mock").digest("hex"),
-    };
+  async generateCommitments(filePath: string): Promise<BlobCommitments> {
+    let hash: string;
+    if (existsSync(filePath)) {
+      const content = readFileSync(filePath);
+      hash = createHash("sha256").update(content).digest("hex");
+    } else {
+      hash = createHash("sha256").update("mock").digest("hex");
+    }
+
+    return { commitments: [], hash };
   }
 
   async checkHealth(): Promise<{
@@ -74,7 +91,11 @@ export class ShelbyMockWrapper {
     return { apt: "0", shelbyUsd: "0" };
   }
 
-  computeFileHash(_filePath: string): string {
+  computeFileHash(filePath: string): string {
+    if (existsSync(filePath)) {
+      const content = readFileSync(filePath);
+      return createHash("sha256").update(content).digest("hex");
+    }
     return createHash("sha256").update("mock-file").digest("hex");
   }
 }

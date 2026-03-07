@@ -1,3 +1,5 @@
+// Phase 2: stdio transport only
+// Phase 3: SSE transport will be added alongside stdio
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createForsetyMcpServer } from "./server.js";
 

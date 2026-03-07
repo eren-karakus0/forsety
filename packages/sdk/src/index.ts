@@ -42,7 +42,7 @@ export { AccessService } from "./services/access.service.js";
 export { EvidenceService } from "./services/evidence.service.js";
 export type { EvidencePackData } from "./services/evidence.service.js";
 
-export { AgentService } from "./services/agent.service.js";
+export { AgentService, sanitizeAgent } from "./services/agent.service.js";
 export type { RegisterAgentInput } from "./services/agent.service.js";
 
 export { RecallVaultService } from "./services/recall-vault.service.js";
