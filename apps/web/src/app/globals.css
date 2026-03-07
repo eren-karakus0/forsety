@@ -4,32 +4,64 @@
 
 @layer base {
   :root {
-    --color-navy: 210 60% 25%;
-    --color-gold: 42 70% 52%;
-    --color-background: 220 20% 97%;
-    --color-foreground: 210 60% 10%;
-    --color-muted: 220 15% 90%;
-    --color-muted-foreground: 220 10% 45%;
-    --color-border: 220 15% 85%;
-    --color-ring: 210 60% 25%;
+    /* Living Justice → shadcn/ui CSS Variables */
+    --background: 220 20% 97%;
+    --foreground: 215 45% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 45% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 45% 10%;
+    --primary: 215 45% 19%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 30% 91%;
+    --secondary-foreground: 215 45% 19%;
+    --muted: 220 30% 91%;
+    --muted-foreground: 215 20% 45%;
+    --accent: 42 65% 51%;
+    --accent-foreground: 215 45% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 85%;
+    --input: 220 20% 85%;
+    --ring: 42 65% 51%;
     --radius: 0.625rem;
+
+    /* Living Justice Design Tokens (kept for direct use) */
+    --color-navy: 215 45% 19%;
+    --color-gold: 42 65% 51%;
   }
 
   .dark {
-    --color-background: 220 20% 5%;
-    --color-foreground: 210 20% 95%;
-    --color-muted: 220 15% 15%;
-    --color-muted-foreground: 220 10% 60%;
-    --color-border: 220 15% 20%;
-    --color-ring: 42 70% 52%;
+    --background: 220 25% 5%;
+    --foreground: 210 20% 95%;
+    --card: 220 25% 8%;
+    --card-foreground: 210 20% 95%;
+    --popover: 220 25% 8%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 42 65% 51%;
+    --primary-foreground: 215 45% 10%;
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 220 20% 15%;
+    --muted-foreground: 220 15% 60%;
+    --accent: 42 65% 51%;
+    --accent-foreground: 215 45% 10%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 42 65% 51%;
+
+    --color-navy: 42 65% 51%;
+    --color-gold: 42 65% 51%;
   }
 
   * {
-    border-color: hsl(var(--color-border));
+    border-color: hsl(var(--border));
   }
 
   body {
-    background-color: hsl(var(--color-background));
-    color: hsl(var(--color-foreground));
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
