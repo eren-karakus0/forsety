@@ -29,10 +29,9 @@ export async function POST(request: NextRequest) {
     const db = createDb(env.DATABASE_URL);
     const walletAddress = result.address.toLowerCase();
 
-    // Validate nonce from DB: must exist, not expired, match address
-    const [session] = await db
-      .select()
-      .from(sessions)
+    // Atomic nonce consumption: delete + return in single query (prevents race condition)
+    const [consumed] = await db
+      .delete(sessions)
       .where(
         and(
           eq(sessions.nonce, result.nonce),
@@ -40,17 +39,14 @@ export async function POST(request: NextRequest) {
           gt(sessions.expiresAt, new Date())
         )
       )
-      .limit(1);
+      .returning();
 
-    if (!session) {
+    if (!consumed) {
       return NextResponse.json(
         { error: "Invalid or expired nonce" },
         { status: 401 }
       );
     }
-
-    // Delete nonce — one-time use (prevent replay)
-    await db.delete(sessions).where(eq(sessions.id, session.id));
 
     // Upsert user record
     await db
