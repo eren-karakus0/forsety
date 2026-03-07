@@ -14,6 +14,7 @@ import { AgentAuditService } from "./services/agent-audit.service.js";
 import { VectorSearchService } from "./services/vector-search.service.js";
 import { LocalEmbedder } from "./embeddings/local-embedder.js";
 import type { Embedder } from "./embeddings/local-embedder.js";
+import { ShieldStoreService } from "./services/shield-store.service.js";
 
 export class ForsetyClient {
   private config: ForsetyConfig;
@@ -29,6 +30,7 @@ export class ForsetyClient {
   public readonly recallVault: RecallVaultService;
   public readonly agentAudit: AgentAuditService;
   public readonly vectorSearch: VectorSearchService;
+  public readonly shieldStore: ShieldStoreService;
 
   constructor(config: ForsetyConfig) {
     this.config = {
@@ -72,6 +74,7 @@ export class ForsetyClient {
 
     const embedder: Embedder = new LocalEmbedder();
     this.vectorSearch = new VectorSearchService(this.db, embedder);
+    this.shieldStore = new ShieldStoreService(this.db, this.recallVault);
   }
 
   getDb(): Database {

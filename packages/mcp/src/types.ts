@@ -19,6 +19,8 @@ export const PERMISSIONS = {
   "forsety_dataset_access": "dataset.read",
   "forsety_policy_check": "policy.read",
   "forsety_semantic_search": "dataset.read",
+  "forsety_shield_encrypt": "memory.write",
+  "forsety_shield_decrypt": "memory.read",
 } as const;
 
 export type ToolName = keyof typeof PERMISSIONS;

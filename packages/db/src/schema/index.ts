@@ -30,3 +30,9 @@ export type { Session, NewSession } from "./sessions";
 
 export { users } from "./users";
 export type { User, NewUser } from "./users";
+
+export { encryptionMetadata } from "./encryption-metadata";
+export type {
+  EncryptionMetadata,
+  NewEncryptionMetadata,
+} from "./encryption-metadata";

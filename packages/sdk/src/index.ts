@@ -62,3 +62,14 @@ export type { ScoredResult } from "./services/vector-search.service.js";
 
 export { LocalEmbedder } from "./embeddings/local-embedder.js";
 export type { Embedder } from "./embeddings/local-embedder.js";
+
+export { ShieldStoreService } from "./services/shield-store.service.js";
+
+export { encrypt, decrypt, isEncryptedPayload } from "./crypto/aes.js";
+export type { EncryptedPayload } from "./crypto/aes.js";
+
+export {
+  deriveKey,
+  deriveKeyFromHex,
+  KEY_DERIVATION_MESSAGE,
+} from "./crypto/key-derivation.js";
