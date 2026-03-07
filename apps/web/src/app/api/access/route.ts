@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { validateAuth, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 
 const VALID_OPERATION_TYPES = ["read", "download", "verify"] as const;
 
 export async function POST(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  if (!(await validateAuth(request))) return unauthorizedResponse();
 
   try {
     const body = await request.json();

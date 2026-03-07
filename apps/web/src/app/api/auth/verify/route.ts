@@ -15,8 +15,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify SIWA signature
-    const result = await verifySiwaMessage({ message, signature });
+    // Verify SIWA signature with domain/uri binding
+    const host = request.headers.get("host") ?? "localhost:3000";
+    const result = await verifySiwaMessage({
+      message,
+      signature,
+      expectedDomain: host,
+      expectedUri: `https://${host}`,
+    });
 
     if (!result.success || !result.address || !result.nonce) {
       return NextResponse.json(

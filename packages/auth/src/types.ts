@@ -11,6 +11,10 @@ export interface SiwaMessageParams {
 export interface SiwaVerifyParams {
   message: string;
   signature: string;
+  /** If provided, verify the message domain matches this expected value. */
+  expectedDomain?: string;
+  /** If provided, verify the message URI matches this expected value. */
+  expectedUri?: string;
 }
 
 export interface SiwaVerifyResult {

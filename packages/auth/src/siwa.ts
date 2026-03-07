@@ -33,10 +33,16 @@ export async function verifySiwaMessage(
     const siweMessage = new SiweMessage(params.message);
     const result = await siweMessage.verify({
       signature: params.signature,
+      domain: params.expectedDomain,
     });
 
     if (!result.success) {
       return { success: false, error: "Signature verification failed" };
+    }
+
+    // Verify URI if expected value provided
+    if (params.expectedUri && result.data.uri !== params.expectedUri) {
+      return { success: false, error: "URI mismatch" };
     }
 
     return {

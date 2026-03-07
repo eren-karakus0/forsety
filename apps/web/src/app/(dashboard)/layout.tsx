@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
@@ -19,7 +20,13 @@ import {
   Menu,
 } from "lucide-react";
 import { WalletDisplay } from "./components/wallet-display";
-import { Providers } from "../providers";
+
+// Dynamic import with ssr:false ensures wallet providers (wagmi, RainbowKit)
+// never evaluate on the server, preventing indexedDB/storage errors during build.
+const Providers = dynamic(
+  () => import("../providers").then((mod) => ({ default: mod.Providers })),
+  { ssr: false }
+);
 
 const navLinks = [
   { href: "/dashboard", label: "Datasets", icon: Database },

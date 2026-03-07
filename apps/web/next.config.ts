@@ -16,6 +16,16 @@ const nextConfig: NextConfig = {
         );
       }
     }
+
+    // Suppress wallet-stack module warnings (MetaMask SDK has React Native deps,
+    // pino optionally requires pino-pretty which is not installed)
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /@react-native-async-storage/ },
+      { module: /@metamask\/sdk/ },
+      { module: /pino/ },
+    ];
+
     return config;
   },
 };

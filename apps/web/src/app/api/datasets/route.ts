@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { validateAuth, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  if (!(await validateAuth(request))) return unauthorizedResponse();
 
   try {
     const client = getForsetyClient();
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  if (!(await validateAuth(request))) return unauthorizedResponse();
 
   let tempPath: string | null = null;
 

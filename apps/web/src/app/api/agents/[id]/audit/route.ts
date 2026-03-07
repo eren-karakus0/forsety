@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { validateAuth, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  if (!(await validateAuth(request))) return unauthorizedResponse();
 
   try {
     const { id } = await params;

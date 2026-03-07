@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { validateAuth, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  if (!(await validateAuth(request))) return unauthorizedResponse();
 
   try {
     const datasetId = request.nextUrl.searchParams.get("datasetId");
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  if (!(await validateAuth(request))) return unauthorizedResponse();
 
   try {
     const body = await request.json();
