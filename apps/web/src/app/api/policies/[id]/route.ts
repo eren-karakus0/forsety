@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAuth, unauthorizedResponse } from "@/lib/auth";
+import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await validateAuth(request))) return unauthorizedResponse();
+  if (!validateApiKey(request)) return unauthorizedResponse();
 
   try {
     const { id } = await params;
@@ -33,7 +33,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await validateAuth(request))) return unauthorizedResponse();
+  if (!validateApiKey(request)) return unauthorizedResponse();
 
   try {
     const { id } = await params;

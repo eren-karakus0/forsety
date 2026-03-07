@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getForsetyClient } from "@/lib/forsety";
-import { validateAuth, unauthorizedResponse } from "@/lib/auth";
+import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
-  if (!(await validateAuth(request))) {
+  if (!validateApiKey(request)) {
     return unauthorizedResponse();
   }
 

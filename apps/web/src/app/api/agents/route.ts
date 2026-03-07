@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAuth, unauthorizedResponse } from "@/lib/auth";
+import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { sanitizeAgent } from "@forsety/sdk";
 
 export async function POST(request: NextRequest) {
-  if (!(await validateAuth(request))) return unauthorizedResponse();
+  if (!validateApiKey(request)) return unauthorizedResponse();
 
   try {
     const body = await request.json();
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await validateAuth(request))) return unauthorizedResponse();
+  if (!validateApiKey(request)) return unauthorizedResponse();
 
   try {
     const client = getForsetyClient();

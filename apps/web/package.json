@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src/",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node -e \"require('fs').rmSync('.next/types',{recursive:true,force:true})\" && tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
   },
   "dependencies": {
