@@ -19,9 +19,34 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Forsety — Evidence Layer for Licensed AI Data Access",
+  title: {
+    default: "Forsety — Evidence Layer for Licensed AI Data Access",
+    template: "%s | Forsety",
+  },
   description:
-    "We prove licensed access and compliant usage. Built on Shelby Protocol.",
+    "Cryptographic evidence packs that verify every dataset interaction. Prove licensed access and compliant usage with Forsety, built on Shelby Protocol.",
+  keywords: [
+    "AI compliance",
+    "data licensing",
+    "evidence pack",
+    "Shelby Protocol",
+    "MCP",
+    "dataset verification",
+  ],
+  authors: [{ name: "eren-karakus0" }],
+  openGraph: {
+    title: "Forsety — Evidence Layer for Licensed AI Data Access",
+    description:
+      "Cryptographic evidence packs that verify every dataset interaction. Built on Shelby Protocol.",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Forsety — Evidence Layer for Licensed AI Data Access",
+    description:
+      "Cryptographic evidence packs that verify every dataset interaction. Built on Shelby Protocol.",
+  },
 };
 
 export default function RootLayout({

@@ -18,6 +18,7 @@
     "@forsety/ui": "workspace:*",
     "@forsety/sdk": "workspace:*",
     "@forsety/db": "workspace:*",
+    "lucide-react": "^0.460.0",
     "zod": "^3.24.0",
     "server-only": "^0.0.1"
   },

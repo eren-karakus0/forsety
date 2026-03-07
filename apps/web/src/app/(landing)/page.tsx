@@ -1,17 +1,23 @@
+import { Hero } from "./components/hero";
+import { Problem } from "./components/problem";
+import { Features } from "./components/features";
+import { HowItWorks } from "./components/how-it-works";
+import { Architecture } from "./components/architecture";
+import { ForDevelopers } from "./components/for-developers";
+import { Stats } from "./components/stats";
+import { CtaSection } from "./components/cta-section";
+
 export default function LandingPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center">
-      <div className="text-center animate-fade-in">
-        <h1 className="font-display text-5xl font-bold text-navy-800">
-          Forsety
-        </h1>
-        <p className="mt-4 text-lg text-navy-600">
-          Evidence layer for licensed AI data access
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Built on Shelby Protocol
-        </p>
-      </div>
-    </main>
+    <>
+      <Hero />
+      <Problem />
+      <Features />
+      <HowItWorks />
+      <Architecture />
+      <ForDevelopers />
+      <Stats />
+      <CtaSection />
+    </>
   );
 }
