@@ -4,8 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Button } from "@forsety/ui";
-import { Menu, X, Github } from "lucide-react";
-import { LaunchAppButton } from "./launch-app-button";
+import { Menu, X, Github, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
@@ -78,10 +77,16 @@ export function Navbar() {
               GitHub
             </Link>
           </Button>
-          <LaunchAppButton
+          <Button
             size="sm"
             className="bg-gradient-to-r from-gold-500 to-gold-600 text-white hover:from-gold-400 hover:to-gold-500 border-0"
-          />
+            asChild
+          >
+            <Link href="/dashboard">
+              Launch App
+              <ArrowRight className="ml-2 h-3.5 w-3.5" />
+            </Link>
+          </Button>
         </div>
 
         {/* Mobile Toggle */}
@@ -136,12 +141,16 @@ export function Navbar() {
                     GitHub
                   </Link>
                 </Button>
-                <LaunchAppButton
+                <Button
                   size="sm"
                   className="bg-gradient-to-r from-gold-500 to-gold-600 text-white hover:from-gold-400 hover:to-gold-500 border-0"
+                  asChild
                 >
-                  Get Started
-                </LaunchAppButton>
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                    Get Started
+                    <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
               </div>
             </div>
           </motion.div>
