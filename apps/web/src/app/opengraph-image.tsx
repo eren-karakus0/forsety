@@ -16,7 +16,7 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #070a12 0%, #0d1424 30%, #1a2847 60%, #0e3e4c 100%)",
+          background: "linear-gradient(135deg, #f0f3f9 0%, #ffffff 30%, #f0f3f9 60%, #d1f0f5 100%)",
           fontFamily: "system-ui, sans-serif",
           position: "relative",
           overflow: "hidden",
@@ -31,7 +31,7 @@ export default async function Image() {
             width: "400px",
             height: "400px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)",
           }}
         />
         {/* Teal gradient orb */}
@@ -43,7 +43,7 @@ export default async function Image() {
             width: "350px",
             height: "350px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(55,170,212,0.12) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(55,170,212,0.10) 0%, transparent 70%)",
           }}
         />
 
@@ -56,7 +56,7 @@ export default async function Image() {
             width: "80px",
             height: "80px",
             borderRadius: "16px",
-            background: "#273C6B",
+            background: "#1a2847",
             marginBottom: "32px",
           }}
         >
@@ -77,7 +77,7 @@ export default async function Image() {
             fontSize: "56px",
             fontWeight: 800,
             letterSpacing: "-0.03em",
-            color: "white",
+            color: "#0d1424",
             textAlign: "center",
             lineHeight: 1.1,
             maxWidth: "900px",
@@ -91,7 +91,7 @@ export default async function Image() {
         <div
           style={{
             fontSize: "22px",
-            color: "rgba(255,255,255,0.5)",
+            color: "#4164b2",
             textAlign: "center",
             marginTop: "20px",
             maxWidth: "700px",
@@ -111,14 +111,14 @@ export default async function Image() {
             gap: "8px",
             padding: "8px 20px",
             borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.05)",
+            border: "1px solid #d9e0f0",
+            background: "#f0f3f9",
           }}
         >
           <div
             style={{
               fontSize: "16px",
-              color: "rgba(255,255,255,0.4)",
+              color: "#6783c1",
               display: "flex",
             }}
           >

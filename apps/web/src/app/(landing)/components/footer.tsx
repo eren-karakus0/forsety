@@ -21,7 +21,7 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-navy-950/50">
+    <footer className="border-t border-navy-200 bg-navy-50">
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
@@ -34,17 +34,17 @@ export function Footer() {
                 height={32}
                 className="h-8 w-8"
               />
-              <span className="font-display text-lg font-semibold tracking-tight text-white">
+              <span className="font-display text-lg font-semibold tracking-tight text-navy-900">
                 Forsety
               </span>
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-white/40">
+            <p className="mt-3 text-sm leading-relaxed text-navy-400">
               Evidence layer for licensed AI data access. Built on Shelby
               Protocol.
             </p>
 
             {/* Powered by Shelby badge */}
-            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/50">
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-navy-200 bg-navy-100 px-3 py-1 text-xs font-medium text-navy-500">
               Powered by Shelby Protocol
             </div>
           </div>
@@ -52,13 +52,13 @@ export function Footer() {
           {/* Link Groups */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h3 className="text-sm font-semibold text-white/80">{title}</h3>
+              <h3 className="text-sm font-semibold text-navy-700">{title}</h3>
               <ul className="mt-3 space-y-2">
                 {links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-white/40 transition-colors hover:text-white/70"
+                      className="text-sm text-navy-400 transition-colors hover:text-navy-600"
                       {...(link.href.startsWith("http")
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
@@ -72,14 +72,14 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6">
-          <p className="text-center text-xs text-white/30">
+        <div className="mt-12 border-t border-navy-200 pt-6">
+          <p className="text-center text-xs text-navy-300">
             &copy; {new Date().getFullYear()} Forsety. Built by{" "}
             <Link
               href="https://github.com/eren-karakus0"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white/40 hover:text-white/60"
+              className="text-navy-400 hover:text-navy-600"
             >
               eren-karakus0
             </Link>

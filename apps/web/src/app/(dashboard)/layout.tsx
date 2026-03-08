@@ -21,7 +21,6 @@ import {
   Menu,
 } from "lucide-react";
 import { WalletDisplay } from "./components/wallet-display";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 // Dynamic import with ssr:false ensures wallet providers (Aptos adapter)
 // never evaluate on the server, preventing indexedDB/storage errors during build.
@@ -55,7 +54,7 @@ function NavItems({ onClick }: { onClick?: () => void }) {
             onClick={onClick}
             className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               isActive
-                ? "bg-primary/10 text-primary dark:bg-gold-500/10 dark:text-gold-400"
+                ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
@@ -125,7 +124,6 @@ export default function DashboardLayout({
               Shelbynet
             </span>
             <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
-            <ThemeToggle />
             <WalletDisplay />
           </div>
         </div>

@@ -86,25 +86,25 @@ function FeatureCard({ feature }: { feature: Feature }) {
 
   return (
     <motion.div
-      className="group glass-card p-6 transition-colors duration-300 hover:bg-white/[0.08]"
+      className="group glass-card p-6 transition-colors duration-300 hover:bg-navy-100/80"
       whileHover={hoverStyle}
       whileTap={hoverStyle}
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-start justify-between">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/10 transition-colors group-hover:bg-white/[0.15]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-navy-100 transition-colors group-hover:bg-navy-200/60">
           <feature.icon
             className={`h-5 w-5 ${feature.iconColor} transition-transform duration-300 group-hover:scale-110`}
           />
         </div>
-        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-medium text-white/60">
+        <span className="rounded-full border border-navy-200 bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-500">
           {feature.tag}
         </span>
       </div>
-      <h3 className="mt-4 font-display text-lg font-semibold text-white">
+      <h3 className="mt-4 font-display text-lg font-semibold text-navy-900">
         {feature.title}
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-white/50">
+      <p className="mt-2 text-sm leading-relaxed text-navy-400">
         {feature.description}
       </p>
     </motion.div>
@@ -115,17 +115,17 @@ export function Features() {
   return (
     <section
       id="features"
-      className="border-t border-white/5 py-20 sm:py-28"
+      className="border-t border-navy-100 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
             Features
           </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
             Everything You Need for Compliant AI
           </h2>
-          <p className="mt-4 text-lg text-white/50">
+          <p className="mt-4 text-lg text-navy-400">
             From cryptographic proofs to encrypted storage, Forsety provides a
             complete toolkit for verifiable data access.
           </p>

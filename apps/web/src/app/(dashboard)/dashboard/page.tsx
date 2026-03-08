@@ -113,7 +113,7 @@ export default async function DashboardPage() {
             key={stat.label}
             className={`transition-all duration-200 hover:shadow-md ${
               stat.accent
-                ? "border-gold-500/20 bg-gradient-to-br from-gold-500/5 to-transparent dark:border-gold-500/20 dark:from-gold-500/5"
+                ? "border-gold-500/20 bg-gradient-to-br from-gold-500/5 to-transparent"
                 : "border-border"
             }`}
           >

@@ -28,7 +28,7 @@ export function Navbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "border-b border-white/10 bg-navy-950/60 backdrop-blur-xl"
+          ? "border-b border-navy-200 bg-white/80 backdrop-blur-xl"
           : "bg-transparent"
       }`}
     >
@@ -42,7 +42,7 @@ export function Navbar() {
             height={36}
             className="h-9 w-9"
           />
-          <span className="font-display text-xl font-semibold tracking-tight text-white">
+          <span className="font-display text-xl font-semibold tracking-tight text-navy-900">
             Forsety
           </span>
         </Link>
@@ -53,7 +53,7 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="group relative rounded-lg px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white"
+              className="group relative rounded-lg px-3 py-2 text-sm font-medium text-navy-600 transition-colors hover:text-navy-900"
             >
               {link.label}
               <span className="absolute bottom-1 left-3 right-3 h-px origin-left scale-x-0 bg-gold-500 transition-transform duration-300 group-hover:scale-x-100" />
@@ -66,7 +66,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-white/70 hover:bg-white/10 hover:text-white"
+            className="text-navy-600 hover:bg-navy-100 hover:text-navy-900"
             asChild
           >
             <Link
@@ -80,7 +80,7 @@ export function Navbar() {
           </Button>
           <LaunchAppButton
             size="sm"
-            className="bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 hover:from-gold-400 hover:to-gold-500 border-0"
+            className="bg-gradient-to-r from-gold-500 to-gold-600 text-white hover:from-gold-400 hover:to-gold-500 border-0"
           />
         </div>
 
@@ -91,9 +91,9 @@ export function Navbar() {
           aria-label="Toggle menu"
         >
           {mobileOpen ? (
-            <X className="h-6 w-6 text-white" />
+            <X className="h-6 w-6 text-navy-900" />
           ) : (
-            <Menu className="h-6 w-6 text-white" />
+            <Menu className="h-6 w-6 text-navy-900" />
           )}
         </button>
       </div>
@@ -105,7 +105,7 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-white/10 bg-navy-950/90 backdrop-blur-xl md:hidden"
+            className="overflow-hidden border-t border-navy-200 bg-white/95 backdrop-blur-xl md:hidden"
           >
             <div className="px-6 pb-6 pt-4">
               <nav className="flex flex-col gap-2">
@@ -113,7 +113,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white"
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-navy-600 hover:bg-navy-50 hover:text-navy-900"
                     onClick={() => setMobileOpen(false)}
                   >
                     {link.label}
@@ -124,7 +124,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="justify-start text-white/70 hover:bg-white/10 hover:text-white"
+                  className="justify-start text-navy-600 hover:bg-navy-100 hover:text-navy-900"
                   asChild
                 >
                   <Link
@@ -138,7 +138,7 @@ export function Navbar() {
                 </Button>
                 <LaunchAppButton
                   size="sm"
-                  className="bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 hover:from-gold-400 hover:to-gold-500 border-0"
+                  className="bg-gradient-to-r from-gold-500 to-gold-600 text-white hover:from-gold-400 hover:to-gold-500 border-0"
                 >
                   Get Started
                 </LaunchAppButton>

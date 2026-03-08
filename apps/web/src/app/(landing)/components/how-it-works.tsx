@@ -127,7 +127,7 @@ function StepCard({
     >
       {/* Step Container */}
       <div
-        className="mx-auto flex h-28 w-28 items-center justify-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300"
+        className="mx-auto flex h-28 w-28 items-center justify-center rounded-2xl border border-navy-200 bg-navy-50 backdrop-blur-sm transition-all duration-300"
         style={{
           boxShadow: isActive ? `0 0 50px ${step.glowColor}` : "none",
           borderColor: isActive ? step.glowColor : "",
@@ -145,10 +145,10 @@ function StepCard({
         {step.number}
       </div>
 
-      <h3 className="mt-6 font-display text-xl font-semibold text-white">
+      <h3 className="mt-6 font-display text-xl font-semibold text-navy-900">
         {step.title}
       </h3>
-      <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/50">
+      <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-navy-400">
         {step.description}
       </p>
 
@@ -165,7 +165,7 @@ function StepCard({
         {step.details.map((detail) => (
           <span
             key={detail}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60"
+            className="rounded-full border border-navy-200 bg-navy-50 px-3 py-1 text-xs text-navy-500"
           >
             {detail}
           </span>
@@ -180,7 +180,7 @@ function AnimatedConnector() {
 
   if (prefersReducedMotion) {
     return (
-      <div className="absolute left-0 right-0 top-[3.5rem] hidden h-px bg-gradient-to-r from-transparent via-white/20 to-transparent lg:block" />
+      <div className="absolute left-0 right-0 top-[3.5rem] hidden h-px bg-gradient-to-r from-transparent via-navy-300 to-transparent lg:block" />
     );
   }
 
@@ -264,17 +264,17 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="border-t border-white/5 py-20 sm:py-28"
+      className="border-t border-navy-100 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
             How it Works
           </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
             Three Steps to Verifiable Compliance
           </h2>
-          <p className="mt-4 text-lg text-white/50">
+          <p className="mt-4 text-lg text-navy-400">
             From upload to evidence generation — a seamless, auditable pipeline.
           </p>
         </FadeIn>

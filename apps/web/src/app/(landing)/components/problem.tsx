@@ -43,18 +43,18 @@ const painPoints: PainPoint[] = [
 function ProblemCard({ point }: { point: PainPoint }) {
   return (
     <motion.div
-      className="glass-card group p-6 transition-colors duration-300 hover:bg-white/[0.08]"
+      className="glass-card group p-6 transition-colors duration-300 hover:bg-navy-100/80"
       whileHover={{ boxShadow: `0 0 40px ${point.glowColor}` }}
       whileTap={{ boxShadow: `0 0 40px ${point.glowColor}` }}
       transition={{ duration: 0.3 }}
     >
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-white/10 transition-colors group-hover:bg-white/[0.15]">
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-navy-100 transition-colors group-hover:bg-navy-200/60">
         <point.icon className={`h-5 w-5 ${point.iconColor}`} />
       </div>
-      <h3 className="font-display text-lg font-semibold text-white">
+      <h3 className="font-display text-lg font-semibold text-navy-900">
         {point.title}
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-white/50">
+      <p className="mt-2 text-sm leading-relaxed text-navy-400">
         {point.description}
       </p>
     </motion.div>
@@ -63,16 +63,16 @@ function ProblemCard({ point }: { point: PainPoint }) {
 
 export function Problem() {
   return (
-    <section className="border-t border-white/5 py-20 sm:py-28">
+    <section className="border-t border-navy-100 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
             The Problem
           </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
             AI Data Compliance Is Broken
           </h2>
-          <p className="mt-4 text-lg text-white/50">
+          <p className="mt-4 text-lg text-navy-400">
             As AI scales, the gap between data usage and verifiable compliance
             widens. Current solutions rely on trust — not proof.
           </p>

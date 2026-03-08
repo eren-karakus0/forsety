@@ -31,30 +31,6 @@
     --color-gold: 42 65% 51%;
   }
 
-  .dark {
-    --background: 222 40% 6%;
-    --foreground: 210 20% 95%;
-    --card: 222 37% 10%;
-    --card-foreground: 210 20% 95%;
-    --popover: 222 37% 10%;
-    --popover-foreground: 210 20% 95%;
-    --primary: 42 65% 51%;
-    --primary-foreground: 215 45% 10%;
-    --secondary: 220 20% 15%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 220 20% 15%;
-    --muted-foreground: 220 15% 60%;
-    --accent: 42 65% 51%;
-    --accent-foreground: 215 45% 10%;
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 222 30% 18%;
-    --input: 222 30% 18%;
-    --ring: 42 65% 51%;
-
-    --color-navy: 42 65% 51%;
-    --color-gold: 42 65% 51%;
-  }
 
   * {
     border-color: hsl(var(--border));
@@ -72,7 +48,7 @@
 
 @layer components {
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    @apply bg-white/70 backdrop-blur-xl border border-navy-200/50 shadow-sm;
   }
 
   .glass-card {

@@ -356,7 +356,7 @@ export default function DatasetDetailPage() {
 
             {/* Right: Evidence Pack */}
             <div className="space-y-6">
-              <Card className="border-gold-500/20 bg-gradient-to-b from-gold-500/5 to-transparent dark:border-gold-500/20 dark:from-gold-500/5">
+              <Card className="border-gold-500/20 bg-gradient-to-b from-gold-500/5 to-transparent">
                 <CardContent className="pt-6">
                   <h2 className="mb-1 font-display text-base font-semibold text-foreground">
                     Evidence Pack

@@ -46,7 +46,7 @@ function DataFlowArrow({ active }: { active: boolean }) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={active ? "text-gold-400" : "text-white/20"}
+            className={active ? "text-gold-400" : "text-navy-200"}
             initial={false}
             animate={{ opacity: active ? 1 : 0.3 }}
             transition={{ duration: 0.3 }}
@@ -82,7 +82,7 @@ function LayerInfoPanel({
 }) {
   return (
     <div className="glass-card overflow-hidden p-5">
-      <div className="mb-4 text-xs font-semibold uppercase tracking-wider text-white/40">
+      <div className="mb-4 text-xs font-semibold uppercase tracking-wider text-navy-300">
         Layer Details
       </div>
 
@@ -95,10 +95,10 @@ function LayerInfoPanel({
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <h4 className="font-display text-sm font-semibold text-white">
+            <h4 className="font-display text-sm font-semibold text-navy-900">
               {layerDescriptions.find((l) => l.key === activeLayer)?.label}
             </h4>
-            <p className="mt-2 text-sm leading-relaxed text-white/50">
+            <p className="mt-2 text-sm leading-relaxed text-navy-400">
               {
                 layerDescriptions.find((l) => l.key === activeLayer)
                   ?.description
@@ -111,7 +111,7 @@ function LayerInfoPanel({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-sm text-white/30"
+            className="text-sm text-navy-300"
           >
             Tap or hover over a layer to see details.
           </motion.p>
@@ -119,14 +119,14 @@ function LayerInfoPanel({
       </AnimatePresence>
 
       {/* Layer Legend */}
-      <div className="mt-6 space-y-2.5 border-t border-white/10 pt-4">
+      <div className="mt-6 space-y-2.5 border-t border-navy-200 pt-4">
         {layerDescriptions.map((layer) => (
           <button
             key={layer.key}
             className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs transition-all ${
               activeLayer === layer.key
-                ? "bg-white/10 text-white"
-                : "text-white/40 hover:bg-white/5 hover:text-white/60"
+                ? "bg-navy-100 text-navy-900"
+                : "text-navy-400 hover:bg-navy-50 hover:text-navy-600"
             }`}
             onClick={() =>
               onSelectLayer(activeLayer === layer.key ? null : layer.key)
@@ -138,7 +138,7 @@ function LayerInfoPanel({
               className={`h-2 w-2 rounded-full transition-all ${
                 activeLayer === layer.key
                   ? "bg-gold-400 shadow-[0_0_8px_rgba(212,175,55,0.5)]"
-                  : "bg-white/20"
+                  : "bg-navy-200"
               }`}
             />
             {layer.label}
@@ -197,16 +197,16 @@ export function Architecture() {
   };
 
   return (
-    <section className="border-t border-white/5 py-20 sm:py-28">
+    <section className="border-t border-navy-100 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
             Architecture
           </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
             Built on Shelby Protocol
           </h2>
-          <p className="mt-4 text-lg text-white/50">
+          <p className="mt-4 text-lg text-navy-400">
             Forsety leverages Shelby&apos;s decentralized storage for immutable
             data anchoring and blob management.
           </p>
@@ -234,11 +234,11 @@ export function Architecture() {
                 style={{
                   boxShadow:
                     activeLayer === "app"
-                      ? "0 0 30px rgba(255, 255, 255, 0.08)"
+                      ? "0 0 30px rgba(13, 20, 36, 0.08)"
                       : "none",
                 }}
               >
-                <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+                <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-navy-300">
                   Application Layer
                 </div>
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -246,7 +246,7 @@ export function Architecture() {
                     (app, i) => (
                       <motion.div
                         key={app}
-                        className="rounded-lg bg-white/5 px-3 py-2.5 text-center text-sm font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white/90"
+                        className="rounded-lg bg-navy-50 px-3 py-2.5 text-center text-sm font-medium text-navy-600 transition-colors hover:bg-navy-100 hover:text-navy-900"
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -298,7 +298,7 @@ export function Architecture() {
                   ].map((service, i) => (
                     <motion.div
                       key={service}
-                      className="rounded-lg bg-white/10 px-3 py-2.5 text-center text-xs font-medium text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+                      className="rounded-lg bg-navy-100 px-3 py-2.5 text-center text-xs font-medium text-navy-700 transition-colors hover:bg-navy-200/60 hover:text-navy-900"
                       initial={{ opacity: 0, scale: 0.9 }}
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
@@ -352,7 +352,7 @@ export function Architecture() {
                     ].map((table) => (
                       <span
                         key={table}
-                        className="rounded-md bg-white/5 px-2 py-1 text-xs font-medium text-white/60 transition-colors hover:bg-teal-500/10 hover:text-teal-300"
+                        className="rounded-md bg-navy-50 px-2 py-1 text-xs font-medium text-navy-500 transition-colors hover:bg-teal-500/10 hover:text-teal-600"
                       >
                         {table}
                       </span>
@@ -361,7 +361,7 @@ export function Architecture() {
                 </div>
 
                 <div
-                  className="glass-card cursor-pointer bg-navy-800/50 p-5 outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold-400/50 rounded-2xl"
+                  className="glass-card cursor-pointer p-5 outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold-400/50 rounded-2xl"
                   onClick={() => handleLayerClick("data")}
                   onKeyDown={(e) => handleLayerKeyDown(e, "data")}
                   onMouseEnter={() => handleLayerInteraction("data")}
@@ -389,7 +389,7 @@ export function Architecture() {
                     ].map((item) => (
                       <span
                         key={item}
-                        className="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white/60 transition-colors hover:bg-violet-500/10 hover:text-violet-300"
+                        className="rounded-md bg-navy-100 px-2 py-1 text-xs font-medium text-navy-500 transition-colors hover:bg-violet-500/10 hover:text-violet-600"
                       >
                         {item}
                       </span>

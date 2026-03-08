@@ -244,17 +244,17 @@ export function ForDevelopers() {
   return (
     <section
       id="developers"
-      className="border-t border-white/5 py-20 sm:py-28"
+      className="border-t border-navy-100 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
             For Developers
           </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
             Integrate in Minutes
           </h2>
-          <p className="mt-4 text-lg text-white/50">
+          <p className="mt-4 text-lg text-navy-400">
             TypeScript SDK, MCP tools, and REST API — pick the integration that
             fits your stack.
           </p>
@@ -262,9 +262,9 @@ export function ForDevelopers() {
 
         <FadeIn delay={0.2}>
           <div className="mx-auto mt-12 max-w-3xl">
-            <div className="glass-card overflow-hidden">
+            <div className="overflow-hidden rounded-2xl shadow-xl">
               <Tabs defaultValue="sdk">
-                <div className="border-b border-white/10 bg-white/[0.03] px-4 pt-3">
+                <div className="border-b border-navy-800 bg-navy-900 px-4 pt-3">
                   <TabsList className="bg-transparent">
                     <TabsTrigger
                       value="sdk"
@@ -291,7 +291,7 @@ export function ForDevelopers() {
                   <TabsContent key={key} value={key} className="mt-0">
                     <div className="relative">
                       <CopyButton code={code} />
-                      <pre className="overflow-x-auto bg-navy-950/50 p-6 pr-14 text-sm leading-relaxed">
+                      <pre className="overflow-x-auto bg-navy-900 p-6 pr-14 text-sm leading-relaxed">
                         <code className="font-mono text-white/70">
                           {highlightCode(code, lang)}
                         </code>

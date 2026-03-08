@@ -12,20 +12,20 @@ const stats = [
 
 export function Stats() {
   return (
-    <section className="border-t border-white/5 bg-gradient-to-b from-navy-950/50 to-transparent py-16 sm:py-20">
+    <section className="border-t border-navy-100 bg-gradient-to-b from-navy-50 to-transparent py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-6">
         <StaggerChildren className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {stats.map((stat) => (
             <StaggerItem key={stat.label}>
-              <div className="glass-card p-6 text-center transition-all duration-300 hover:bg-white/[0.08]">
+              <div className="glass-card p-6 text-center transition-all duration-300 hover:bg-navy-100/80">
                 <Counter
                   value={stat.value}
                   className="font-display text-4xl font-bold gradient-text-gold-teal sm:text-5xl"
                 />
-                <div className="mt-2 text-sm font-semibold text-white">
+                <div className="mt-2 text-sm font-semibold text-navy-900">
                   {stat.label}
                 </div>
-                <div className="mt-1 text-xs text-white/40">
+                <div className="mt-1 text-xs text-navy-300">
                   {stat.description}
                 </div>
               </div>
