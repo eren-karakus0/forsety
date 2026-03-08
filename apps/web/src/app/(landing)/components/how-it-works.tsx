@@ -276,7 +276,7 @@ export function HowItWorks() {
       className="section-fullscreen py-20 sm:py-28"
     >
       <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-5xl px-6">
         <ScrollReveal>
           <FadeIn className="mx-auto max-w-2xl text-center">
             <div className="flex items-center justify-center gap-3">

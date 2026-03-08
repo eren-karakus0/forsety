@@ -4,9 +4,9 @@ import { motion, useReducedMotion } from "framer-motion";
 
 /* ─── Color tokens ─── */
 const colors = {
-  gold: { primary: "#D4AF37", secondary: "#B8960E", glow: "rgba(212,175,55,0.15)", muted: "rgba(212,175,55,0.08)" },
-  teal: { primary: "#37AAD4", secondary: "#2B8BAD", glow: "rgba(55,170,212,0.15)", muted: "rgba(55,170,212,0.08)" },
-  violet: { primary: "#6137D4", secondary: "#8955FF", glow: "rgba(97,55,212,0.15)", muted: "rgba(97,55,212,0.08)" },
+  gold: { primary: "#E8C84A", glow: "rgba(232,200,74,0.3)", muted: "rgba(232,200,74,0.12)" },
+  teal: { primary: "#4DC4EE", glow: "rgba(77,196,238,0.3)", muted: "rgba(77,196,238,0.12)" },
+  violet: { primary: "#A77BFF", glow: "rgba(167,123,255,0.3)", muted: "rgba(167,123,255,0.12)" },
 };
 
 /* ─── 01 · VERIFY — Runic Seal ─── */
@@ -21,7 +21,7 @@ export function VerifyIllustration() {
         fill="none"
       >
         {/* Outer glow circle */}
-        <circle cx="200" cy="200" r="185" stroke={colors.gold.muted} strokeWidth="1" />
+        <circle cx="200" cy="200" r="185" stroke={colors.gold.primary} strokeWidth="1" opacity="0.2" />
 
         {/* Outer rotating ring */}
         <motion.g
@@ -29,7 +29,7 @@ export function VerifyIllustration() {
           transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
           style={{ originX: "200px", originY: "200px" }}
         >
-          <circle cx="200" cy="200" r="170" stroke={colors.gold.primary} strokeWidth="0.5" opacity="0.3" />
+          <circle cx="200" cy="200" r="170" stroke={colors.gold.primary} strokeWidth="1" opacity="0.45" />
           {/* Tick marks around outer ring */}
           {Array.from({ length: 36 }).map((_, i) => {
             const angle = (i * 10 * Math.PI) / 180;
@@ -42,8 +42,8 @@ export function VerifyIllustration() {
                 key={i}
                 x1={x1} y1={y1} x2={x2} y2={y2}
                 stroke={colors.gold.primary}
-                strokeWidth={i % 3 === 0 ? "1.5" : "0.5"}
-                opacity={i % 3 === 0 ? "0.6" : "0.25"}
+                strokeWidth={i % 3 === 0 ? "2" : "0.8"}
+                opacity={i % 3 === 0 ? "0.8" : "0.4"}
               />
             );
           })}
@@ -55,7 +55,7 @@ export function VerifyIllustration() {
           transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
           style={{ originX: "200px", originY: "200px" }}
         >
-          <circle cx="200" cy="200" r="130" stroke={colors.gold.primary} strokeWidth="0.5" opacity="0.2" />
+          <circle cx="200" cy="200" r="130" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.35" />
           {/* Rune markers on inner ring */}
           {[0, 60, 120, 180, 240, 300].map((deg) => {
             const angle = (deg * Math.PI) / 180;
@@ -63,15 +63,15 @@ export function VerifyIllustration() {
             const y = 200 + 130 * Math.sin(angle);
             return (
               <g key={deg} transform={`translate(${x},${y})`}>
-                <line x1="0" y1="-6" x2="0" y2="6" stroke={colors.gold.primary} strokeWidth="1.2" opacity="0.5" />
-                <line x1="-3" y1="-3" x2="3" y2="3" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.3" />
+                <line x1="0" y1="-7" x2="0" y2="7" stroke={colors.gold.primary} strokeWidth="1.5" opacity="0.7" />
+                <line x1="-4" y1="-4" x2="4" y2="4" stroke={colors.gold.primary} strokeWidth="1" opacity="0.5" />
               </g>
             );
           })}
         </motion.g>
 
         {/* Static middle ring */}
-        <circle cx="200" cy="200" r="95" stroke={colors.gold.primary} strokeWidth="0.5" opacity="0.15" />
+        <circle cx="200" cy="200" r="95" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.25" />
 
         {/* Verification pulse ring */}
         <motion.circle
@@ -82,41 +82,41 @@ export function VerifyIllustration() {
           opacity={0}
           animate={reduced ? {} : {
             r: [95, 140, 170],
-            opacity: [0.4, 0.15, 0],
-            strokeWidth: [1, 0.5, 0.2],
+            opacity: [0.6, 0.2, 0],
+            strokeWidth: [1.5, 0.8, 0.3],
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeOut", repeatDelay: 2 }}
         />
 
-        {/* Central Tiwaz Rune — larger, prominent */}
-        <g opacity="0.7">
+        {/* Central Tiwaz Rune — bold and prominent */}
+        <g opacity="0.9">
           {/* Vertical line */}
-          <line x1="200" y1="155" x2="200" y2="245" stroke={colors.gold.primary} strokeWidth="2" strokeLinecap="round" />
+          <line x1="200" y1="150" x2="200" y2="250" stroke={colors.gold.primary} strokeWidth="3" strokeLinecap="round" />
           {/* Upper arms */}
-          <line x1="200" y1="165" x2="178" y2="190" stroke={colors.gold.primary} strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="200" y1="165" x2="222" y2="190" stroke={colors.gold.primary} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="200" y1="162" x2="174" y2="192" stroke={colors.gold.primary} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="200" y1="162" x2="226" y2="192" stroke={colors.gold.primary} strokeWidth="2.5" strokeLinecap="round" />
         </g>
 
         {/* Glowing center dot */}
         <motion.circle
           cx="200" cy="200" r="3"
           fill={colors.gold.primary}
-          animate={reduced ? {} : { opacity: [0.4, 0.8, 0.4], r: [3, 4, 3] }}
+          animate={reduced ? {} : { opacity: [0.6, 1, 0.6], r: [4, 5.5, 4] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
 
         {/* Corner accent runes — small Elder Futhark marks */}
         {/* Fehu (ᚠ) — top right */}
-        <g opacity="0.2" transform="translate(310, 90)">
-          <line x1="0" y1="0" x2="0" y2="18" stroke={colors.gold.primary} strokeWidth="1" />
-          <line x1="0" y1="2" x2="8" y2="7" stroke={colors.gold.primary} strokeWidth="0.8" />
-          <line x1="0" y1="8" x2="7" y2="12" stroke={colors.gold.primary} strokeWidth="0.8" />
+        <g opacity="0.4" transform="translate(310, 88)">
+          <line x1="0" y1="0" x2="0" y2="20" stroke={colors.gold.primary} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="0" y1="2" x2="9" y2="8" stroke={colors.gold.primary} strokeWidth="1.2" strokeLinecap="round" />
+          <line x1="0" y1="9" x2="8" y2="14" stroke={colors.gold.primary} strokeWidth="1.2" strokeLinecap="round" />
         </g>
         {/* Ansuz (ᚨ) — bottom left */}
-        <g opacity="0.2" transform="translate(85, 295)">
-          <line x1="0" y1="0" x2="0" y2="18" stroke={colors.gold.primary} strokeWidth="1" />
-          <line x1="0" y1="3" x2="7" y2="8" stroke={colors.gold.primary} strokeWidth="0.8" />
-          <line x1="7" y1="8" x2="0" y2="13" stroke={colors.gold.primary} strokeWidth="0.8" />
+        <g opacity="0.4" transform="translate(82, 292)">
+          <line x1="0" y1="0" x2="0" y2="20" stroke={colors.gold.primary} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="0" y1="3" x2="8" y2="9" stroke={colors.gold.primary} strokeWidth="1.2" strokeLinecap="round" />
+          <line x1="8" y1="9" x2="0" y2="15" stroke={colors.gold.primary} strokeWidth="1.2" strokeLinecap="round" />
         </g>
 
         {/* Connecting radial lines from center */}
@@ -131,8 +131,8 @@ export function VerifyIllustration() {
               key={deg}
               x1={x1} y1={y1} x2={x2} y2={y2}
               stroke={colors.gold.primary}
-              strokeWidth="0.4"
-              opacity="0.15"
+              strokeWidth="0.6"
+              opacity="0.25"
               strokeDasharray="2 4"
             />
           );
@@ -179,8 +179,8 @@ export function RecallIllustration() {
         fill="none"
       >
         {/* Outer atmosphere ring */}
-        <circle cx="200" cy="210" r="180" stroke={colors.teal.primary} strokeWidth="0.5" opacity="0.1" />
-        <circle cx="200" cy="210" r="160" stroke={colors.teal.primary} strokeWidth="0.3" opacity="0.08" strokeDasharray="4 8" />
+        <circle cx="200" cy="210" r="180" stroke={colors.teal.primary} strokeWidth="0.8" opacity="0.2" />
+        <circle cx="200" cy="210" r="160" stroke={colors.teal.primary} strokeWidth="0.5" opacity="0.15" strokeDasharray="4 8" />
 
         {/* Connection lines */}
         {edges.map(([from, to], i) => (
@@ -189,11 +189,11 @@ export function RecallIllustration() {
             x1={nodes[from].x} y1={nodes[from].y}
             x2={nodes[to].x} y2={nodes[to].y}
             stroke={colors.teal.primary}
-            strokeWidth="0.8"
+            strokeWidth="1.2"
             opacity={0}
-            animate={reduced ? { opacity: 0.2 } : {
-              opacity: [0.08, 0.3, 0.08],
-              strokeWidth: [0.8, 1.2, 0.8],
+            animate={reduced ? { opacity: 0.3 } : {
+              opacity: [0.15, 0.5, 0.15],
+              strokeWidth: [1.2, 2, 1.2],
             }}
             transition={{
               duration: 3,
@@ -210,12 +210,12 @@ export function RecallIllustration() {
           return (
             <motion.circle
               key={`particle-${edgeIdx}`}
-              r="1.5"
+              r="2.5"
               fill={colors.teal.primary}
               animate={{
                 cx: [nodes[from].x, nodes[to].x],
                 cy: [nodes[from].y, nodes[to].y],
-                opacity: [0, 0.7, 0],
+                opacity: [0, 0.9, 0],
               }}
               transition={{
                 duration: 2.5,
@@ -235,7 +235,7 @@ export function RecallIllustration() {
             <motion.circle
               cx={node.x} cy={node.y} r={node.r * 3}
               fill={colors.teal.glow}
-              animate={reduced ? {} : { opacity: [0.3, 0.6, 0.3], r: [node.r * 2.5, node.r * 3.5, node.r * 2.5] }}
+              animate={reduced ? {} : { opacity: [0.5, 0.8, 0.5], r: [node.r * 2.5, node.r * 3.5, node.r * 2.5] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
             />
             {/* Node core */}
@@ -243,36 +243,36 @@ export function RecallIllustration() {
               cx={node.x} cy={node.y} r={node.r}
               fill={i === 7 ? colors.teal.primary : "none"}
               stroke={colors.teal.primary}
-              strokeWidth={i === 7 ? 0 : 1}
-              opacity={i === 7 ? 0.8 : 0.5}
-              animate={reduced ? {} : { opacity: i === 7 ? [0.7, 1, 0.7] : [0.3, 0.6, 0.3] }}
+              strokeWidth={i === 7 ? 0 : 1.5}
+              opacity={i === 7 ? 0.9 : 0.6}
+              animate={reduced ? {} : { opacity: i === 7 ? [0.8, 1, 0.8] : [0.45, 0.75, 0.45] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
             />
           </g>
         ))}
 
         {/* Central Tiwaz rune at node[7] (center node) */}
-        <g opacity="0.6">
-          <line x1="200" y1="185" x2="200" y2="215" stroke={colors.teal.primary} strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="200" y1="189" x2="190" y2="200" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="200" y1="189" x2="210" y2="200" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
+        <g opacity="0.9">
+          <line x1="200" y1="182" x2="200" y2="218" stroke={colors.teal.primary} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="200" y1="186" x2="188" y2="200" stroke={colors.teal.primary} strokeWidth="2" strokeLinecap="round" />
+          <line x1="200" y1="186" x2="212" y2="200" stroke={colors.teal.primary} strokeWidth="2" strokeLinecap="round" />
         </g>
 
         {/* Decorative rune marks at key nodes */}
         {/* Raidō (ᚱ) at node[0] — journey/path */}
-        <g opacity="0.25" transform="translate(210, 72)">
-          <line x1="0" y1="0" x2="0" y2="14" stroke={colors.teal.primary} strokeWidth="0.8" />
-          <line x1="0" y1="1" x2="6" y2="5" stroke={colors.teal.primary} strokeWidth="0.7" />
-          <line x1="6" y1="5" x2="0" y2="9" stroke={colors.teal.primary} strokeWidth="0.7" />
+        <g opacity="0.45" transform="translate(212, 70)">
+          <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
+          <line x1="0" y1="1" x2="7" y2="6" stroke={colors.teal.primary} strokeWidth="1" strokeLinecap="round" />
+          <line x1="7" y1="6" x2="0" y2="11" stroke={colors.teal.primary} strokeWidth="1" strokeLinecap="round" />
         </g>
         {/* Laguz (ᛚ) at node[10] — water/flow */}
-        <g opacity="0.25" transform="translate(210, 334)">
-          <line x1="0" y1="0" x2="0" y2="14" stroke={colors.teal.primary} strokeWidth="0.8" />
-          <line x1="0" y1="0" x2="6" y2="7" stroke={colors.teal.primary} strokeWidth="0.7" />
+        <g opacity="0.45" transform="translate(212, 332)">
+          <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
+          <line x1="0" y1="0" x2="7" y2="8" stroke={colors.teal.primary} strokeWidth="1" strokeLinecap="round" />
         </g>
 
         {/* Vertical trunk line (Yggdrasil axis) */}
-        <line x1="200" y1="85" x2="200" y2="335" stroke={colors.teal.primary} strokeWidth="0.4" opacity="0.08" strokeDasharray="3 6" />
+        <line x1="200" y1="85" x2="200" y2="335" stroke={colors.teal.primary} strokeWidth="0.6" opacity="0.15" strokeDasharray="3 6" />
       </svg>
     </div>
   );
@@ -299,8 +299,8 @@ export function ShieldIllustration() {
           <polygon
             points="200,30 310,80 360,190 310,300 200,350 90,300 40,190 90,80"
             stroke={colors.violet.primary}
-            strokeWidth="0.6"
-            opacity="0.15"
+            strokeWidth="1"
+            opacity="0.3"
           />
           {/* Rune inscriptions along outer octagon */}
           {[
@@ -313,9 +313,9 @@ export function ShieldIllustration() {
             { x: 60, y: 130, r: -25 },
             { x: 145, y: 50, r: 20 },
           ].map((pos, i) => (
-            <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.r})`} opacity="0.2">
-              <line x1="0" y1="-4" x2="0" y2="4" stroke={colors.violet.primary} strokeWidth="0.8" />
-              <line x1="-2" y1="-2" x2="2" y2="2" stroke={colors.violet.primary} strokeWidth="0.5" />
+            <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.r})`} opacity="0.45">
+              <line x1="0" y1="-5" x2="0" y2="5" stroke={colors.violet.primary} strokeWidth="1.2" strokeLinecap="round" />
+              <line x1="-3" y1="-3" x2="3" y2="3" stroke={colors.violet.primary} strokeWidth="0.8" strokeLinecap="round" />
             </g>
           ))}
         </motion.g>
@@ -329,19 +329,19 @@ export function ShieldIllustration() {
           <polygon
             points="200,70 290,115 290,265 200,310 110,265 110,115"
             stroke={colors.violet.primary}
-            strokeWidth="0.5"
-            opacity="0.12"
+            strokeWidth="0.8"
+            opacity="0.25"
           />
           {/* Vertex markers */}
           {[
             [200, 70], [290, 115], [290, 265], [200, 310], [110, 265], [110, 115],
           ].map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="2" fill={colors.violet.primary} opacity="0.3" />
+            <circle key={i} cx={x} cy={y} r="3" fill={colors.violet.primary} opacity="0.5" />
           ))}
         </motion.g>
 
         {/* Inner shield ring — static */}
-        <circle cx="200" cy="190" r="100" stroke={colors.violet.primary} strokeWidth="0.5" opacity="0.12" />
+        <circle cx="200" cy="190" r="100" stroke={colors.violet.primary} strokeWidth="0.8" opacity="0.2" />
 
         {/* Defensive pulse rings */}
         <motion.polygon
@@ -351,8 +351,8 @@ export function ShieldIllustration() {
           fill="none"
           opacity={0}
           animate={reduced ? {} : {
-            opacity: [0.3, 0.1, 0],
-            strokeWidth: [1, 0.5, 0.2],
+            opacity: [0.5, 0.15, 0],
+            strokeWidth: [1.5, 0.8, 0.3],
             scale: [1, 1.3, 1.6],
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeOut", repeatDelay: 3 }}
@@ -372,25 +372,25 @@ export function ShieldIllustration() {
           const y4 = 190 - 95 * Math.sin(angle);
           return (
             <g key={deg}>
-              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={colors.violet.primary} strokeWidth="0.3" opacity="0.12" strokeDasharray="3 5" />
-              <line x1={x3} y1={y3} x2={x4} y2={y4} stroke={colors.violet.primary} strokeWidth="0.3" opacity="0.12" strokeDasharray="3 5" />
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={colors.violet.primary} strokeWidth="0.5" opacity="0.2" strokeDasharray="3 5" />
+              <line x1={x3} y1={y3} x2={x4} y2={y4} stroke={colors.violet.primary} strokeWidth="0.5" opacity="0.2" strokeDasharray="3 5" />
             </g>
           );
         })}
 
         {/* Central Tiwaz + Shield emblem */}
-        <g opacity="0.6">
-          {/* Shield shape (small) */}
+        <g opacity="0.9">
+          {/* Shield shape */}
           <path
-            d="M200,155 L225,170 L225,200 Q225,215 200,225 Q175,215 175,200 L175,170 Z"
+            d="M200,150 L230,168 L230,202 Q230,220 200,232 Q170,220 170,202 L170,168 Z"
             stroke={colors.violet.primary}
-            strokeWidth="1.2"
+            strokeWidth="1.8"
             fill={colors.violet.muted}
           />
           {/* Tiwaz inside shield */}
-          <line x1="200" y1="163" x2="200" y2="215" stroke={colors.violet.primary} strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="200" y1="168" x2="189" y2="181" stroke={colors.violet.primary} strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="200" y1="168" x2="211" y2="181" stroke={colors.violet.primary} strokeWidth="1.2" strokeLinecap="round" />
+          <line x1="200" y1="160" x2="200" y2="222" stroke={colors.violet.primary} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="200" y1="166" x2="186" y2="182" stroke={colors.violet.primary} strokeWidth="2" strokeLinecap="round" />
+          <line x1="200" y1="166" x2="214" y2="182" stroke={colors.violet.primary} strokeWidth="2" strokeLinecap="round" />
         </g>
 
         {/* Corner ward runes */}
@@ -401,10 +401,10 @@ export function ShieldIllustration() {
           { x: 75, y: 315 },
           { x: 325, y: 315 },
         ].map((pos, i) => (
-          <g key={i} opacity="0.15" transform={`translate(${pos.x}, ${pos.y})`}>
-            <line x1="0" y1="8" x2="0" y2="-8" stroke={colors.violet.primary} strokeWidth="0.8" />
-            <line x1="0" y1="-4" x2="-5" y2="-10" stroke={colors.violet.primary} strokeWidth="0.6" />
-            <line x1="0" y1="-4" x2="5" y2="-10" stroke={colors.violet.primary} strokeWidth="0.6" />
+          <g key={i} opacity="0.35" transform={`translate(${pos.x}, ${pos.y})`}>
+            <line x1="0" y1="10" x2="0" y2="-10" stroke={colors.violet.primary} strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="0" y1="-5" x2="-6" y2="-13" stroke={colors.violet.primary} strokeWidth="1" strokeLinecap="round" />
+            <line x1="0" y1="-5" x2="6" y2="-13" stroke={colors.violet.primary} strokeWidth="1" strokeLinecap="round" />
           </g>
         ))}
 
@@ -412,7 +412,7 @@ export function ShieldIllustration() {
         <motion.circle
           cx="200" cy="190" r="2.5"
           fill={colors.violet.primary}
-          animate={reduced ? {} : { opacity: [0.4, 0.9, 0.4], r: [2.5, 3.5, 2.5] }}
+          animate={reduced ? {} : { opacity: [0.6, 1, 0.6], r: [3.5, 5, 3.5] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         />
       </svg>
