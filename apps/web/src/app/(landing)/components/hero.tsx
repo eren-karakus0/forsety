@@ -80,7 +80,7 @@ export function Hero() {
         <div className="mx-auto max-w-3xl text-center">
           {/* Badge */}
           <FadeIn delay={0.1}>
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-navy-200 bg-navy-50 px-4 py-1.5 text-sm font-medium text-navy-700 backdrop-blur-sm">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-gold-500/20 bg-gold-500/[0.06] px-4 py-1.5 text-sm font-medium text-gold-600 backdrop-blur-sm">
               <Shield className="h-4 w-4 text-gold-400" />
               Built on Shelby Protocol
             </div>
@@ -115,7 +115,7 @@ export function Hero() {
               <Magnetic strength={0.15}>
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-gold-500 to-teal-500 text-white font-semibold hover:from-gold-400 hover:to-teal-400 border-0 glow-gold"
+                  className="bg-gradient-to-r from-gold-500 to-teal-500 text-white font-semibold hover:from-gold-400 hover:to-teal-400 border-0 glow-gold-lg"
                   asChild
                 >
                   <Link href="/dashboard">

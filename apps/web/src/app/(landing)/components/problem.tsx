@@ -22,7 +22,7 @@ const painPoints: PainPoint[] = [
     title: "No Proof of License",
     description:
       "AI companies use datasets without verifiable evidence of proper licensing. When audited, there is no trail to prove compliance.",
-    glowColor: "rgba(212, 175, 55, 0.15)",
+    glowColor: "rgba(235, 192, 81, 0.25)",
     iconColor: "text-gold-400",
   },
   {
@@ -30,7 +30,7 @@ const painPoints: PainPoint[] = [
     title: "Opaque Data Access",
     description:
       "Dataset access is invisible — no one knows who accessed what, when, or under which policy. Disputes are unresolvable.",
-    glowColor: "rgba(55, 170, 212, 0.15)",
+    glowColor: "rgba(55, 170, 212, 0.25)",
     iconColor: "text-teal-400",
   },
   {
@@ -38,7 +38,7 @@ const painPoints: PainPoint[] = [
     title: "Agent Accountability Gap",
     description:
       "AI agents consume data autonomously with zero audit trail. There is no way to verify what data they read or modified.",
-    glowColor: "rgba(97, 55, 212, 0.15)",
+    glowColor: "rgba(139, 85, 255, 0.25)",
     iconColor: "text-violet-400",
   },
 ];
@@ -52,7 +52,7 @@ function ProblemCard({ point }: { point: PainPoint }) {
         whileTap={{ boxShadow: `0 0 40px ${point.glowColor}` }}
         transition={{ duration: 0.3 }}
       >
-        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-navy-100 transition-all duration-300 group-hover:bg-navy-200/60 group-hover:scale-110">
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-navy-100/80 transition-all duration-300 group-hover:bg-navy-200/60 group-hover:scale-110">
           <point.icon className={`h-5 w-5 ${point.iconColor}`} />
         </div>
         <h3 className="font-display text-lg font-semibold text-navy-900">
@@ -68,7 +68,8 @@ function ProblemCard({ point }: { point: PainPoint }) {
 
 export function Problem() {
   return (
-    <section className="border-t border-navy-100 py-20 sm:py-28">
+    <section className="py-20 sm:py-28">
+      <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       <div className="mx-auto max-w-7xl px-6">
         <ScrollReveal>
           <FadeIn className="mx-auto max-w-2xl text-center">

@@ -246,8 +246,9 @@ export function ForDevelopers() {
   return (
     <section
       id="developers"
-      className="border-t border-navy-100 py-20 sm:py-28"
+      className="py-20 sm:py-28"
     >
+      <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
@@ -264,7 +265,7 @@ export function ForDevelopers() {
 
         <FadeIn delay={0.2}>
           <div className="mx-auto mt-12 max-w-3xl">
-            <div className="overflow-hidden rounded-2xl shadow-xl">
+            <div className="overflow-hidden rounded-2xl shadow-[0_0_60px_rgba(13,20,36,0.12)]">
               <Tabs defaultValue="sdk">
                 <div className="border-b border-navy-800 bg-navy-900 px-4 pt-3">
                   <TabsList className="bg-transparent">

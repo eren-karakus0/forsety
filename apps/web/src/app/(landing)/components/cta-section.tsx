@@ -12,7 +12,8 @@ import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 export function CtaSection() {
   return (
-    <section className="relative overflow-hidden border-t border-navy-100 py-20 sm:py-28">
+    <section className="relative overflow-hidden py-20 sm:py-28">
+      <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       {/* Decorative orbs with parallax */}
       <Parallax speed={0.2} direction="up">
         <GradientOrb color="gold" size={300} className="-left-[10%] top-[20%]" blur={80} />
@@ -44,7 +45,7 @@ export function CtaSection() {
               <Magnetic strength={0.15}>
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-gold-500 to-teal-500 text-white font-semibold hover:from-gold-400 hover:to-teal-400 border-0 glow-gold"
+                  className="bg-gradient-to-r from-gold-500 to-teal-500 text-white font-semibold hover:from-gold-400 hover:to-teal-400 border-0 glow-gold-lg"
                   asChild
                 >
                   <Link href="/dashboard">

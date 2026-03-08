@@ -55,16 +55,23 @@
     @apply glass rounded-2xl shadow-xl;
   }
 
+  .glass-dark {
+    @apply bg-navy-900/60 backdrop-blur-xl border border-navy-800/50 shadow-lg;
+  }
+  .glass-card-dark {
+    @apply glass-dark rounded-2xl;
+  }
+
   .glow-gold {
-    box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
+    box-shadow: 0 0 40px rgba(235, 192, 81, 0.2);
   }
 
   .glow-teal {
-    box-shadow: 0 0 40px rgba(55, 170, 212, 0.15);
+    box-shadow: 0 0 40px rgba(55, 170, 212, 0.2);
   }
 
   .glow-violet {
-    box-shadow: 0 0 40px rgba(97, 55, 212, 0.15);
+    box-shadow: 0 0 40px rgba(139, 85, 255, 0.2);
   }
 
   .gradient-text-gold {
@@ -105,15 +112,20 @@
 
   /* Enhanced glow variants */
   .glow-gold-lg {
-    box-shadow: 0 0 60px rgba(212, 175, 55, 0.2), 0 0 120px rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 60px rgba(235, 192, 81, 0.25), 0 0 120px rgba(235, 192, 81, 0.1);
   }
 
   .glow-teal-lg {
-    box-shadow: 0 0 60px rgba(55, 170, 212, 0.2), 0 0 120px rgba(55, 170, 212, 0.1);
+    box-shadow: 0 0 60px rgba(55, 170, 212, 0.25), 0 0 120px rgba(55, 170, 212, 0.1);
   }
 
   .glow-violet-lg {
-    box-shadow: 0 0 60px rgba(97, 55, 212, 0.2), 0 0 120px rgba(97, 55, 212, 0.1);
+    box-shadow: 0 0 60px rgba(139, 85, 255, 0.25), 0 0 120px rgba(139, 85, 255, 0.1);
+  }
+
+  /* Section transition — gradient fade instead of border-t */
+  .section-divider {
+    @apply h-px bg-gradient-to-r from-transparent via-navy-200/40 to-transparent;
   }
 
   /* Animated gradient border */

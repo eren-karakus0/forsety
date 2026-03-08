@@ -26,7 +26,7 @@ const steps: Step[] = [
     description:
       "Upload your dataset to Shelby Protocol. Attach a license and define access policies — who can read, how many times, until when.",
     gradient: "from-gold-500 to-gold-600",
-    glowColor: "rgba(212, 175, 55, 0.15)",
+    glowColor: "rgba(235, 192, 81, 0.25)",
     iconColor: "text-gold-400",
     details: [
       "SPDX license types supported",
@@ -41,7 +41,7 @@ const steps: Step[] = [
     description:
       "Every data access is logged with cryptographic proofs. AI agents authenticate, policies are enforced, and every operation is recorded.",
     gradient: "from-teal-500 to-teal-600",
-    glowColor: "rgba(55, 170, 212, 0.15)",
+    glowColor: "rgba(55, 170, 212, 0.25)",
     iconColor: "text-teal-400",
     details: [
       "SHA-256 content hashes",
@@ -56,7 +56,7 @@ const steps: Step[] = [
     description:
       "Generate an evidence pack — a verifiable bundle of licenses, policies, access logs, and proofs. Share it with auditors or stakeholders.",
     gradient: "from-violet-500 to-violet-600",
-    glowColor: "rgba(97, 55, 212, 0.15)",
+    glowColor: "rgba(139, 85, 255, 0.25)",
     iconColor: "text-violet-400",
     details: [
       "JSON evidence bundle",
@@ -273,8 +273,9 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="border-t border-navy-100 py-20 sm:py-28"
+      className="py-20 sm:py-28"
     >
+      <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       <div className="mx-auto max-w-7xl px-6">
         <ScrollReveal>
           <FadeIn className="mx-auto max-w-2xl text-center">

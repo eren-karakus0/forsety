@@ -163,6 +163,24 @@ const config: Config = {
           "50%": { backgroundPosition: "100% 50%" },
           "100%": { backgroundPosition: "0% 50%" },
         },
+        "mesh-float-1": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+          "66%": { transform: "translate(-20px, 20px) scale(0.95)" },
+        },
+        "mesh-float-2": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "33%": { transform: "translate(-40px, 30px) scale(1.05)" },
+          "66%": { transform: "translate(25px, -40px) scale(1.1)" },
+        },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
+        blink: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.5s ease-out",
@@ -177,6 +195,10 @@ const config: Config = {
         shimmer: "shimmer 2s linear infinite",
         float: "float 6s ease-in-out infinite",
         "gradient-shift": "gradient-shift 8s ease infinite",
+        "mesh-float-1": "mesh-float-1 15s ease-in-out infinite",
+        "mesh-float-2": "mesh-float-2 18s ease-in-out infinite",
+        marquee: "marquee 30s linear infinite",
+        blink: "blink 1s step-end infinite",
       },
     },
   },

@@ -10,9 +10,9 @@ interface GradientOrbProps {
 }
 
 const colorMap = {
-  gold: "bg-gold-500/10",
-  teal: "bg-teal-500/10",
-  violet: "bg-violet-500/10",
+  gold: "bg-gold-500/20",
+  teal: "bg-teal-500/20",
+  violet: "bg-violet-500/20",
 };
 
 export function GradientOrb({
@@ -35,8 +35,8 @@ export function GradientOrb({
         prefersReducedMotion
           ? {}
           : {
-              scale: [1, 1.1, 1],
-              opacity: [0.15, 0.25, 0.15],
+              scale: [1, 1.15, 1],
+              opacity: [0.2, 0.35, 0.2],
             }
       }
       transition={{

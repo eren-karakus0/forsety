@@ -212,7 +212,8 @@ export function Architecture() {
   };
 
   return (
-    <section className="border-t border-navy-100 py-20 sm:py-28">
+    <section className="py-20 sm:py-28">
+      <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">

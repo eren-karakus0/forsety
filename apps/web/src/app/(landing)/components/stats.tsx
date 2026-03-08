@@ -15,7 +15,8 @@ const stats = [
 
 export function Stats() {
   return (
-    <section className="relative border-t border-navy-100 overflow-hidden bg-gradient-to-b from-navy-50 to-transparent py-16 sm:py-20">
+    <section className="relative overflow-hidden py-16 sm:py-20">
+      <div className="section-divider mx-auto max-w-5xl mb-16 sm:mb-20" />
       {/* Background orbs */}
       <GradientOrb color="gold" size={300} className="-left-[10%] top-[20%]" blur={100} />
       <GradientOrb color="teal" size={250} className="-right-[10%] bottom-[10%]" blur={80} />

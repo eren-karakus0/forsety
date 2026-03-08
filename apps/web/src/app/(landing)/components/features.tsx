@@ -31,7 +31,7 @@ const features: Feature[] = [
     description:
       "Cryptographic evidence packs prove every dataset access event — who accessed what, when, and under which license.",
     tag: "Phase 1",
-    glowColor: "rgba(212, 175, 55, 0.15)",
+    glowColor: "rgba(235, 192, 81, 0.25)",
     iconColor: "text-gold-400",
   },
   {
@@ -40,7 +40,7 @@ const features: Feature[] = [
     description:
       "Persistent memory for AI agents with TTL, namespaces, and Shelby backup. Every read and write is audited.",
     tag: "Phase 2",
-    glowColor: "rgba(55, 170, 212, 0.15)",
+    glowColor: "rgba(55, 170, 212, 0.25)",
     iconColor: "text-teal-400",
   },
   {
@@ -49,7 +49,7 @@ const features: Feature[] = [
     description:
       "Client-side AES-256-GCM encryption. Your data is encrypted before it leaves your device. Zero-knowledge by design.",
     tag: "Phase 3",
-    glowColor: "rgba(97, 55, 212, 0.15)",
+    glowColor: "rgba(139, 85, 255, 0.25)",
     iconColor: "text-violet-400",
   },
   {
@@ -58,7 +58,7 @@ const features: Feature[] = [
     description:
       "Semantic search across datasets and agent memories using local embeddings. No external API calls — fully private.",
     tag: "Phase 3",
-    glowColor: "rgba(55, 170, 212, 0.15)",
+    glowColor: "rgba(55, 170, 212, 0.25)",
     iconColor: "text-teal-400",
   },
   {
@@ -67,7 +67,7 @@ const features: Feature[] = [
     description:
       "Sign in with your wallet. Wallet-based identity ties dataset ownership and agent management to cryptographic keys.",
     tag: "Phase 3",
-    glowColor: "rgba(212, 175, 55, 0.15)",
+    glowColor: "rgba(235, 192, 81, 0.25)",
     iconColor: "text-gold-400",
   },
   {
@@ -76,7 +76,7 @@ const features: Feature[] = [
     description:
       "Model Context Protocol server with stdio and SSE transports. Connect AI agents to Forsety with standard tooling.",
     tag: "Phase 3",
-    glowColor: "rgba(97, 55, 212, 0.15)",
+    glowColor: "rgba(139, 85, 255, 0.25)",
     iconColor: "text-violet-400",
   },
 ];
@@ -100,7 +100,7 @@ function FeatureCard({ feature }: { feature: Feature }) {
               className={`h-5 w-5 ${feature.iconColor} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12`}
             />
           </div>
-          <span className="shimmer-bg rounded-full border border-navy-200 bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-500">
+          <span className="shimmer-bg rounded-full border border-navy-200/80 bg-navy-50/80 px-2.5 py-0.5 text-xs font-medium text-navy-500">
             {feature.tag}
           </span>
         </div>
@@ -119,8 +119,9 @@ export function Features() {
   return (
     <section
       id="features"
-      className="border-t border-navy-100 py-20 sm:py-28"
+      className="py-20 sm:py-28"
     >
+      <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       <div className="mx-auto max-w-7xl px-6">
         <ScrollReveal>
           <FadeIn className="mx-auto max-w-2xl text-center">
