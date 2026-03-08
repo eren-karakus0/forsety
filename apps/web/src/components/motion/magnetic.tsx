@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useRef, useState, useEffect } from "react";
 import { motion, useMotionValue, useSpring, useReducedMotion } from "framer-motion";
 
 interface MagneticProps {
@@ -16,13 +16,17 @@ export function Magnetic({
 }: MagneticProps) {
   const ref = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
   const springX = useSpring(x, { stiffness: 300, damping: 20 });
   const springY = useSpring(y, { stiffness: 300, damping: 20 });
 
-  if (prefersReducedMotion) {
+  useEffect(() => setMounted(true), []);
+
+  // Render static div on server & before mount to avoid hydration mismatch
+  if (prefersReducedMotion || !mounted) {
     return <div className={className}>{children}</div>;
   }
 

@@ -12,6 +12,8 @@ import {
 import { motion } from "framer-motion";
 import { FadeIn } from "@/components/motion/fade-in";
 import { StaggerChildren, StaggerItem } from "@/components/motion/stagger-children";
+import { TiltCard } from "@/components/motion/tilt-card";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 interface Feature {
   icon: LucideIcon;
@@ -85,29 +87,31 @@ function FeatureCard({ feature }: { feature: Feature }) {
   };
 
   return (
-    <motion.div
-      className="group glass-card p-6 transition-colors duration-300 hover:bg-navy-100/80"
-      whileHover={hoverStyle}
-      whileTap={hoverStyle}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-navy-100 transition-colors group-hover:bg-navy-200/60">
-          <feature.icon
-            className={`h-5 w-5 ${feature.iconColor} transition-transform duration-300 group-hover:scale-110`}
-          />
+    <TiltCard glowColor={feature.glowColor} className="h-full">
+      <motion.div
+        className="group glass-card h-full p-6 transition-colors duration-300 hover:bg-navy-100/80"
+        whileHover={hoverStyle}
+        whileTap={hoverStyle}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-navy-100 transition-all duration-300 group-hover:bg-navy-200/60">
+            <feature.icon
+              className={`h-5 w-5 ${feature.iconColor} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12`}
+            />
+          </div>
+          <span className="shimmer-bg rounded-full border border-navy-200 bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-500">
+            {feature.tag}
+          </span>
         </div>
-        <span className="rounded-full border border-navy-200 bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-500">
-          {feature.tag}
-        </span>
-      </div>
-      <h3 className="mt-4 font-display text-lg font-semibold text-navy-900">
-        {feature.title}
-      </h3>
-      <p className="mt-2 text-sm leading-relaxed text-navy-400">
-        {feature.description}
-      </p>
-    </motion.div>
+        <h3 className="mt-4 font-display text-lg font-semibold text-navy-900">
+          {feature.title}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-navy-400">
+          {feature.description}
+        </p>
+      </motion.div>
+    </TiltCard>
   );
 }
 
@@ -118,18 +122,20 @@ export function Features() {
       className="border-t border-navy-100 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-6">
-        <FadeIn className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
-            Features
-          </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
-            Everything You Need for Compliant AI
-          </h2>
-          <p className="mt-4 text-lg text-navy-400">
-            From cryptographic proofs to encrypted storage, Forsety provides a
-            complete toolkit for verifiable data access.
-          </p>
-        </FadeIn>
+        <ScrollReveal>
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
+              Features
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
+              Everything You Need for Compliant AI
+            </h2>
+            <p className="mt-4 text-lg text-navy-400">
+              From cryptographic proofs to encrypted storage, Forsety provides a
+              complete toolkit for verifiable data access.
+            </p>
+          </FadeIn>
+        </ScrollReveal>
 
         <StaggerChildren className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (

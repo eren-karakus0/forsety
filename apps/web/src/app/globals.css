@@ -102,9 +102,56 @@
     background-size: 200% 100%;
     @apply animate-shimmer;
   }
+
+  /* Enhanced glow variants */
+  .glow-gold-lg {
+    box-shadow: 0 0 60px rgba(212, 175, 55, 0.2), 0 0 120px rgba(212, 175, 55, 0.1);
+  }
+
+  .glow-teal-lg {
+    box-shadow: 0 0 60px rgba(55, 170, 212, 0.2), 0 0 120px rgba(55, 170, 212, 0.1);
+  }
+
+  .glow-violet-lg {
+    box-shadow: 0 0 60px rgba(97, 55, 212, 0.2), 0 0 120px rgba(97, 55, 212, 0.1);
+  }
+
+  /* Animated gradient border */
+  .gradient-border-animated {
+    position: relative;
+  }
+
+  .gradient-border-animated::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #D4AF37, #37AAD4, #6137D4, #D4AF37);
+    background-size: 300% 300%;
+    animation: gradient-border-rotate 4s ease infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  @keyframes gradient-border-rotate {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 }
 
 @layer utilities {
+  /* 3D perspective utilities */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .motion-safe\:animate-none,

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { Upload, FileCheck, ShieldCheck, type LucideIcon } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { FadeIn } from "@/components/motion/fade-in";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
+import { Counter } from "@/components/motion/counter";
 
 interface Step {
   number: string;
@@ -64,15 +66,6 @@ const steps: Step[] = [
   },
 ];
 
-const lineVariants = {
-  hidden: { pathLength: 0, opacity: 0 },
-  visible: {
-    pathLength: 1,
-    opacity: 1,
-    transition: { duration: 1.2, ease: "easeInOut" as const },
-  },
-};
-
 function StepCard({
   step,
   index,
@@ -126,23 +119,25 @@ function StepCard({
       }}
     >
       {/* Step Container */}
-      <div
+      <motion.div
         className="mx-auto flex h-28 w-28 items-center justify-center rounded-2xl border border-navy-200 bg-navy-50 backdrop-blur-sm transition-all duration-300"
         style={{
           boxShadow: isActive ? `0 0 50px ${step.glowColor}` : "none",
           borderColor: isActive ? step.glowColor : "",
         }}
+        animate={isActive ? { scale: 1.05 } : { scale: 1 }}
+        transition={{ duration: 0.3 }}
       >
         <step.icon
           className={`h-10 w-10 ${step.iconColor} transition-transform duration-300 ${isActive ? "scale-110" : ""}`}
         />
-      </div>
+      </motion.div>
 
-      {/* Number Badge */}
+      {/* Number Badge with Counter */}
       <div
         className={`absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r ${step.gradient} text-xs font-bold text-white shadow-lg lg:-top-2 lg:left-1/2 lg:ml-12 lg:right-auto`}
       >
-        {step.number}
+        <Counter value={step.number} className="text-xs font-bold" />
       </div>
 
       <h3 className="mt-6 font-display text-xl font-semibold text-navy-900">
@@ -178,18 +173,31 @@ function StepCard({
 function AnimatedConnector() {
   const prefersReducedMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
+  const connectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
 
-  // Render static connector on server & before mount to avoid hydration mismatch
+  // Scroll-driven connector line animation
+  const { scrollYProgress } = useScroll({
+    target: connectorRef,
+    offset: ["start 80%", "end 40%"],
+  });
+
+  const pathLength = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  // Always render with ref attached so useScroll can find target after mount.
+  // Show static line before mount / when reduced-motion is on.
   if (prefersReducedMotion || !mounted) {
     return (
-      <div className="absolute left-0 right-0 top-[3.5rem] hidden h-px bg-gradient-to-r from-transparent via-navy-300 to-transparent lg:block" />
+      <div
+        ref={connectorRef}
+        className="absolute left-0 right-0 top-[3.5rem] hidden h-px bg-gradient-to-r from-transparent via-navy-300 to-transparent lg:block"
+      />
     );
   }
 
   return (
-    <div className="absolute left-0 right-0 top-[3.5rem] hidden lg:block">
+    <div ref={connectorRef} className="absolute left-0 right-0 top-[3.5rem] hidden lg:block">
       <svg
         className="h-px w-full overflow-visible"
         viewBox="0 0 1000 2"
@@ -203,10 +211,7 @@ function AnimatedConnector() {
           stroke="url(#connectorGradient)"
           strokeWidth="2"
           strokeDasharray="6 4"
-          variants={lineVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
+          style={{ pathLength }}
         />
         <defs>
           <linearGradient
@@ -271,17 +276,19 @@ export function HowItWorks() {
       className="border-t border-navy-100 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-6">
-        <FadeIn className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
-            How it Works
-          </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
-            Three Steps to Verifiable Compliance
-          </h2>
-          <p className="mt-4 text-lg text-navy-400">
-            From upload to evidence generation — a seamless, auditable pipeline.
-          </p>
-        </FadeIn>
+        <ScrollReveal>
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
+              How it Works
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
+              Three Steps to Verifiable Compliance
+            </h2>
+            <p className="mt-4 text-lg text-navy-400">
+              From upload to evidence generation — a seamless, auditable pipeline.
+            </p>
+          </FadeIn>
+        </ScrollReveal>
 
         <div className="relative mt-16" ref={sectionRef}>
           <AnimatedConnector />

@@ -208,7 +208,7 @@ export default async function OverviewPage() {
         {stats.map((stat) => (
           <StaggerItemWrapper key={stat.label}>
             <Card
-              className={`border-l-4 ${accentBorder[stat.accent]} bg-gradient-to-br ${accentGlow[stat.accent]} transition-all duration-200 hover:shadow-md`}
+              className={`border-l-4 ${accentBorder[stat.accent]} bg-gradient-to-br ${accentGlow[stat.accent]} transition-all duration-200 hover:shadow-lg hover:scale-[1.02]`}
             >
               <CardContent className="pt-5">
                 <div className="flex items-center justify-between">
@@ -243,7 +243,7 @@ export default async function OverviewPage() {
         {quickActions.map((action) => (
           <StaggerItemWrapper key={action.href}>
             <Link href={action.href} className="group block">
-              <Card className="h-full transition-all duration-200 hover:border-primary/30 hover:shadow-md">
+              <Card className="h-full transition-all duration-200 hover:border-primary/30 hover:shadow-md gradient-border-animated">
                 <CardContent className="flex flex-col gap-3 pt-5">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${accentGlow[action.accent]}`}
@@ -288,7 +288,7 @@ export default async function OverviewPage() {
                 {data.recentLogs.map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-center justify-between rounded-lg border border-border/50 px-4 py-3 transition-colors hover:bg-muted/30"
+                    className="flex items-center justify-between rounded-lg border border-border/50 px-4 py-3 transition-all duration-200 hover:bg-muted/30 hover:translate-x-1"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">

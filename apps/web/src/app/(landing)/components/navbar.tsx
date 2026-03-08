@@ -31,7 +31,11 @@ export function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div
+        className={`mx-auto flex max-w-7xl items-center justify-between px-6 transition-all duration-300 ${
+          scrolled ? "h-14" : "h-16"
+        }`}
+      >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
           <Image
@@ -39,7 +43,7 @@ export function Navbar() {
             alt="Forsety"
             width={36}
             height={36}
-            className="h-9 w-9"
+            className={`transition-all duration-300 ${scrolled ? "h-8 w-8" : "h-9 w-9"}`}
           />
           <span className="font-display text-xl font-semibold tracking-tight text-navy-900">
             Forsety

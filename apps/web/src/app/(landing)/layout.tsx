@@ -3,6 +3,7 @@
 import { Navbar } from "./components/navbar";
 import { Footer } from "./components/footer";
 import { SessionProvider } from "./components/session-context";
+import { ScrollProgress } from "@/components/motion/scroll-progress";
 
 export default function LandingLayout({
   children,
@@ -12,6 +13,9 @@ export default function LandingLayout({
   return (
     <SessionProvider>
       <div className="relative flex min-h-screen flex-col bg-white text-navy-900">
+        {/* Scroll progress bar */}
+        <ScrollProgress />
+
         {/* Gradient mesh background */}
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
           <div className="absolute -left-[20%] -top-[10%] h-[600px] w-[600px] rounded-full bg-teal-500/[0.04] blur-[120px]" />

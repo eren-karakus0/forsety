@@ -131,7 +131,7 @@ export default function DashboardLayout({
       </header>
 
       {/* Content */}
-      <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-6 py-8 animate-fade-in">{children}</main>
     </div>
     </Providers>
   );
