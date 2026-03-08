@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@forsety/ui";
-import { Download } from "lucide-react";
+import { Download, ClipboardList } from "lucide-react";
 
 interface AuditLog {
   id: string;
@@ -121,18 +121,26 @@ function AuditPageContent() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-end justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Audit Trail
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Complete audit log of all agent activities
-          </p>
+        <div className="page-header-accent">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50">
+              <ClipboardList className="h-5 w-5 text-violet-500" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+                Audit Trail
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Complete audit log of all agent activities
+              </p>
+            </div>
+          </div>
         </div>
         <Button
           variant="outline"
           onClick={handleExport}
           disabled={logs.length === 0}
+          className="hover:border-gold-500/30 hover:text-gold-600"
         >
           <Download className="mr-2 h-4 w-4" />
           Export JSON
@@ -140,9 +148,9 @@ function AuditPageContent() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] rounded-lg">
             <SelectValue placeholder="All Agents" />
           </SelectTrigger>
           <SelectContent>
@@ -157,7 +165,7 @@ function AuditPageContent() {
         </Select>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[160px] rounded-lg">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -168,39 +176,46 @@ function AuditPageContent() {
           </SelectContent>
         </Select>
 
-        <div className="ml-auto self-center text-sm text-muted-foreground">
+        <div className="ml-auto flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground">
+          <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-gold-400 to-teal-400" />
           {logs.length} entries
         </div>
       </div>
 
       {/* Log Table */}
-      <Card>
+      <Card className="overflow-hidden rounded-xl">
         {loading ? (
           <div className="space-y-3 p-6">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <Skeleton key={i} className="h-10 w-full rounded-lg" />
             ))}
           </div>
         ) : logs.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-muted-foreground">
-            No audit logs found
+          <div className="flex flex-col items-center gap-3 px-5 py-16">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
+              <ClipboardList className="h-5 w-5 text-violet-400" />
+            </div>
+            <p className="text-sm font-medium text-foreground">No audit logs found</p>
+            <p className="text-xs text-muted-foreground">
+              Try adjusting your filters
+            </p>
           </div>
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Agent</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tool</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resource</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
+              <TableRow className="table-header-row border-border/40 hover:bg-transparent">
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Time</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Agent</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Action</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tool</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Resource</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {logs.map((log) => (
-                <TableRow key={log.id} className="transition-colors">
+                <TableRow key={log.id} className="border-border/30 transition-colors hover:bg-muted/20">
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleString("en-US", {
                       month: "short",
@@ -214,7 +229,7 @@ function AuditPageContent() {
                     {log.agentId ? (
                       <Link
                         href={`/dashboard/agents/${log.agentId}`}
-                        className="text-xs font-medium text-foreground hover:text-gold-500 transition-colors"
+                        className="text-xs font-medium text-foreground hover:text-gold-600 transition-colors"
                       >
                         {getAgentName(log.agentId)}
                       </Link>

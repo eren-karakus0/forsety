@@ -14,7 +14,7 @@ import {
   Skeleton,
   Separator,
 } from "@forsety/ui";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Users } from "lucide-react";
 
 interface AgentData {
   agent: {
@@ -94,7 +94,10 @@ export default function AgentDetailPage() {
   if (!data) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">Agent not found</p>
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50">
+          <Users className="h-5 w-5 text-teal-400" />
+        </div>
+        <p className="text-sm font-medium text-foreground">Agent not found</p>
         <Button variant="link" asChild>
           <Link href="/dashboard/agents">Back to agents</Link>
         </Button>
@@ -108,38 +111,43 @@ export default function AgentDetailPage() {
     <div className="animate-fade-in">
       {/* Breadcrumb */}
       <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/dashboard" className="transition-colors hover:text-foreground">
+        <Link href="/dashboard" className="transition-colors hover:text-gold-600">
           Dashboard
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <Link href="/dashboard/agents" className="transition-colors hover:text-foreground">
+        <Link href="/dashboard/agents" className="transition-colors hover:text-gold-600">
           Agents
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground">{agent.name}</span>
+        <span className="font-medium text-foreground">{agent.name}</span>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left: Agent info */}
         <div className="lg:col-span-2 space-y-6">
           {/* Agent Card */}
-          <Card>
+          <Card className="overflow-hidden rounded-xl">
             <CardContent className="pt-6">
               <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h1 className="font-display text-xl font-bold text-foreground">
-                    {agent.name}
-                  </h1>
-                  {agent.description && (
-                    <p className="mt-1 text-sm text-muted-foreground">{agent.description}</p>
-                  )}
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
+                    <Users className="h-5 w-5 text-teal-500" />
+                  </div>
+                  <div>
+                    <h1 className="font-display text-xl font-bold text-foreground">
+                      {agent.name}
+                    </h1>
+                    {agent.description && (
+                      <p className="mt-0.5 text-sm text-muted-foreground">{agent.description}</p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
                     className={`h-2 w-2 rounded-full ${
                       agent.isActive
                         ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]"
-                        : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.3)]"
+                        : "bg-red-400 shadow-[0_0_6px_rgba(239,68,68,0.2)]"
                     }`}
                   />
                   <Badge variant={agent.isActive ? "default" : "destructive"}>
@@ -148,23 +156,23 @@ export default function AgentDetailPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg bg-muted/50 p-4 space-y-3">
-                <div className="flex justify-between border-b border-border/60 pb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Agent ID</span>
+              <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                <div className="flex justify-between border-b border-border/40 pb-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Agent ID</span>
                   <span className="font-mono text-xs text-muted-foreground break-all">{agent.id}</span>
                 </div>
-                <div className="flex justify-between border-b border-border/60 pb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Owner</span>
+                <div className="flex justify-between border-b border-border/40 pb-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</span>
                   <span className="font-mono text-xs text-muted-foreground">{agent.ownerAddress}</span>
                 </div>
-                <div className="flex justify-between border-b border-border/60 pb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Created</span>
+                <div className="flex justify-between border-b border-border/40 pb-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Created</span>
                   <span className="text-sm text-foreground">
                     {new Date(agent.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Last Seen</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Last Seen</span>
                   <span className="text-sm text-foreground">
                     {agent.lastSeenAt
                       ? new Date(agent.lastSeenAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
@@ -176,20 +184,20 @@ export default function AgentDetailPage() {
           </Card>
 
           {/* Permissions */}
-          <Card>
+          <Card className="rounded-xl">
             <CardContent className="pt-6">
               <h2 className="mb-4 font-display text-base font-semibold text-foreground">
                 Permissions
               </h2>
               <div className="flex flex-wrap gap-2">
                 {agent.permissions.map((p) => (
-                  <Badge key={p} variant="outline" className="text-xs">
+                  <Badge key={p} variant="outline" className="rounded-lg text-xs">
                     {p}
                   </Badge>
                 ))}
               </div>
               <Separator className="my-4" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Allowed Datasets
               </h3>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -203,22 +211,22 @@ export default function AgentDetailPage() {
           </Card>
 
           {/* Audit Log */}
-          <Card>
-            <CardHeader className="border-b border-border bg-muted/50 flex-row items-center justify-between">
-              <CardTitle className="text-sm">Recent Activity</CardTitle>
-              <Button variant="link" size="sm" asChild>
+          <Card className="overflow-hidden rounded-xl">
+            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
+              <Button variant="link" size="sm" asChild className="text-gold-600">
                 <Link href={`/dashboard/audit?agentId=${id}`}>View all</Link>
               </Button>
             </CardHeader>
             <CardContent className="p-0">
               {auditLogs.length === 0 ? (
-                <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-                  No activity yet
+                <div className="flex flex-col items-center gap-2 px-5 py-12">
+                  <p className="text-sm text-muted-foreground">No activity yet</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/30">
                   {auditLogs.map((log: AuditLogEntry) => (
-                    <div key={log.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/30">
+                    <div key={log.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/20">
                       <Badge variant={statusVariant[log.status] ?? "secondary"} className="text-[10px]">
                         {log.status}
                       </Badge>
@@ -246,7 +254,7 @@ export default function AgentDetailPage() {
 
         {/* Right: Audit Summary */}
         <div className="space-y-6">
-          <Card className="border-gold-500/20 bg-gradient-to-b from-gold-500/5 to-transparent">
+          <Card className="stat-card-gold rounded-xl">
             <CardContent className="pt-6">
               <h2 className="mb-4 font-display text-base font-semibold text-foreground">
                 Audit Summary
@@ -258,6 +266,7 @@ export default function AgentDetailPage() {
                     {auditSummary.totalActions}
                   </span>
                 </div>
+                <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Successful</span>
                   <span className="font-display text-lg font-bold text-emerald-500">
@@ -282,9 +291,9 @@ export default function AgentDetailPage() {
 
           {/* Metadata */}
           {agent.metadata && Object.keys(agent.metadata).length > 0 && (
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b border-border bg-muted/50 py-2.5">
-                <CardTitle className="text-xs uppercase tracking-wider">
+            <Card className="overflow-hidden rounded-xl">
+              <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent py-2.5">
+                <CardTitle className="text-[11px] uppercase tracking-wider">
                   Metadata
                 </CardTitle>
               </CardHeader>

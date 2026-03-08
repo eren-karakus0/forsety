@@ -15,6 +15,7 @@ import {
   Upload,
   ArrowRight,
   AlertTriangle,
+  Shield,
 } from "lucide-react";
 import {
   FadeInWrapper,
@@ -105,25 +106,29 @@ export default async function OverviewPage() {
       label: "Total Datasets",
       value: data.totalDatasets.toString(),
       icon: Database,
-      accent: "gold" as const,
+      cardClass: "stat-card-gold",
+      iconColor: "text-gold-500",
     },
     {
       label: "Registered Agents",
       value: data.registeredAgents.toString(),
       icon: Users,
-      accent: "teal" as const,
+      cardClass: "stat-card-teal",
+      iconColor: "text-teal-500",
     },
     {
       label: "Active Agents",
       value: data.activeAgents.toString(),
       icon: Activity,
-      accent: "violet" as const,
+      cardClass: "stat-card-violet",
+      iconColor: "text-violet-500",
     },
     {
       label: "Audit Events",
       value: data.auditEvents.toString(),
       icon: ClipboardList,
-      accent: "navy" as const,
+      cardClass: "stat-card-navy",
+      iconColor: "text-navy-500",
     },
   ];
 
@@ -133,69 +138,59 @@ export default async function OverviewPage() {
       icon: Database,
       title: "Datasets",
       description: "Browse and manage your licensed datasets",
-      accent: "gold" as const,
+      iconColor: "text-gold-500",
+      iconBg: "bg-gold-50",
     },
     {
       href: "/dashboard/agents",
       icon: Users,
       title: "Agents",
       description: "View registered AI agents and their status",
-      accent: "teal" as const,
+      iconColor: "text-teal-500",
+      iconBg: "bg-teal-50",
     },
     {
       href: "/dashboard/audit",
       icon: ClipboardList,
       title: "Audit Trail",
       description: "Review the global activity trail",
-      accent: "violet" as const,
+      iconColor: "text-violet-500",
+      iconBg: "bg-violet-50",
     },
     {
       href: "/dashboard/upload",
       icon: Upload,
       title: "Upload",
       description: "Add a new dataset with license",
-      accent: "navy" as const,
+      iconColor: "text-navy-600",
+      iconBg: "bg-navy-50",
     },
   ];
-
-  const accentBorder: Record<string, string> = {
-    gold: "border-l-gold-500",
-    teal: "border-l-teal-500",
-    violet: "border-l-violet-500",
-    navy: "border-l-navy-500",
-  };
-
-  const accentGlow: Record<string, string> = {
-    gold: "from-gold-500/10 to-transparent",
-    teal: "from-teal-500/10 to-transparent",
-    violet: "from-violet-500/10 to-transparent",
-    navy: "from-navy-500/10 to-transparent",
-  };
-
-  const accentIcon: Record<string, string> = {
-    gold: "text-gold-500",
-    teal: "text-teal-500",
-    violet: "text-violet-500",
-    navy: "text-navy-500",
-  };
 
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
       <FadeInWrapper delay={0}>
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Overview of your Forsety workspace
-          </p>
+        <div className="page-header-accent">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-gold-500/10 to-teal-500/10">
+              <Shield className="h-5 w-5 text-gold-500" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+                Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Overview of your Forsety workspace
+              </p>
+            </div>
+          </div>
         </div>
       </FadeInWrapper>
 
       {/* Error Banner */}
       {data.error && (
-        <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 backdrop-blur-sm">
           <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
           <p className="text-sm text-destructive">
             Unable to load workspace data. Stats may be incomplete.
@@ -208,14 +203,14 @@ export default async function OverviewPage() {
         {stats.map((stat) => (
           <StaggerItemWrapper key={stat.label}>
             <Card
-              className={`border-l-4 ${accentBorder[stat.accent]} bg-gradient-to-br ${accentGlow[stat.accent]} transition-all duration-200 hover:shadow-lg hover:scale-[1.02]`}
+              className={`${stat.cardClass} rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]`}
             >
               <CardContent className="pt-5">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {stat.label}
                   </p>
-                  <stat.icon className={`h-4 w-4 ${accentIcon[stat.accent]}`} />
+                  <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
                 </div>
                 <div className="mt-2 font-display text-2xl font-bold text-foreground">
                   <CounterWrapper
@@ -243,23 +238,24 @@ export default async function OverviewPage() {
         {quickActions.map((action) => (
           <StaggerItemWrapper key={action.href}>
             <Link href={action.href} className="group block">
-              <Card className="h-full transition-all duration-200 hover:border-primary/30 hover:shadow-md gradient-border-animated">
+              <Card className="glass-card-premium h-full rounded-xl transition-all duration-300 hover:shadow-lg">
                 <CardContent className="flex flex-col gap-3 pt-5">
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${accentGlow[action.accent]}`}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${action.iconBg}`}
                   >
                     <action.icon
-                      className={`h-5 w-5 ${accentIcon[action.accent]}`}
+                      className={`h-5 w-5 ${action.iconColor}`}
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <p className="text-sm font-semibold text-foreground transition-colors group-hover:text-gold-600">
                       {action.title}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {action.description}
                     </p>
                   </div>
+                  <ArrowRight className="mt-auto h-3.5 w-3.5 text-muted-foreground/40 transition-all duration-300 group-hover:translate-x-1 group-hover:text-gold-500" />
                 </CardContent>
               </Card>
             </Link>
@@ -270,35 +266,35 @@ export default async function OverviewPage() {
       {/* Recent Activity */}
       {data.recentLogs.length > 0 && (
         <FadeInWrapper delay={0.2}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="font-display text-lg font-semibold">
+          <Card className="overflow-hidden rounded-xl">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent pb-4">
+              <CardTitle className="font-display text-base font-semibold">
                 Recent Activity
               </CardTitle>
               <Link
                 href="/dashboard/audit"
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-gold-600"
               >
                 View All
                 <ArrowRight className="h-3 w-3" />
               </Link>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/40">
                 {data.recentLogs.map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-center justify-between rounded-lg border border-border/50 px-4 py-3 transition-all duration-200 hover:bg-muted/30 hover:translate-x-1"
+                    className="flex items-center justify-between px-5 py-3.5 transition-all duration-200 hover:bg-muted/20"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/60">
                         <Activity className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-foreground">
                           {log.toolName ?? log.action}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[11px] text-muted-foreground">
                           {log.agentId
                             ? `Agent ${log.agentId.slice(0, 8)}...`
                             : "Anonymous"}
@@ -314,7 +310,7 @@ export default async function OverviewPage() {
                       >
                         {log.status}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[11px] text-muted-foreground">
                         {formatRelativeTime(log.timestamp)}
                       </span>
                     </div>

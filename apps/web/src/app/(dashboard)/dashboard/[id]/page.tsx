@@ -19,7 +19,7 @@ import {
   Alert,
   AlertDescription,
 } from "@forsety/ui";
-import { Download, Layers, Check, ChevronRight, Eye, Loader2 } from "lucide-react";
+import { Download, Layers, Check, ChevronRight, Eye, Loader2, Database } from "lucide-react";
 
 interface DatasetDetail {
   dataset: {
@@ -71,8 +71,8 @@ interface PolicyEntry {
 
 function MetadataRow({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
   return (
-    <div className="flex items-start justify-between border-b border-border/60 py-3 last:border-0">
-      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="flex items-start justify-between border-b border-border/30 py-3 last:border-0">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       <span
@@ -157,7 +157,10 @@ export default function DatasetDetailPage() {
   if (!data) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">Dataset not found</p>
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gold-50">
+          <Database className="h-5 w-5 text-gold-400" />
+        </div>
+        <p className="text-sm font-medium text-foreground">Dataset not found</p>
         <Button variant="link" asChild>
           <Link href="/dashboard">Back to datasets</Link>
         </Button>
@@ -171,39 +174,42 @@ export default function DatasetDetailPage() {
     <div className="animate-fade-in">
       {/* Breadcrumb */}
       <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/dashboard" className="transition-colors hover:text-foreground">
+        <Link href="/dashboard/datasets" className="transition-colors hover:text-gold-600">
           Datasets
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground">{dataset.name}</span>
+        <span className="font-medium text-foreground">{dataset.name}</span>
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="mb-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="access">
+        <TabsList className="mb-6 rounded-lg">
+          <TabsTrigger value="overview" className="rounded-md">Overview</TabsTrigger>
+          <TabsTrigger value="access" className="rounded-md">
             Access Log ({accessLogs.length})
           </TabsTrigger>
-          <TabsTrigger value="policies">
+          <TabsTrigger value="policies" className="rounded-md">
             Policies ({policies.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="access">
-          <Card>
-            <CardHeader className="border-b border-border bg-muted/50">
-              <CardTitle className="text-sm">Access Log Timeline</CardTitle>
+          <Card className="overflow-hidden rounded-xl">
+            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent">
+              <CardTitle className="text-sm font-semibold">Access Log Timeline</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {accessLogs.length === 0 ? (
-                <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-                  No access logs yet
+                <div className="flex flex-col items-center gap-2 px-5 py-12">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">No access logs yet</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/30">
                   {accessLogs.map((log: AccessLogEntry) => (
-                    <div key={log.id} className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/30">
-                      <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                    <div key={log.id} className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/20">
+                      <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted/60">
                         <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -233,19 +239,19 @@ export default function DatasetDetailPage() {
         </TabsContent>
 
         <TabsContent value="policies">
-          <Card>
-            <CardHeader className="border-b border-border bg-muted/50">
-              <CardTitle className="text-sm">Policy Versions</CardTitle>
+          <Card className="overflow-hidden rounded-xl">
+            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent">
+              <CardTitle className="text-sm font-semibold">Policy Versions</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {policies.length === 0 ? (
-                <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-                  No policies defined
+                <div className="flex flex-col items-center gap-2 px-5 py-12">
+                  <p className="text-sm text-muted-foreground">No policies defined</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/30">
                   {policies.map((pol: PolicyEntry) => (
-                    <div key={pol.id} className="px-5 py-4 transition-colors hover:bg-muted/30">
+                    <div key={pol.id} className="px-5 py-4 transition-colors hover:bg-muted/20">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Badge className="text-[10px]">
@@ -288,12 +294,17 @@ export default function DatasetDetailPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left: Metadata */}
             <div className="lg:col-span-2 space-y-6">
-              <Card>
+              <Card className="overflow-hidden rounded-xl">
                 <CardContent className="pt-6">
                   <div className="mb-4 flex items-center justify-between">
-                    <h1 className="font-display text-xl font-bold text-foreground">
-                      {dataset.name}
-                    </h1>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-50">
+                        <Database className="h-5 w-5 text-gold-500" />
+                      </div>
+                      <h1 className="font-display text-xl font-bold text-foreground">
+                        {dataset.name}
+                      </h1>
+                    </div>
                     <Badge variant="default">Active</Badge>
                   </div>
 
@@ -301,7 +312,7 @@ export default function DatasetDetailPage() {
                     <p className="mb-4 text-sm text-muted-foreground">{dataset.description}</p>
                   )}
 
-                  <div className="rounded-lg bg-muted/50 p-4">
+                  <div className="rounded-xl bg-muted/30 p-4">
                     <MetadataRow label="Dataset ID" value={dataset.id} mono />
                     <MetadataRow label="Shelby Blob" value={dataset.shelbyBlobName} mono />
                     <MetadataRow label="Blob Hash" value={dataset.blobHash} mono />
@@ -319,7 +330,7 @@ export default function DatasetDetailPage() {
               </Card>
 
               {/* Licenses */}
-              <Card>
+              <Card className="rounded-xl">
                 <CardContent className="pt-6">
                   <h2 className="mb-4 font-display text-base font-semibold text-foreground">
                     Licenses
@@ -331,7 +342,7 @@ export default function DatasetDetailPage() {
                       {licenses.map((lic) => (
                         <div
                           key={lic.id}
-                          className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3"
+                          className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/30"
                         >
                           <div>
                             <Badge variant="secondary" className="font-mono">
@@ -356,7 +367,7 @@ export default function DatasetDetailPage() {
 
             {/* Right: Evidence Pack */}
             <div className="space-y-6">
-              <Card className="border-gold-500/20 bg-gradient-to-b from-gold-500/5 to-transparent">
+              <Card className="stat-card-gold rounded-xl">
                 <CardContent className="pt-6">
                   <h2 className="mb-1 font-display text-base font-semibold text-foreground">
                     Evidence Pack
@@ -369,7 +380,7 @@ export default function DatasetDetailPage() {
                     <Button
                       onClick={handleGenerateEvidence}
                       disabled={generating}
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-gold-500 to-teal-500 text-white border-0 hover:from-gold-400 hover:to-teal-400"
                     >
                       {generating ? (
                         <>
@@ -385,7 +396,7 @@ export default function DatasetDetailPage() {
                     </Button>
                   ) : (
                     <div className="space-y-3">
-                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Check className="h-4 w-4 text-emerald-600" />
                           <span className="text-sm font-medium text-emerald-700">
@@ -400,7 +411,7 @@ export default function DatasetDetailPage() {
                       <Button
                         variant="outline"
                         onClick={downloadEvidence}
-                        className="w-full"
+                        className="w-full hover:border-gold-500/30 hover:text-gold-600"
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Download JSON
@@ -409,7 +420,7 @@ export default function DatasetDetailPage() {
                   )}
 
                   {error && (
-                    <Alert variant="destructive" className="mt-3">
+                    <Alert variant="destructive" className="mt-3 rounded-xl">
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
@@ -418,9 +429,9 @@ export default function DatasetDetailPage() {
 
               {/* Evidence JSON Preview */}
               {evidence && (
-                <Card className="overflow-hidden">
-                  <CardHeader className="border-b border-border bg-muted/50 py-2.5">
-                    <CardTitle className="text-xs uppercase tracking-wider">
+                <Card className="overflow-hidden rounded-xl">
+                  <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent py-2.5">
+                    <CardTitle className="text-[11px] uppercase tracking-wider">
                       JSON Preview
                     </CardTitle>
                   </CardHeader>

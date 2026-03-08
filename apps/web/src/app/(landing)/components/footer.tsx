@@ -3,7 +3,7 @@ import Image from "next/image";
 
 const footerLinks = {
   Product: [
-    { label: "Features", href: "#features" },
+    { label: "Features", href: "#verify" },
     { label: "How it Works", href: "#how-it-works" },
     { label: "Dashboard", href: "/dashboard" },
   ],
@@ -21,7 +21,8 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-navy-200/60 bg-gradient-to-b from-navy-50/80 to-white">
+    <footer className="bg-gradient-to-b from-navy-50/80 to-white">
+      <div className="mx-auto max-w-7xl h-px bg-gradient-to-r from-transparent via-gold-400/20 to-transparent" />
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
@@ -37,10 +38,19 @@ export function Footer() {
               <span className="font-display text-lg font-semibold tracking-tight text-navy-900">
                 Forsety
               </span>
+              {/* Subtle Tiwaz accent */}
+              <svg width="24" height="24" viewBox="0 0 400 800" fill="none" className="opacity-[0.08] text-navy-900">
+                <line x1="200" y1="0" x2="200" y2="800" stroke="currentColor" strokeWidth="8" />
+                <line x1="200" y1="100" x2="100" y2="300" stroke="currentColor" strokeWidth="6" />
+                <line x1="200" y1="100" x2="300" y2="300" stroke="currentColor" strokeWidth="6" />
+              </svg>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-navy-400">
               Evidence layer for licensed AI data access. Built on Shelby
               Protocol.
+            </p>
+            <p className="mt-1 text-xs font-medium italic text-gold-400/60">
+              &ldquo;Evidence Layer for Licensed AI Data&rdquo;
             </p>
 
             {/* Powered by Shelby badge */}

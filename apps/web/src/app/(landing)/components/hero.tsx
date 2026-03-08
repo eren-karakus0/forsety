@@ -9,6 +9,7 @@ import { GradientOrb } from "@/components/motion/gradient-orb";
 import { Magnetic } from "@/components/motion/magnetic";
 import { TextReveal } from "@/components/motion/text-reveal";
 import { motion, useMotionValue, useTransform, useScroll } from "framer-motion";
+import { TiwazBackground } from "./tiwaz-background";
 
 function useMouseParallax(strength: number = 0.02) {
   const x = useMotionValue(0);
@@ -50,37 +51,29 @@ export function Hero() {
     >
       {/* Animated Gradient Orbs with mouse parallax */}
       <motion.div className="pointer-events-none" style={{ x, y }}>
-        <GradientOrb color="gold" size={500} className="-left-[10%] top-[10%]" blur={100} />
+        <GradientOrb color="gold" size={600} className="-left-[10%] top-[10%]" blur={120} />
       </motion.div>
       <motion.div
         className="pointer-events-none"
         style={{ x: tealOrbX, y: tealOrbY }}
       >
-        <GradientOrb color="teal" size={400} className="-right-[5%] top-[30%]" blur={90} />
+        <GradientOrb color="teal" size={500} className="-right-[5%] top-[30%]" blur={100} />
       </motion.div>
       <motion.div
         className="pointer-events-none"
         style={{ x: violetOrbX, y: violetOrbY }}
       >
-        <GradientOrb color="violet" size={350} className="bottom-[10%] left-[20%]" blur={80} />
+        <GradientOrb color="violet" size={400} className="bottom-[10%] left-[20%]" blur={90} />
       </motion.div>
 
-      {/* Tiwaz geometric pattern */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.04]">
-        <svg className="absolute right-0 top-0 h-full w-1/2" viewBox="0 0 400 800" fill="none">
-          <line x1="200" y1="0" x2="200" y2="800" stroke="currentColor" strokeWidth="1" className="text-navy-300" />
-          <line x1="200" y1="100" x2="100" y2="300" stroke="currentColor" strokeWidth="1" className="text-navy-300" />
-          <line x1="200" y1="100" x2="300" y2="300" stroke="currentColor" strokeWidth="1" className="text-navy-300" />
-          <line x1="200" y1="400" x2="80" y2="600" stroke="currentColor" strokeWidth="0.5" className="text-navy-300" />
-          <line x1="200" y1="400" x2="320" y2="600" stroke="currentColor" strokeWidth="0.5" className="text-navy-300" />
-        </svg>
-      </div>
+      {/* Tiwaz geometric pattern — large parallax background */}
+      <TiwazBackground variant="light" side="right" />
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-3xl text-center">
           {/* Badge */}
           <FadeIn delay={0.1}>
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-gold-500/20 bg-gold-500/[0.06] px-4 py-1.5 text-sm font-medium text-gold-600 backdrop-blur-sm">
+            <div className="shimmer-bg mb-8 inline-flex items-center gap-2 rounded-full border border-gold-500/20 bg-gold-500/[0.06] px-4 py-1.5 text-sm font-medium text-gold-600 backdrop-blur-sm">
               <Shield className="h-4 w-4 text-gold-400" />
               Built on Shelby Protocol
             </div>
@@ -88,7 +81,7 @@ export function Hero() {
 
           {/* Headline with word-by-word reveal */}
           <FadeIn delay={0.15}>
-            <h1 className="font-display text-4xl font-bold tracking-tight text-navy-900 sm:text-5xl lg:text-7xl">
+            <h1 className="font-display text-4xl font-bold tracking-tight text-navy-900 sm:text-5xl lg:text-[5.5rem]">
               <TextReveal variant="word" as="span" staggerDelay={0.05} duration={0.6}>
                 Evidence Layer for
               </TextReveal>{" "}
@@ -102,7 +95,7 @@ export function Hero() {
 
           {/* Subtitle */}
           <FadeIn delay={0.35}>
-            <p className="mt-6 text-lg leading-relaxed text-navy-500 sm:text-xl">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-navy-500 sm:text-xl">
               We prove licensed access and compliant usage. Forsety creates
               cryptographic evidence packs that verify every dataset interaction —
               from upload to consumption.

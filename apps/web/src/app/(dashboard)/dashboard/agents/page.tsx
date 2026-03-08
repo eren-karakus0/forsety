@@ -16,7 +16,7 @@ import {
   TableRow,
   TableCell,
 } from "@forsety/ui";
-import { Users, ArrowRight } from "lucide-react";
+import { Users, ArrowRight, Activity, UserX } from "lucide-react";
 
 interface AgentRow {
   id: string;
@@ -55,74 +55,91 @@ export default function AgentsPage() {
     );
   }
 
+  const activeCount = agents.filter((a) => a.isActive).length;
+  const inactiveCount = agents.filter((a) => !a.isActive).length;
+
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Agents
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Registered AI agents with RecallVault access
-          </p>
+      <div className="page-header-accent">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
+            <Users className="h-5 w-5 text-teal-500" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+              Agents
+            </h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Registered AI agents with RecallVault access
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="transition-all duration-200 hover:shadow-md">
+        <Card className="stat-card-teal rounded-xl transition-all duration-300 hover:shadow-md">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Agents
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Total Agents
+              </p>
+              <Users className="h-4 w-4 text-teal-500" />
+            </div>
             <p className="mt-2 font-display text-2xl font-bold text-foreground">
               {agents.length}
             </p>
           </CardContent>
         </Card>
-        <Card className="transition-all duration-200 hover:shadow-md">
+        <Card className="stat-card-gold rounded-xl transition-all duration-300 hover:shadow-md">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Active
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Active
+              </p>
+              <Activity className="h-4 w-4 text-gold-500" />
+            </div>
             <p className="mt-2 font-display text-2xl font-bold text-emerald-500">
-              {agents.filter((a) => a.isActive).length}
+              {activeCount}
             </p>
           </CardContent>
         </Card>
-        <Card className="border-gold-500/20 bg-gradient-to-br from-gold-500/5 to-transparent transition-all duration-200 hover:shadow-md">
+        <Card className="stat-card-violet rounded-xl transition-all duration-300 hover:shadow-md">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Inactive
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Inactive
+              </p>
+              <UserX className="h-4 w-4 text-violet-500" />
+            </div>
             <p className="mt-2 font-display text-2xl font-bold text-foreground">
-              {agents.filter((a) => !a.isActive).length}
+              {inactiveCount}
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Table */}
-      <Card>
+      <Card className="overflow-hidden rounded-xl">
         <Table>
           <TableHeader>
-            <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableRow className="table-header-row border-border/40 hover:bg-transparent">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Name
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Owner
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Permissions
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Last Seen
               </TableHead>
-              <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Actions
               </TableHead>
             </TableRow>
@@ -132,8 +149,8 @@ export default function AgentsPage() {
               <TableRow>
                 <TableCell colSpan={6} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                      <Users className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50">
+                      <Users className="h-5 w-5 text-teal-400" />
                     </div>
                     <p className="text-sm font-medium text-foreground">
                       No agents registered
@@ -146,10 +163,10 @@ export default function AgentsPage() {
               </TableRow>
             ) : (
               agents.map((agent) => (
-                <TableRow key={agent.id} className="group transition-colors">
+                <TableRow key={agent.id} className="group border-border/30 transition-colors hover:bg-muted/20">
                   <TableCell>
                     <Link href={`/dashboard/agents/${agent.id}`}>
-                      <span className="text-sm font-medium text-foreground transition-colors group-hover:text-gold-500">
+                      <span className="text-sm font-medium text-foreground transition-colors group-hover:text-gold-600">
                         {agent.name}
                       </span>
                       <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
@@ -186,7 +203,7 @@ export default function AgentsPage() {
                         className={`h-2 w-2 rounded-full ${
                           agent.isActive
                             ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]"
-                            : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.3)]"
+                            : "bg-red-400 shadow-[0_0_6px_rgba(239,68,68,0.2)]"
                         }`}
                       />
                       <Badge
@@ -205,7 +222,7 @@ export default function AgentsPage() {
                       : "Never"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="hover:border-gold-500/30 hover:text-gold-600">
                       <Link href={`/dashboard/agents/${agent.id}`}>
                         View
                         <ArrowRight className="ml-1 h-3 w-3" />

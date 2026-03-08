@@ -123,9 +123,75 @@
     box-shadow: 0 0 60px rgba(139, 85, 255, 0.25), 0 0 120px rgba(139, 85, 255, 0.1);
   }
 
+  /* Premium card — hover'da animated gradient border */
+  .glass-card-premium {
+    @apply glass-card relative;
+  }
+  .glass-card-premium::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, transparent, transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease, background 0.4s ease;
+  }
+  .glass-card-premium:hover::before {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(212,175,55,0.3), rgba(55,170,212,0.3));
+  }
+
+  /* Alternating section warm tint — brand-aligned cream */
+  .section-tinted {
+    background: linear-gradient(180deg, rgba(253, 249, 239, 0.5) 0%, rgba(240, 243, 249, 0.6) 100%);
+  }
+
   /* Section transition — gradient fade instead of border-t */
   .section-divider {
     @apply h-px bg-gradient-to-r from-transparent via-navy-200/40 to-transparent;
+  }
+
+  /* Dashboard stat card — accent left border + gradient fill */
+  .stat-card-gold {
+    @apply border-l-[3px] border-l-gold-500;
+    background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, transparent 60%);
+  }
+  .stat-card-teal {
+    @apply border-l-[3px] border-l-teal-500;
+    background: linear-gradient(135deg, rgba(55,170,212,0.06) 0%, transparent 60%);
+  }
+  .stat-card-violet {
+    @apply border-l-[3px] border-l-violet-500;
+    background: linear-gradient(135deg, rgba(97,55,212,0.06) 0%, transparent 60%);
+  }
+  .stat-card-navy {
+    @apply border-l-[3px] border-l-navy-500;
+    background: linear-gradient(135deg, rgba(39,60,107,0.06) 0%, transparent 60%);
+  }
+
+  /* Dashboard page header with accent underline */
+  .page-header-accent {
+    @apply relative pb-4;
+  }
+  .page-header-accent::after {
+    content: "";
+    @apply absolute bottom-0 left-0 h-[2px] w-16;
+    background: linear-gradient(90deg, #D4AF37, #37AAD4);
+  }
+
+  /* Dashboard sidebar nav link active */
+  .nav-link-active {
+    @apply bg-gold-500/10 text-gold-600 border-l-2 border-l-gold-500;
+  }
+
+  /* Dashboard table header */
+  .table-header-row {
+    background: linear-gradient(135deg, rgba(240,243,249,0.8) 0%, rgba(253,249,239,0.4) 100%);
   }
 
   /* Animated gradient border */
@@ -155,6 +221,24 @@
 }
 
 @layer utilities {
+  /* Full-screen section */
+  .section-fullscreen {
+    @apply min-h-screen flex items-center;
+  }
+
+  /* Dark section base */
+  .section-dark {
+    @apply bg-navy-900 text-white;
+  }
+
+  /* Feature section number */
+  .section-number {
+    @apply font-display text-[8rem] font-bold leading-none;
+    -webkit-text-stroke: 1px currentColor;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.08;
+  }
+
   /* 3D perspective utilities */
   .perspective-1000 {
     perspective: 1000px;

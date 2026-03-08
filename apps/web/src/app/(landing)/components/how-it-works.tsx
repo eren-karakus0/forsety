@@ -29,9 +29,9 @@ const steps: Step[] = [
     glowColor: "rgba(235, 192, 81, 0.25)",
     iconColor: "text-gold-400",
     details: [
-      "SPDX license types supported",
+      "Any license format",
       "Granular policy rules",
-      "Shelby blob storage",
+      "Decentralized storage",
     ],
   },
   {
@@ -44,8 +44,8 @@ const steps: Step[] = [
     glowColor: "rgba(55, 170, 212, 0.25)",
     iconColor: "text-teal-400",
     details: [
-      "SHA-256 content hashes",
-      "Agent API key auth",
+      "Tamper-proof records",
+      "Secure agent access",
       "Real-time audit trail",
     ],
   },
@@ -59,9 +59,9 @@ const steps: Step[] = [
     glowColor: "rgba(139, 85, 255, 0.25)",
     iconColor: "text-violet-400",
     details: [
-      "JSON evidence bundle",
-      "Cryptographic proofs",
-      "Auditor-ready format",
+      "Shareable proof bundle",
+      "Verifiable evidence",
+      "Audit-ready reports",
     ],
   },
 ];
@@ -273,15 +273,19 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="py-20 sm:py-28"
+      className="section-fullscreen py-20 sm:py-28"
     >
       <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       <div className="mx-auto max-w-7xl px-6">
         <ScrollReveal>
           <FadeIn className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
-              How it Works
-            </p>
+            <div className="flex items-center justify-center gap-3">
+              <span className="h-px w-8 bg-gradient-to-r from-transparent to-gold-400" />
+              <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
+                How it Works
+              </p>
+              <span className="h-px w-8 bg-gradient-to-l from-transparent to-gold-400" />
+            </div>
             <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
               Three Steps to Verifiable Compliance
             </h2>

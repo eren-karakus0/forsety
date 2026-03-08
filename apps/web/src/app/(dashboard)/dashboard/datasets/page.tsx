@@ -64,17 +64,24 @@ export default async function DatasetsPage() {
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex items-end justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Datasets
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {error
-              ? "Licensed datasets with verifiable evidence trails"
-              : `${datasets.length} dataset${datasets.length !== 1 ? "s" : ""} with verifiable evidence trails`}
-          </p>
+        <div className="page-header-accent">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-50">
+              <Database className="h-5 w-5 text-gold-500" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+                Datasets
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {error
+                  ? "Licensed datasets with verifiable evidence trails"
+                  : `${datasets.length} dataset${datasets.length !== 1 ? "s" : ""} with verifiable evidence trails`}
+              </p>
+            </div>
+          </div>
         </div>
-        <Button asChild>
+        <Button asChild className="bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500">
           <Link href="/dashboard/upload">
             <Plus className="mr-2 h-4 w-4" />
             Upload Dataset
@@ -84,7 +91,7 @@ export default async function DatasetsPage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 backdrop-blur-sm">
           <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
           <p className="text-sm text-destructive">
             Unable to load datasets. Please try again later.
@@ -93,23 +100,23 @@ export default async function DatasetsPage() {
       )}
 
       {/* Table */}
-      <Card>
+      <Card className="overflow-hidden rounded-xl">
         <Table>
           <TableHeader>
-            <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableRow className="table-header-row border-border/40 hover:bg-transparent">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Name
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 License
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Created
               </TableHead>
-              <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Actions
               </TableHead>
             </TableRow>
@@ -120,7 +127,7 @@ export default async function DatasetsPage() {
                 <TableCell colSpan={5} className="py-16 text-center">
                   {error ? (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10">
                         <AlertTriangle className="h-5 w-5 text-destructive" />
                       </div>
                       <p className="text-sm font-medium text-foreground">
@@ -132,8 +139,8 @@ export default async function DatasetsPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                        <Database className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gold-50">
+                        <Database className="h-5 w-5 text-gold-400" />
                       </div>
                       <p className="text-sm font-medium text-foreground">
                         No datasets yet
@@ -141,7 +148,7 @@ export default async function DatasetsPage() {
                       <p className="text-xs text-muted-foreground">
                         Upload your first dataset to get started
                       </p>
-                      <Button size="sm" asChild>
+                      <Button size="sm" asChild className="mt-1 bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500">
                         <Link href="/dashboard/upload">Upload Dataset</Link>
                       </Button>
                     </div>
@@ -150,10 +157,10 @@ export default async function DatasetsPage() {
               </TableRow>
             ) : (
               datasets.map((dataset) => (
-                <TableRow key={dataset.id} className="group transition-colors">
+                <TableRow key={dataset.id} className="group border-border/30 transition-colors hover:bg-muted/20">
                   <TableCell>
                     <Link href={`/dashboard/${dataset.id}`}>
-                      <span className="text-sm font-medium text-foreground transition-colors group-hover:text-gold-500">
+                      <span className="text-sm font-medium text-foreground transition-colors group-hover:text-gold-600">
                         {dataset.name}
                       </span>
                       {dataset.blobHash && (
@@ -178,7 +185,7 @@ export default async function DatasetsPage() {
                     {dataset.createdAt}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="hover:border-gold-500/30 hover:text-gold-600">
                       <Link href={`/dashboard/${dataset.id}`}>
                         View
                         <ArrowRight className="ml-1 h-3 w-3" />

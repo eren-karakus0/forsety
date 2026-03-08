@@ -14,7 +14,7 @@ import {
   Alert,
   AlertDescription,
 } from "@forsety/ui";
-import { Upload, Check, Loader2, ArrowRight } from "lucide-react";
+import { Upload, Check, Loader2, ArrowRight, FileUp } from "lucide-react";
 
 const LICENSE_OPTIONS = [
   { value: "CC-BY-4.0", label: "CC BY 4.0", desc: "Attribution" },
@@ -75,27 +75,34 @@ export default function UploadPage() {
   return (
     <div className="animate-fade-in">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-navy-800">
-            Upload Dataset
-          </h1>
-          <p className="mt-1.5 text-sm text-navy-500">
-            Upload a dataset to Shelby Protocol with license metadata
-          </p>
+        <div className="page-header-accent mb-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-50">
+              <Upload className="h-5 w-5 text-navy-600" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+                Upload Dataset
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Upload a dataset to Shelby Protocol with license metadata
+              </p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Zone */}
           <Card
-            className={`cursor-pointer border-2 border-dashed transition-all ${
+            className={`cursor-pointer rounded-xl border-2 border-dashed transition-all duration-300 ${
               dragOver
-                ? "border-gold-500 bg-gold-50/50"
+                ? "border-gold-500 bg-gold-50/30 shadow-[0_0_30px_rgba(212,175,55,0.15)]"
                 : file
-                  ? "border-emerald-300 bg-emerald-50/30"
-                  : "border-navy-200 hover:border-navy-300 hover:bg-navy-50/30"
+                  ? "border-emerald-400 bg-emerald-50/20"
+                  : "border-navy-200 hover:border-gold-400/50 hover:bg-gold-50/10"
             }`}
           >
-            <CardContent className="relative py-10">
+            <CardContent className="relative py-12">
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -113,25 +120,25 @@ export default function UploadPage() {
 
                 {file ? (
                   <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                      <Check className="h-5 w-5 text-emerald-600" />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
+                      <Check className="h-6 w-6 text-emerald-600" />
                     </div>
-                    <p className="mt-3 text-sm font-medium text-navy-800">
+                    <p className="mt-4 text-sm font-semibold text-foreground">
                       {file.name}
                     </p>
-                    <p className="mt-1 text-xs text-navy-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {(file.size / 1024).toFixed(1)} KB
                     </p>
                   </>
                 ) : (
                   <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-navy-100">
-                      <Upload className="h-5 w-5 text-navy-500" />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-50 to-teal-50">
+                      <FileUp className="h-6 w-6 text-gold-500" />
                     </div>
-                    <p className="mt-3 text-sm font-medium text-navy-700">
+                    <p className="mt-4 text-sm font-semibold text-foreground">
                       Drop your file here, or click to browse
                     </p>
-                    <p className="mt-1 text-xs text-navy-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Any file type supported
                     </p>
                   </>
@@ -142,48 +149,56 @@ export default function UploadPage() {
 
           {/* Name */}
           <div className="space-y-2">
-            <Label>Dataset Name</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Dataset Name
+            </Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. ImageNet Training Subset"
+              className="rounded-lg"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Description
+            </Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of the dataset..."
               rows={3}
+              className="rounded-lg"
             />
           </div>
 
           {/* License Select */}
           <div className="space-y-2">
-            <Label>License Type</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              License Type
+            </Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {LICENSE_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => setLicense(opt.value)}
-                  className={`rounded-lg border px-3 py-3 text-left transition-all ${
+                  className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 ${
                     license === opt.value
-                      ? "border-gold-500 bg-gold-50 ring-2 ring-gold-500/20"
-                      : "border-navy-200 bg-white hover:border-navy-300 hover:bg-navy-50/50"
+                      ? "border-gold-500 bg-gold-50/60 shadow-[0_0_20px_rgba(212,175,55,0.1)]"
+                      : "border-navy-200 bg-white hover:border-gold-400/40 hover:bg-gold-50/20"
                   }`}
                 >
                   <span
-                    className={`block text-sm font-medium ${
-                      license === opt.value ? "text-gold-700" : "text-navy-700"
+                    className={`block text-sm font-semibold ${
+                      license === opt.value ? "text-gold-700" : "text-foreground"
                     }`}
                   >
                     {opt.label}
                   </span>
-                  <span className="mt-0.5 block text-[11px] text-navy-400">
+                  <span className="mt-0.5 block text-[11px] text-muted-foreground">
                     {opt.desc}
                   </span>
                 </button>
@@ -193,18 +208,20 @@ export default function UploadPage() {
 
           {/* Owner Address */}
           <div className="space-y-2">
-            <Label>Owner Address</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Owner Address
+            </Label>
             <Input
               value={ownerAddress}
               onChange={(e) => setOwnerAddress(e.target.value)}
               placeholder="0x..."
-              className="font-mono"
+              className="rounded-lg font-mono"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="rounded-xl">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -214,7 +231,11 @@ export default function UploadPage() {
             <Button variant="ghost" asChild>
               <Link href="/dashboard">Cancel</Link>
             </Button>
-            <Button type="submit" disabled={!isValid || submitting}>
+            <Button
+              type="submit"
+              disabled={!isValid || submitting}
+              className="bg-gradient-to-r from-gold-500 to-teal-500 text-white border-0 hover:from-gold-400 hover:to-teal-400"
+            >
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
