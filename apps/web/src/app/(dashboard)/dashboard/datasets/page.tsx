@@ -41,7 +41,7 @@ async function getDatasets(): Promise<{ rows: DatasetRow[]; error: boolean }> {
       rows: datasetsWithLicenses.map((d) => ({
         id: d.id,
         name: d.name,
-        license: d.licenseSpdx ?? "—",
+        license: d.licenseSpdx ?? "-",
         status: "active" as const,
         createdAt: d.createdAt
           ? new Date(d.createdAt).toLocaleDateString("en-US", {
@@ -49,7 +49,7 @@ async function getDatasets(): Promise<{ rows: DatasetRow[]; error: boolean }> {
               day: "numeric",
               year: "numeric",
             })
-          : "—",
+          : "-",
         blobHash: d.blobHash,
         sizeBytes: d.sizeBytes,
       })),
@@ -71,7 +71,7 @@ export default async function DatasetsPage() {
 
   const totalSize = datasets.reduce((acc, d) => acc + (d.sizeBytes ?? 0), 0);
   const licenseCounts = datasets.reduce<Record<string, number>>((acc, d) => {
-    const key = d.license === "—" ? "None" : d.license;
+    const key = d.license === "-" ? "None" : d.license;
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
@@ -134,7 +134,7 @@ export default async function DatasetsPage() {
                   Total Size
                 </p>
                 <p className="font-display text-lg font-bold text-foreground">
-                  {totalSize > 0 ? formatBytes(totalSize) : "—"}
+                  {totalSize > 0 ? formatBytes(totalSize) : "-"}
                 </p>
               </div>
             </CardContent>
@@ -149,7 +149,7 @@ export default async function DatasetsPage() {
                   Top License
                 </p>
                 <p className="font-display text-lg font-bold text-foreground">
-                  {topLicense ? topLicense[0] : "—"}
+                  {topLicense ? topLicense[0] : "-"}
                 </p>
               </div>
             </CardContent>

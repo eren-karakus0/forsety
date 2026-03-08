@@ -7,7 +7,7 @@ interface TextRevealProps {
   children: string;
   className?: string;
   variant?: "word" | "line" | "char";
-  /** Tag to render — defaults to span */
+  /** Tag to render - defaults to span */
   as?: "span" | "h1" | "h2" | "h3" | "p";
   staggerDelay?: number;
   duration?: number;
@@ -89,7 +89,7 @@ export function TextReveal({
   );
 }
 
-/** Wrapper for mixed content (text + JSX children) — reveals children as a group word-by-word */
+/** Wrapper for mixed content (text + JSX children) - reveals children as a group word-by-word */
 interface TextRevealGroupProps {
   children: ReactNode;
   className?: string;

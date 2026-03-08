@@ -27,7 +27,7 @@ export const SHELBYNET_CONFIG = {
   faucet: "https://faucet.shelbynet.shelby.xyz",
 };
 
-/** Shared wallet adapter props — single source of truth for providers.tsx & wallet-launch-flow.tsx */
+/** Shared wallet adapter props - single source of truth for providers.tsx & wallet-launch-flow.tsx */
 export function getWalletAdapterProps() {
   const network = getAptosNetwork();
   return {

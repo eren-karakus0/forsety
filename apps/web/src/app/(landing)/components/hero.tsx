@@ -36,7 +36,7 @@ export function Hero() {
   });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 1, 0.3]);
 
-  // Orb parallax transforms — must be at top level (hook rules)
+  // Orb parallax transforms - must be at top level (hook rules)
   const tealOrbX = useTransform(x, (v) => v * -0.7);
   const tealOrbY = useTransform(y, (v) => v * -0.7);
   const violetOrbX = useTransform(x, (v) => v * 0.5);
@@ -66,7 +66,7 @@ export function Hero() {
         <GradientOrb color="violet" size={400} className="bottom-[10%] left-[20%]" blur={90} />
       </motion.div>
 
-      {/* Tiwaz geometric pattern — large parallax background */}
+      {/* Tiwaz geometric pattern - large parallax background */}
       <TiwazBackground variant="light" side="right" />
 
       <div className="relative mx-auto max-w-7xl px-6">
@@ -97,7 +97,7 @@ export function Hero() {
           <FadeIn delay={0.35}>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-navy-500 sm:text-xl">
               We prove licensed access and compliant usage. Forsety creates
-              cryptographic evidence packs that verify every dataset interaction —
+              cryptographic evidence packs that verify every dataset interaction,
               from upload to consumption.
             </p>
           </FadeIn>

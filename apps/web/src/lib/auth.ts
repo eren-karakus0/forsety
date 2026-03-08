@@ -32,7 +32,7 @@ export async function validateJwtCookie(
 }
 
 /**
- * Check either API key or JWT — returns true if any auth method is valid.
+ * Check either API key or JWT - returns true if any auth method is valid.
  */
 export async function validateAuth(request: NextRequest): Promise<boolean> {
   if (validateApiKey(request)) return true;

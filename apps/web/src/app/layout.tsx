@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Forsety — Evidence Layer for Licensed AI Data Access",
+    default: "Forsety - Evidence Layer for Licensed AI Data Access",
     template: "%s | Forsety",
   },
   description:
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://forsety.vercel.app"),
   openGraph: {
-    title: "Forsety — Evidence Layer for Licensed AI Data Access",
+    title: "Forsety - Evidence Layer for Licensed AI Data Access",
     description:
       "Cryptographic evidence packs that verify every dataset interaction. Built on Shelby Protocol.",
     type: "website",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Forsety — Evidence Layer for Licensed AI Data Access",
+    title: "Forsety - Evidence Layer for Licensed AI Data Access",
     description:
       "Cryptographic evidence packs that verify every dataset interaction. Built on Shelby Protocol.",
   },

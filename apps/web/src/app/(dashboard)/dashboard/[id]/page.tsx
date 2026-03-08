@@ -80,7 +80,7 @@ function MetadataRow({ label, value, mono }: { label: string; value: string | nu
           mono ? "font-mono text-xs break-all text-muted-foreground" : "text-foreground"
         }`}
       >
-        {value || "—"}
+        {value || "-"}
       </span>
     </div>
   );
@@ -258,7 +258,7 @@ export default function DatasetDetailPage() {
                             v{pol.version}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            {pol.createdAt ? new Date(pol.createdAt).toLocaleDateString() : "—"}
+                            {pol.createdAt ? new Date(pol.createdAt).toLocaleDateString() : "-"}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">

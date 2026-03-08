@@ -9,7 +9,7 @@ const colors = {
   violet: { primary: "#A77BFF", glow: "rgba(167,123,255,0.3)", muted: "rgba(167,123,255,0.12)" },
 };
 
-/* ─── 01 · VERIFY — Runic Seal ─── */
+/* ─── 01 · VERIFY - Runic Seal ─── */
 export function VerifyIllustration() {
   const reduced = useReducedMotion();
 
@@ -88,7 +88,7 @@ export function VerifyIllustration() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeOut", repeatDelay: 2 }}
         />
 
-        {/* Central Tiwaz Rune — bold and prominent */}
+        {/* Central Tiwaz Rune - bold and prominent */}
         <g opacity="0.9">
           {/* Vertical line */}
           <line x1="200" y1="150" x2="200" y2="250" stroke={colors.gold.primary} strokeWidth="3" strokeLinecap="round" />
@@ -105,14 +105,14 @@ export function VerifyIllustration() {
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Corner accent runes — small Elder Futhark marks */}
-        {/* Fehu (ᚠ) — top right */}
+        {/* Corner accent runes - small Elder Futhark marks */}
+        {/* Fehu (ᚠ) - top right */}
         <g opacity="0.4" transform="translate(310, 88)">
           <line x1="0" y1="0" x2="0" y2="20" stroke={colors.gold.primary} strokeWidth="1.5" strokeLinecap="round" />
           <line x1="0" y1="2" x2="9" y2="8" stroke={colors.gold.primary} strokeWidth="1.2" strokeLinecap="round" />
           <line x1="0" y1="9" x2="8" y2="14" stroke={colors.gold.primary} strokeWidth="1.2" strokeLinecap="round" />
         </g>
-        {/* Ansuz (ᚨ) — bottom left */}
+        {/* Ansuz (ᚨ) - bottom left */}
         <g opacity="0.4" transform="translate(82, 292)">
           <line x1="0" y1="0" x2="0" y2="20" stroke={colors.gold.primary} strokeWidth="1.5" strokeLinecap="round" />
           <line x1="0" y1="3" x2="8" y2="9" stroke={colors.gold.primary} strokeWidth="1.2" strokeLinecap="round" />
@@ -142,11 +142,11 @@ export function VerifyIllustration() {
   );
 }
 
-/* ─── 02 · RECALL — Memory Constellation ─── */
+/* ─── 02 · RECALL - Memory Constellation ─── */
 export function RecallIllustration() {
   const reduced = useReducedMotion();
 
-  /* Node positions — Yggdrasil-like tree structure */
+  /* Node positions - Yggdrasil-like tree structure */
   const nodes = [
     { x: 200, y: 80, r: 4, delay: 0 },       // top (root)
     { x: 140, y: 150, r: 3, delay: 0.5 },     // branch left
@@ -259,13 +259,13 @@ export function RecallIllustration() {
         </g>
 
         {/* Decorative rune marks at key nodes */}
-        {/* Raidō (ᚱ) at node[0] — journey/path */}
+        {/* Raidō (ᚱ) at node[0] - journey/path */}
         <g opacity="0.6" transform="translate(212, 70)">
           <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.5" strokeLinecap="round" />
           <line x1="0" y1="1" x2="7" y2="6" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
           <line x1="7" y1="6" x2="0" y2="11" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
         </g>
-        {/* Laguz (ᛚ) at node[10] — water/flow */}
+        {/* Laguz (ᛚ) at node[10] - water/flow */}
         <g opacity="0.6" transform="translate(212, 332)">
           <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.5" strokeLinecap="round" />
           <line x1="0" y1="0" x2="7" y2="8" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
@@ -278,7 +278,7 @@ export function RecallIllustration() {
   );
 }
 
-/* ─── 03 · SHIELD — Aegis Barrier ─── */
+/* ─── 03 · SHIELD - Aegis Barrier ─── */
 export function ShieldIllustration() {
   const reduced = useReducedMotion();
 
@@ -289,7 +289,7 @@ export function ShieldIllustration() {
         className="h-[320px] w-[320px] sm:h-[380px] sm:w-[380px] lg:h-[420px] lg:w-[420px]"
         fill="none"
       >
-        {/* Outer defensive ring — slowly rotating */}
+        {/* Outer defensive ring - slowly rotating */}
         <motion.g
           animate={reduced ? {} : { rotate: 360 }}
           transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
@@ -320,7 +320,7 @@ export function ShieldIllustration() {
           ))}
         </motion.g>
 
-        {/* Middle hexagonal layer — counter rotation */}
+        {/* Middle hexagonal layer - counter rotation */}
         <motion.g
           animate={reduced ? {} : { rotate: -360 }}
           transition={{ duration: 55, repeat: Infinity, ease: "linear" }}
@@ -340,7 +340,7 @@ export function ShieldIllustration() {
           ))}
         </motion.g>
 
-        {/* Inner shield ring — static */}
+        {/* Inner shield ring - static */}
         <circle cx="200" cy="190" r="100" stroke={colors.violet.primary} strokeWidth="0.8" opacity="0.2" />
 
         {/* Defensive pulse rings */}
@@ -394,7 +394,7 @@ export function ShieldIllustration() {
         </g>
 
         {/* Corner ward runes */}
-        {/* Algiz (ᛉ) — protection rune, 4 corners */}
+        {/* Algiz (ᛉ) - protection rune, 4 corners */}
         {[
           { x: 75, y: 75 },
           { x: 325, y: 75 },

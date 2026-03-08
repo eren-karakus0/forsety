@@ -24,7 +24,7 @@ const steps: Step[] = [
     icon: Upload,
     title: "Upload & License",
     description:
-      "Upload your dataset to Shelby Protocol. Attach a license and define access policies — who can read, how many times, until when.",
+      "Upload your dataset to Shelby Protocol. Attach a license and define access policies: who can read, how many times, until when.",
     gradient: "from-gold-500 to-gold-600",
     glowColor: "rgba(235, 192, 81, 0.25)",
     iconColor: "text-gold-400",
@@ -54,7 +54,7 @@ const steps: Step[] = [
     icon: ShieldCheck,
     title: "Prove Compliance",
     description:
-      "Generate an evidence pack — a verifiable bundle of licenses, policies, access logs, and proofs. Share it with auditors or stakeholders.",
+      "Generate an evidence pack, a verifiable bundle of licenses, policies, access logs, and proofs. Share it with auditors or stakeholders.",
     gradient: "from-violet-500 to-violet-600",
     glowColor: "rgba(139, 85, 255, 0.25)",
     iconColor: "text-violet-400",
@@ -291,7 +291,7 @@ export function HowItWorks() {
               Three Steps to Verifiable Compliance
             </h2>
             <p className="mt-4 text-lg text-navy-400">
-              From upload to evidence generation — a seamless, auditable pipeline.
+              From upload to evidence generation, a seamless, auditable pipeline.
             </p>
           </FadeIn>
         </ScrollReveal>

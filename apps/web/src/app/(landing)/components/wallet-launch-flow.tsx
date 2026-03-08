@@ -33,7 +33,7 @@ class WalletErrorBoundary extends Component<
   }
 }
 
-/** Fallback when wallet adapter fails — retries by reloading */
+/** Fallback when wallet adapter fails - retries by reloading */
 function FallbackButton({
   size,
   children,

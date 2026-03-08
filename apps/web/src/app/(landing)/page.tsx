@@ -15,7 +15,7 @@ const verifyFeature = {
   kicker: "VERIFY",
   title: "Cryptographic Evidence Packs",
   description:
-    "Generate tamper-proof bundles containing licenses, access logs, and cryptographic proofs. Every dataset interaction is recorded and verifiable — ready to share with auditors or stakeholders.",
+    "Generate tamper-proof bundles containing licenses, access logs, and cryptographic proofs. Every dataset interaction is recorded and verifiable, ready to share with auditors or stakeholders.",
   highlights: [
     "Immutable records of every data access event",
     "Licenses, policies, and proofs bundled together",

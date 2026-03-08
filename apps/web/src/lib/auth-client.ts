@@ -32,7 +32,7 @@ export function useForsetyAuth() {
 
       if (!nonce || !message) throw new Error("Invalid nonce response");
 
-      // 2. Sign with Aptos wallet — include address, application, chainId in envelope
+      // 2. Sign with Aptos wallet - include address, application, chainId in envelope
       const signResult = await signMessage({
         message,
         nonce,
@@ -41,7 +41,7 @@ export function useForsetyAuth() {
         chainId: true,
       });
 
-      // 3. Verify on server — send fullMessage, signature, and publicKey
+      // 3. Verify on server - send fullMessage, signature, and publicKey
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -17,7 +17,7 @@ export async function GET() {
     const agents = await client.agents.list();
     agentsCount = agents.length;
   } catch {
-    // checks failed — report defaults
+    // checks failed - report defaults
   }
 
   const overall = shelbyStatus.connected ? "ok" : "degraded";

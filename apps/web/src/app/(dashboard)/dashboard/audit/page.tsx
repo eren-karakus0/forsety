@@ -251,7 +251,7 @@ function AuditPageContent() {
                     Avg Duration
                   </p>
                   <p className="font-display text-lg font-bold text-foreground">
-                    {avgDuration != null ? `${avgDuration}ms` : "—"}
+                    {avgDuration != null ? `${avgDuration}ms` : "-"}
                   </p>
                 </div>
               </CardContent>
@@ -324,7 +324,7 @@ function AuditPageContent() {
                         {log.toolName}
                       </Badge>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -338,7 +338,7 @@ function AuditPageContent() {
                         )}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -352,7 +352,7 @@ function AuditPageContent() {
                     )}
                   </TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">
-                    {log.durationMs != null ? `${log.durationMs}ms` : "—"}
+                    {log.durationMs != null ? `${log.durationMs}ms` : "-"}
                   </TableCell>
                 </TableRow>
               ))}

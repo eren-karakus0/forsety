@@ -123,7 +123,7 @@
     box-shadow: 0 0 60px rgba(139, 85, 255, 0.25), 0 0 120px rgba(139, 85, 255, 0.1);
   }
 
-  /* Premium card — hover'da animated gradient border */
+  /* Premium card - hover'da animated gradient border */
   .glass-card-premium {
     @apply glass-card relative;
   }
@@ -146,17 +146,17 @@
     background: linear-gradient(135deg, rgba(212,175,55,0.3), rgba(55,170,212,0.3));
   }
 
-  /* Alternating section warm tint — brand-aligned cream */
+  /* Alternating section warm tint - brand-aligned cream */
   .section-tinted {
     background: linear-gradient(180deg, rgba(253, 249, 239, 0.5) 0%, rgba(240, 243, 249, 0.6) 100%);
   }
 
-  /* Section transition — gradient fade instead of border-t */
+  /* Section transition - gradient fade instead of border-t */
   .section-divider {
     @apply h-px bg-gradient-to-r from-transparent via-navy-200/40 to-transparent;
   }
 
-  /* Dashboard stat card — accent left border + gradient fill */
+  /* Dashboard stat card - accent left border + gradient fill */
   .stat-card-gold {
     @apply border-l-[3px] border-l-gold-500;
     background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, transparent 60%);

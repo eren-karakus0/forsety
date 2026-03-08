@@ -7,7 +7,7 @@ import { Button } from "@forsety/ui";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useSession } from "./session-context";
 
-// Lazy-load the wallet provider + auth flow — only fetched when user clicks
+// Lazy-load the wallet provider + auth flow - only fetched when user clicks
 const WalletLaunchFlow = dynamic(
   () =>
     import("./wallet-launch-flow").then((mod) => ({

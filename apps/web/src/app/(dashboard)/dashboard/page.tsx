@@ -289,7 +289,7 @@ export default async function OverviewPage() {
 
       {/* Two-column: Quick Actions + Recent Activity */}
       <div className="grid gap-6 lg:grid-cols-5">
-        {/* Quick Actions — left column */}
+        {/* Quick Actions - left column */}
         <div className="lg:col-span-2">
           <FadeInWrapper delay={0.15}>
             <h2 className="mb-4 font-display text-base font-semibold text-foreground">
@@ -325,7 +325,7 @@ export default async function OverviewPage() {
           </StaggerWrapper>
         </div>
 
-        {/* Recent Activity — right column */}
+        {/* Recent Activity - right column */}
         <div className="lg:col-span-3">
           <FadeInWrapper delay={0.2}>
             <Card className="overflow-hidden rounded-xl">

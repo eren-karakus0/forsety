@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
     await jwtVerify(token, getJwtSecret());
     return NextResponse.next();
   } catch {
-    // Invalid or expired token — clear cookie and redirect
+    // Invalid or expired token - clear cookie and redirect
     const response = NextResponse.redirect(new URL("/", request.url));
     response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
     return response;
