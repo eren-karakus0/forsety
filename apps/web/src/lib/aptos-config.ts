@@ -11,6 +11,8 @@ export function getAptosNetwork(): Network {
       return Network.TESTNET;
     case "devnet":
       return Network.DEVNET;
+    case "shelbynet":
+      return Network.SHELBYNET;
     default:
       return Network.CUSTOM;
   }
@@ -39,14 +41,11 @@ export function getWalletAdapterProps() {
     ] as const,
     dappConfig: {
       network,
-      ...(network === Network.CUSTOM
+      ...(process.env.NEXT_PUBLIC_APTOS_API_KEY
         ? {
-            aptosApiKeys: process.env.NEXT_PUBLIC_APTOS_API_KEY
-              ? {
-                  [APTOS_NETWORK]:
-                    process.env.NEXT_PUBLIC_APTOS_API_KEY,
-                }
-              : undefined,
+            aptosApiKeys: {
+              [APTOS_NETWORK]: process.env.NEXT_PUBLIC_APTOS_API_KEY,
+            },
           }
         : {}),
     },

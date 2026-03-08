@@ -177,8 +177,12 @@ function StepCard({
 
 function AnimatedConnector() {
   const prefersReducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
 
-  if (prefersReducedMotion) {
+  useEffect(() => setMounted(true), []);
+
+  // Render static connector on server & before mount to avoid hydration mismatch
+  if (prefersReducedMotion || !mounted) {
     return (
       <div className="absolute left-0 right-0 top-[3.5rem] hidden h-px bg-gradient-to-r from-transparent via-navy-300 to-transparent lg:block" />
     );

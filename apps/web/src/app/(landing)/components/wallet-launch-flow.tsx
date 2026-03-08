@@ -1,7 +1,6 @@
 "use client";
 
 import { Component, type ReactNode, type ErrorInfo } from "react";
-import { useRouter } from "next/navigation";
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "@forsety/ui";
 import { ArrowRight } from "lucide-react";
@@ -34,7 +33,7 @@ class WalletErrorBoundary extends Component<
   }
 }
 
-/** Fallback when wallet adapter fails — redirects directly to dashboard */
+/** Fallback when wallet adapter fails — retries by reloading */
 function FallbackButton({
   size,
   children,
@@ -44,9 +43,8 @@ function FallbackButton({
   children?: ReactNode;
   className?: string;
 }) {
-  const router = useRouter();
   return (
-    <Button size={size} className={className} onClick={() => router.push("/dashboard")}>
+    <Button size={size} className={className} onClick={() => window.location.reload()}>
       {children ?? (
         <>
           Launch App

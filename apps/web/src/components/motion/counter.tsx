@@ -12,6 +12,7 @@ export function Counter({ value, className }: CounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true });
   const prefersReducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
 
   // Extract numeric part and suffix (e.g., "114+" -> 114, "+")
   const numMatch = value.match(/^(\d+)(.*)$/);
@@ -19,6 +20,8 @@ export function Counter({ value, className }: CounterProps) {
   const suffix = numMatch ? numMatch[2] : value;
 
   const [displayNum, setDisplayNum] = useState(0);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!isInView || prefersReducedMotion || !numMatch) return;
@@ -43,7 +46,8 @@ export function Counter({ value, className }: CounterProps) {
     return () => cancelAnimationFrame(frame);
   }, [isInView, targetNum, prefersReducedMotion, numMatch]);
 
-  if (!numMatch || prefersReducedMotion) {
+  // Render static value on server & before mount to avoid hydration mismatch
+  if (!mounted || !numMatch || prefersReducedMotion) {
     return (
       <span ref={ref} className={className}>
         {value}

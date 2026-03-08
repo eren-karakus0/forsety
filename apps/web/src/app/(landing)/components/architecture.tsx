@@ -35,25 +35,40 @@ const layerDescriptions: LayerInfo[] = [
 
 function DataFlowArrow({ active }: { active: boolean }) {
   const prefersReducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="flex justify-center py-1">
       <div className="relative h-8 w-8">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <motion.path
-            d="M16 4v24M8 20l8 8 8-8"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={active ? "text-gold-400" : "text-navy-200"}
-            initial={false}
-            animate={{ opacity: active ? 1 : 0.3 }}
-            transition={{ duration: 0.3 }}
-          />
+          {mounted ? (
+            <motion.path
+              d="M16 4v24M8 20l8 8 8-8"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={active ? "text-gold-400" : "text-navy-200"}
+              initial={false}
+              animate={{ opacity: active ? 1 : 0.3 }}
+              transition={{ duration: 0.3 }}
+            />
+          ) : (
+            <path
+              d="M16 4v24M8 20l8 8 8-8"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-navy-200"
+              opacity={0.3}
+            />
+          )}
         </svg>
 
-        {active && !prefersReducedMotion && (
+        {active && !prefersReducedMotion && mounted && (
           <motion.div
             className="absolute left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-gold-400"
             animate={{
