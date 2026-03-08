@@ -5,6 +5,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useForsetyAuth } from "@/lib/auth-client";
 import { Button } from "@forsety/ui";
 import { LogOut, Wallet } from "lucide-react";
+import { WalletSelectorTrigger } from "@/components/wallet-selector";
 
 function truncateAddress(address: string): string {
   if (address.length <= 12) return address;
@@ -18,10 +19,10 @@ export function WalletDisplay() {
 
   if (!connected || !account) {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Wallet className="h-4 w-4" />
-        <span>Not connected</span>
-      </div>
+      <WalletSelectorTrigger className="h-8 gap-1.5 rounded-lg bg-gradient-to-r from-gold-500 to-gold-600 px-3 text-xs font-medium text-white hover:from-gold-400 hover:to-gold-500 border-0">
+        <Wallet className="h-3.5 w-3.5" />
+        Connect Wallet
+      </WalletSelectorTrigger>
     );
   }
 
