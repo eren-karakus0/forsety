@@ -14,6 +14,7 @@ import {
   Separator,
 } from "@forsety/ui";
 import {
+  LayoutDashboard,
   Database,
   Users,
   ClipboardList,
@@ -30,7 +31,8 @@ const Providers = dynamic(
 );
 
 const navLinks = [
-  { href: "/dashboard", label: "Datasets", icon: Database },
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
+  { href: "/dashboard/datasets", label: "Datasets", icon: Database },
   { href: "/dashboard/agents", label: "Agents", icon: Users },
   { href: "/dashboard/audit", label: "Audit", icon: ClipboardList },
   { href: "/dashboard/upload", label: "Upload", icon: Upload },
@@ -42,10 +44,9 @@ function NavItems({ onClick }: { onClick?: () => void }) {
   return (
     <>
       {navLinks.map((link) => {
-        const isActive =
-          link.href === "/dashboard"
-            ? pathname === "/dashboard"
-            : pathname.startsWith(link.href);
+        const isActive = link.exact
+          ? pathname === link.href
+          : pathname.startsWith(link.href);
 
         return (
           <Link

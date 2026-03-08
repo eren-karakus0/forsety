@@ -1,4 +1,4 @@
-import { eq, and, desc, gte, isNull } from "drizzle-orm";
+import { eq, and, desc, gte, isNull, count } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { agentAuditLogs } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
@@ -53,6 +53,14 @@ export class AgentAuditService {
       .returning();
 
     return log!;
+  }
+
+  /** Global count of audit events — efficient SQL COUNT */
+  async countAll(): Promise<number> {
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(agentAuditLogs);
+    return result?.total ?? 0;
   }
 
   /** Global audit feed — includes anonymous (null agentId) records */

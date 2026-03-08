@@ -14,7 +14,7 @@ import {
   Alert,
   AlertDescription,
 } from "@forsety/ui";
-import { Upload, Check, ChevronRight, Loader2, ArrowRight } from "lucide-react";
+import { Upload, Check, Loader2, ArrowRight } from "lucide-react";
 
 const LICENSE_OPTIONS = [
   { value: "CC-BY-4.0", label: "CC BY 4.0", desc: "Attribution" },
@@ -74,15 +74,6 @@ export default function UploadPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Breadcrumb */}
-      <div className="mb-6 flex items-center gap-2 text-sm text-navy-400">
-        <Link href="/dashboard" className="transition-colors hover:text-navy-600">
-          Datasets
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-navy-700">Upload</span>
-      </div>
-
       <div className="mx-auto max-w-2xl">
         <div className="mb-8">
           <h1 className="font-display text-2xl font-bold tracking-tight text-navy-800">

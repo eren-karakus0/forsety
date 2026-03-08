@@ -121,6 +121,26 @@ describe("AgentAuditService", () => {
     });
   });
 
+  describe("countAll", () => {
+    it("should return total count of all audit events", async () => {
+      mockSelect.mockReturnValue({
+        from: vi.fn().mockResolvedValue([{ total: 42 }]),
+      });
+
+      const result = await service.countAll();
+      expect(result).toBe(42);
+    });
+
+    it("should return 0 when no events exist", async () => {
+      mockSelect.mockReturnValue({
+        from: vi.fn().mockResolvedValue([{ total: 0 }]),
+      });
+
+      const result = await service.countAll();
+      expect(result).toBe(0);
+    });
+  });
+
   describe("listAll", () => {
     it("should return all logs without filters", async () => {
       const logs = [
