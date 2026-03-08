@@ -41,14 +41,12 @@ export function getWalletAdapterProps() {
       network,
       ...(network === Network.CUSTOM
         ? {
-            chainId: SHELBYNET_CONFIG.chainId,
             aptosApiKeys: process.env.NEXT_PUBLIC_APTOS_API_KEY
               ? {
                   [APTOS_NETWORK]:
                     process.env.NEXT_PUBLIC_APTOS_API_KEY,
                 }
               : undefined,
-            fullnode: SHELBYNET_CONFIG.fullnode,
           }
         : {}),
     },

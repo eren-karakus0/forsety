@@ -81,11 +81,11 @@ function highlightCode(code: string, lang: "ts" | "json" | "bash"): React.ReactN
     let highlighted: React.ReactNode;
 
     if (lang === "ts") {
-      highlighted = highlightTS(line);
+      highlighted = highlightTS(line, i);
     } else if (lang === "json") {
-      highlighted = highlightJSON(line);
+      highlighted = highlightJSON(line, i);
     } else {
-      highlighted = highlightBash(line);
+      highlighted = highlightBash(line, i);
     }
 
     return (
@@ -97,41 +97,40 @@ function highlightCode(code: string, lang: "ts" | "json" | "bash"): React.ReactN
   });
 }
 
-function highlightTS(line: string): React.ReactNode {
-  // Comments
+function highlightTS(line: string, lineIdx: number): React.ReactNode {
   if (line.trimStart().startsWith("//")) {
     return <span className="text-white/30">{line}</span>;
   }
 
-  // Apply keyword highlighting
   const parts: React.ReactNode[] = [];
   const regex = /(import|from|const|await|process\.env\.\w+|"[^"]*")/g;
   let lastIndex = 0;
   let match;
+  let partIdx = 0;
 
   while ((match = regex.exec(line)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(line.slice(lastIndex, match.index));
+      parts.push(<span key={`${lineIdx}-t${partIdx++}`}>{line.slice(lastIndex, match.index)}</span>);
     }
     const token = match[0];
     if (token === "import" || token === "from" || token === "const" || token === "await") {
-      parts.push(<span key={match.index} className="text-violet-400">{token}</span>);
+      parts.push(<span key={`${lineIdx}-t${partIdx++}`} className="text-violet-400">{token}</span>);
     } else if (token.startsWith('"')) {
-      parts.push(<span key={match.index} className="text-gold-400">{token}</span>);
+      parts.push(<span key={`${lineIdx}-t${partIdx++}`} className="text-gold-400">{token}</span>);
     } else if (token.startsWith("process.env.")) {
-      parts.push(<span key={match.index} className="text-teal-400">{token}</span>);
+      parts.push(<span key={`${lineIdx}-t${partIdx++}`} className="text-teal-400">{token}</span>);
     }
     lastIndex = match.index + token.length;
   }
 
   if (lastIndex < line.length) {
-    parts.push(line.slice(lastIndex));
+    parts.push(<span key={`${lineIdx}-t${partIdx}`}>{line.slice(lastIndex)}</span>);
   }
 
   return parts.length > 0 ? <>{parts}</> : line;
 }
 
-function highlightJSON(line: string): React.ReactNode {
+function highlightJSON(line: string, lineIdx: number): React.ReactNode {
   if (line.trimStart().startsWith("//")) {
     return <span className="text-white/30">{line}</span>;
   }
@@ -140,49 +139,51 @@ function highlightJSON(line: string): React.ReactNode {
   const regex = /("[\w_-]+")\s*:/g;
   let lastIndex = 0;
   let match;
+  let partIdx = 0;
 
   while ((match = regex.exec(line)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(highlightJSONValues(line.slice(lastIndex, match.index)));
+      parts.push(<span key={`${lineIdx}-j${partIdx++}`}>{highlightJSONValues(line.slice(lastIndex, match.index), lineIdx, partIdx)}</span>);
     }
-    parts.push(<span key={match.index} className="text-teal-400">{match[1]}</span>);
-    parts.push(":");
+    parts.push(<span key={`${lineIdx}-j${partIdx++}`} className="text-teal-400">{match[1]}</span>);
+    parts.push(<span key={`${lineIdx}-j${partIdx++}`}>:</span>);
     lastIndex = match.index + match[0].length;
   }
 
   if (lastIndex < line.length) {
-    parts.push(highlightJSONValues(line.slice(lastIndex)));
+    parts.push(<span key={`${lineIdx}-j${partIdx}`}>{highlightJSONValues(line.slice(lastIndex), lineIdx, partIdx + 100)}</span>);
   }
 
   return parts.length > 0 ? <>{parts}</> : line;
 }
 
-function highlightJSONValues(text: string): React.ReactNode {
+function highlightJSONValues(text: string, lineIdx: number, baseIdx: number): React.ReactNode {
   const parts: React.ReactNode[] = [];
   const regex = /"[^"]*"|\b\d+\b/g;
   let lastIndex = 0;
   let match;
+  let partIdx = 0;
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      parts.push(<span key={`${lineIdx}-v${baseIdx}-${partIdx++}`}>{text.slice(lastIndex, match.index)}</span>);
     }
     if (match[0].startsWith('"')) {
-      parts.push(<span key={`v${match.index}`} className="text-gold-400">{match[0]}</span>);
+      parts.push(<span key={`${lineIdx}-v${baseIdx}-${partIdx++}`} className="text-gold-400">{match[0]}</span>);
     } else {
-      parts.push(<span key={`v${match.index}`} className="text-violet-400">{match[0]}</span>);
+      parts.push(<span key={`${lineIdx}-v${baseIdx}-${partIdx++}`} className="text-violet-400">{match[0]}</span>);
     }
     lastIndex = match.index + match[0].length;
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+    parts.push(<span key={`${lineIdx}-v${baseIdx}-${partIdx}`}>{text.slice(lastIndex)}</span>);
   }
 
   return parts.length > 0 ? <>{parts}</> : text;
 }
 
-function highlightBash(line: string): React.ReactNode {
+function highlightBash(line: string, lineIdx: number): React.ReactNode {
   if (line.trimStart().startsWith("#")) {
     return <span className="text-white/30">{line}</span>;
   }
@@ -191,26 +192,27 @@ function highlightBash(line: string): React.ReactNode {
   const regex = /(curl|-X|-H|-d|POST|GET|\\)|(".*?")|('.*?')/g;
   let lastIndex = 0;
   let match;
+  let partIdx = 0;
 
   while ((match = regex.exec(line)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(line.slice(lastIndex, match.index));
+      parts.push(<span key={`${lineIdx}-b${partIdx++}`}>{line.slice(lastIndex, match.index)}</span>);
     }
     const token = match[0];
     if (token === "curl") {
-      parts.push(<span key={match.index} className="text-violet-400">{token}</span>);
+      parts.push(<span key={`${lineIdx}-b${partIdx++}`} className="text-violet-400">{token}</span>);
     } else if (token.startsWith('"') || token.startsWith("'")) {
-      parts.push(<span key={match.index} className="text-gold-400">{token}</span>);
+      parts.push(<span key={`${lineIdx}-b${partIdx++}`} className="text-gold-400">{token}</span>);
     } else if (token === "-X" || token === "-H" || token === "-d") {
-      parts.push(<span key={match.index} className="text-teal-400">{token}</span>);
+      parts.push(<span key={`${lineIdx}-b${partIdx++}`} className="text-teal-400">{token}</span>);
     } else {
-      parts.push(<span key={match.index} className="text-white/60">{token}</span>);
+      parts.push(<span key={`${lineIdx}-b${partIdx++}`} className="text-white/60">{token}</span>);
     }
     lastIndex = match.index + token.length;
   }
 
   if (lastIndex < line.length) {
-    parts.push(line.slice(lastIndex));
+    parts.push(<span key={`${lineIdx}-b${partIdx}`}>{line.slice(lastIndex)}</span>);
   }
 
   return parts.length > 0 ? <>{parts}</> : line;

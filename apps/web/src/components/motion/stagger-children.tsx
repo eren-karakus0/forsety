@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 interface StaggerChildrenProps {
@@ -36,8 +36,12 @@ export function StaggerChildren({
   staggerDelay = 0.1,
 }: StaggerChildrenProps) {
   const prefersReducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
 
-  if (prefersReducedMotion) {
+  useEffect(() => setMounted(true), []);
+
+  // Render static div on server & before mount to avoid hydration mismatch
+  if (prefersReducedMotion || !mounted) {
     return <div className={className}>{children}</div>;
   }
 

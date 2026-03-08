@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 interface FadeInProps {
@@ -21,6 +21,9 @@ export function FadeIn({
   distance = 24,
 }: FadeInProps) {
   const prefersReducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const directionOffset = {
     up: { y: distance },
@@ -30,7 +33,8 @@ export function FadeIn({
     none: {},
   };
 
-  if (prefersReducedMotion) {
+  // Render static div on server & before mount to avoid hydration mismatch
+  if (prefersReducedMotion || !mounted) {
     return <div className={className}>{children}</div>;
   }
 
