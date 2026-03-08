@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 /* ─── Color tokens ─── */
 const colors = {
   gold: { primary: "#E8C84A", glow: "rgba(232,200,74,0.3)", muted: "rgba(232,200,74,0.12)" },
-  teal: { primary: "#4DC4EE", glow: "rgba(77,196,238,0.3)", muted: "rgba(77,196,238,0.12)" },
+  teal: { primary: "#1A8FB8", glow: "rgba(26,143,184,0.35)", muted: "rgba(26,143,184,0.15)" },
   violet: { primary: "#A77BFF", glow: "rgba(167,123,255,0.3)", muted: "rgba(167,123,255,0.12)" },
 };
 
@@ -179,8 +179,8 @@ export function RecallIllustration() {
         fill="none"
       >
         {/* Outer atmosphere ring */}
-        <circle cx="200" cy="210" r="180" stroke={colors.teal.primary} strokeWidth="0.8" opacity="0.2" />
-        <circle cx="200" cy="210" r="160" stroke={colors.teal.primary} strokeWidth="0.5" opacity="0.15" strokeDasharray="4 8" />
+        <circle cx="200" cy="210" r="180" stroke={colors.teal.primary} strokeWidth="1.2" opacity="0.4" />
+        <circle cx="200" cy="210" r="160" stroke={colors.teal.primary} strokeWidth="0.8" opacity="0.3" strokeDasharray="4 8" />
 
         {/* Connection lines */}
         {edges.map(([from, to], i) => (
@@ -189,11 +189,11 @@ export function RecallIllustration() {
             x1={nodes[from].x} y1={nodes[from].y}
             x2={nodes[to].x} y2={nodes[to].y}
             stroke={colors.teal.primary}
-            strokeWidth="1.2"
+            strokeWidth="1.5"
             opacity={0}
-            animate={reduced ? { opacity: 0.3 } : {
-              opacity: [0.15, 0.5, 0.15],
-              strokeWidth: [1.2, 2, 1.2],
+            animate={reduced ? { opacity: 0.45 } : {
+              opacity: [0.3, 0.65, 0.3],
+              strokeWidth: [1.5, 2.5, 1.5],
             }}
             transition={{
               duration: 3,
@@ -243,36 +243,36 @@ export function RecallIllustration() {
               cx={node.x} cy={node.y} r={node.r}
               fill={i === 7 ? colors.teal.primary : "none"}
               stroke={colors.teal.primary}
-              strokeWidth={i === 7 ? 0 : 1.5}
-              opacity={i === 7 ? 0.9 : 0.6}
-              animate={reduced ? {} : { opacity: i === 7 ? [0.8, 1, 0.8] : [0.45, 0.75, 0.45] }}
+              strokeWidth={i === 7 ? 0 : 2}
+              opacity={i === 7 ? 0.95 : 0.75}
+              animate={reduced ? {} : { opacity: i === 7 ? [0.85, 1, 0.85] : [0.6, 0.9, 0.6] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
             />
           </g>
         ))}
 
         {/* Central Tiwaz rune at node[7] (center node) */}
-        <g opacity="0.9">
-          <line x1="200" y1="182" x2="200" y2="218" stroke={colors.teal.primary} strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="200" y1="186" x2="188" y2="200" stroke={colors.teal.primary} strokeWidth="2" strokeLinecap="round" />
-          <line x1="200" y1="186" x2="212" y2="200" stroke={colors.teal.primary} strokeWidth="2" strokeLinecap="round" />
+        <g opacity="1">
+          <line x1="200" y1="182" x2="200" y2="218" stroke={colors.teal.primary} strokeWidth="3" strokeLinecap="round" />
+          <line x1="200" y1="186" x2="186" y2="202" stroke={colors.teal.primary} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="200" y1="186" x2="214" y2="202" stroke={colors.teal.primary} strokeWidth="2.5" strokeLinecap="round" />
         </g>
 
         {/* Decorative rune marks at key nodes */}
         {/* Raidō (ᚱ) at node[0] — journey/path */}
-        <g opacity="0.45" transform="translate(212, 70)">
-          <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="0" y1="1" x2="7" y2="6" stroke={colors.teal.primary} strokeWidth="1" strokeLinecap="round" />
-          <line x1="7" y1="6" x2="0" y2="11" stroke={colors.teal.primary} strokeWidth="1" strokeLinecap="round" />
+        <g opacity="0.6" transform="translate(212, 70)">
+          <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="0" y1="1" x2="7" y2="6" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
+          <line x1="7" y1="6" x2="0" y2="11" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
         </g>
         {/* Laguz (ᛚ) at node[10] — water/flow */}
-        <g opacity="0.45" transform="translate(212, 332)">
-          <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="0" y1="0" x2="7" y2="8" stroke={colors.teal.primary} strokeWidth="1" strokeLinecap="round" />
+        <g opacity="0.6" transform="translate(212, 332)">
+          <line x1="0" y1="0" x2="0" y2="16" stroke={colors.teal.primary} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="0" y1="0" x2="7" y2="8" stroke={colors.teal.primary} strokeWidth="1.2" strokeLinecap="round" />
         </g>
 
         {/* Vertical trunk line (Yggdrasil axis) */}
-        <line x1="200" y1="85" x2="200" y2="335" stroke={colors.teal.primary} strokeWidth="0.6" opacity="0.15" strokeDasharray="3 6" />
+        <line x1="200" y1="85" x2="200" y2="335" stroke={colors.teal.primary} strokeWidth="0.8" opacity="0.3" strokeDasharray="3 6" />
       </svg>
     </div>
   );

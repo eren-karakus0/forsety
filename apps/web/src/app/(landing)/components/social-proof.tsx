@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Code2, Lock, Shield } from "lucide-react";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
@@ -12,22 +13,14 @@ const partners = [
   {
     name: "Shelby Protocol",
     description: "Decentralized Storage",
-    logo: (
-      <svg viewBox="0 0 32 32" className="h-8 w-8" fill="none">
-        <rect width="32" height="32" rx="8" fill="#0066FF" />
-        <path d="M16 6L16 26M16 10L9 16M16 10L23 16" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    href: "https://shelby.xyz",
+    logo: "/shelby-logo.jpg",
   },
   {
     name: "Aptos",
     description: "Layer 1 Blockchain",
-    logo: (
-      <svg viewBox="0 0 32 32" className="h-8 w-8" fill="none">
-        <rect width="32" height="32" rx="8" fill="#000000" />
-        <path d="M22.5 10.5H18.5L16 13.5L13.5 10.5H9.5L14 16L9.5 21.5H13.5L16 18.5L18.5 21.5H22.5L18 16L22.5 10.5Z" fill="white" />
-      </svg>
-    ),
+    href: "https://aptoslabs.com",
+    logo: "/aptos-logo.png",
   },
 ];
 
@@ -71,11 +64,20 @@ export function SocialProof() {
         <FadeIn delay={0.15}>
           <div className="mx-auto mt-12 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
             {partners.map((partner) => (
-              <div
+              <a
                 key={partner.name}
+                href={partner.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group flex items-center gap-4 rounded-2xl border border-navy-200/60 bg-white px-8 py-5 shadow-sm transition-all duration-300 hover:border-gold-500/30 hover:shadow-md hover:shadow-gold-500/5"
               >
-                {partner.logo}
+                <Image
+                  src={partner.logo}
+                  alt={partner.name}
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-lg object-contain"
+                />
                 <div>
                   <p className="font-display text-base font-semibold text-navy-900 transition-colors group-hover:text-gold-600">
                     {partner.name}
@@ -84,7 +86,7 @@ export function SocialProof() {
                     {partner.description}
                   </p>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </FadeIn>

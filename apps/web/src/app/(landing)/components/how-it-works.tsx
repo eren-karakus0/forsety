@@ -273,8 +273,9 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="section-fullscreen py-20 sm:py-28"
+      className="section-fullscreen flex-col justify-center py-20 sm:py-28"
     >
+      <div className="w-full">
       <div className="section-divider mx-auto max-w-5xl mb-20 sm:mb-28" />
       <div className="mx-auto max-w-5xl px-6">
         <ScrollReveal>
@@ -310,6 +311,7 @@ export function HowItWorks() {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </section>
   );
