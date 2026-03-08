@@ -1,6 +1,11 @@
 import { Hero } from "./components/hero";
 import { ValueProp } from "./components/value-prop";
 import { FeatureSection } from "./components/feature-section";
+import {
+  VerifyIllustration,
+  RecallIllustration,
+  ShieldIllustration,
+} from "./components/feature-illustrations";
 import { HowItWorks } from "./components/how-it-works";
 import { SocialProof } from "./components/social-proof";
 import { CtaSection } from "./components/cta-section";
@@ -58,9 +63,9 @@ export default function LandingPage() {
     <>
       <Hero />
       <ValueProp />
-      <FeatureSection {...verifyFeature} variant="dark" tiwazSide="right" />
-      <FeatureSection {...recallFeature} variant="light" tiwazSide="left" />
-      <FeatureSection {...shieldFeature} variant="dark" tiwazSide="right" />
+      <FeatureSection {...verifyFeature} variant="dark" tiwazSide="right" illustration={<VerifyIllustration />} />
+      <FeatureSection {...recallFeature} variant="light" tiwazSide="left" illustration={<RecallIllustration />} />
+      <FeatureSection {...shieldFeature} variant="dark" tiwazSide="right" illustration={<ShieldIllustration />} />
       <div className="section-tinted">
         <HowItWorks />
       </div>

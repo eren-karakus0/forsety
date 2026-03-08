@@ -1,12 +1,12 @@
 "use client";
 
+import { type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
 import { GradientOrb } from "@/components/motion/gradient-orb";
 import { Parallax } from "@/components/motion/parallax";
 import { TiwazBackground } from "./tiwaz-background";
-import { SectionLabel } from "./section-label";
 
 interface FeatureSectionProps {
   number: string;
@@ -18,6 +18,7 @@ interface FeatureSectionProps {
   variant: "dark" | "light";
   tiwazSide: "left" | "right";
   id?: string;
+  illustration?: ReactNode;
 }
 
 const accentMap = {
@@ -51,6 +52,7 @@ export function FeatureSection({
   variant,
   tiwazSide,
   id,
+  illustration,
 }: FeatureSectionProps) {
   const isDark = variant === "dark";
   const accent = accentMap[accentColor];
@@ -130,14 +132,37 @@ export function FeatureSection({
             </ScrollReveal>
           </div>
 
-          {/* Decorative number + accent graphic */}
+          {/* Illustration + section number overlay */}
           <div className="relative flex items-center justify-center">
-            <FadeIn delay={0.2}>
-              <SectionLabel
-                number={number}
-                className={isDark ? "text-white/[0.04]" : accent.numberColor}
-              />
-            </FadeIn>
+            {illustration ? (
+              <ScrollReveal>
+                <FadeIn delay={0.2}>
+                  {/* Section number behind illustration */}
+                  <span
+                    className={`pointer-events-none absolute inset-0 flex select-none items-center justify-center font-display text-[10rem] font-bold leading-none ${
+                      isDark ? "text-white/[0.03]" : accent.numberColor
+                    }`}
+                    style={{
+                      WebkitTextStroke: isDark ? "1px rgba(255,255,255,0.02)" : "1px currentColor",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                    aria-hidden="true"
+                  >
+                    {number}
+                  </span>
+                  {illustration}
+                </FadeIn>
+              </ScrollReveal>
+            ) : (
+              <FadeIn delay={0.2}>
+                <span
+                  className={`section-number select-none ${isDark ? "text-white/[0.04]" : accent.numberColor}`}
+                  aria-hidden="true"
+                >
+                  {number}
+                </span>
+              </FadeIn>
+            )}
           </div>
         </div>
       </div>
