@@ -22,6 +22,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { WalletDisplay } from "./components/wallet-display";
+import { DashboardWatermark } from "./components/dashboard-watermark";
 
 // Dynamic import with ssr:false ensures wallet providers (Aptos adapter)
 // never evaluate on the server, preventing indexedDB/storage errors during build.
@@ -156,8 +157,11 @@ export default function DashboardLayout({
           <WalletDisplay />
         </header>
 
+        {/* Decorative watermark */}
+        <DashboardWatermark />
+
         {/* Content */}
-        <main className="lg:pl-56">
+        <main className="relative z-10 lg:pl-56">
           <div className="mx-auto max-w-6xl px-6 py-8 pt-8 lg:pt-20 animate-fade-in">
             {children}
           </div>

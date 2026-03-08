@@ -7,6 +7,7 @@ import { fetchAgents, fetchAllAuditLogs } from "../actions";
 import {
   Button,
   Card,
+  CardContent,
   Badge,
   Skeleton,
   Table,
@@ -21,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@forsety/ui";
-import { Download, ClipboardList } from "lucide-react";
+import { Download, ClipboardList, CheckCircle2, ShieldAlert, AlertCircle } from "lucide-react";
 
 interface AuditLog {
   id: string;
@@ -181,6 +182,83 @@ function AuditPageContent() {
           {logs.length} entries
         </div>
       </div>
+
+      {/* Status Breakdown */}
+      {!loading && logs.length > 0 && (() => {
+        const successCount = logs.filter((l) => l.status === "success").length;
+        const deniedCount = logs.filter((l) => l.status === "denied").length;
+        const errorCount = logs.filter((l) => l.status === "error").length;
+        const avgDuration = (() => {
+          const withDuration = logs.filter((l) => l.durationMs != null);
+          if (withDuration.length === 0) return null;
+          return Math.round(withDuration.reduce((s, l) => s + (l.durationMs ?? 0), 0) / withDuration.length);
+        })();
+
+        return (
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Card className="stat-card-teal rounded-xl">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Success
+                  </p>
+                  <p className="font-display text-lg font-bold text-emerald-600">
+                    {successCount}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="stat-card-gold rounded-xl">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50">
+                  <ShieldAlert className="h-4 w-4 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Denied
+                  </p>
+                  <p className="font-display text-lg font-bold text-red-500">
+                    {deniedCount}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="stat-card-violet rounded-xl">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50">
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Errors
+                  </p>
+                  <p className="font-display text-lg font-bold text-orange-500">
+                    {errorCount}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="stat-card-navy rounded-xl">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-50">
+                  <ClipboardList className="h-4 w-4 text-navy-500" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Avg Duration
+                  </p>
+                  <p className="font-display text-lg font-bold text-foreground">
+                    {avgDuration != null ? `${avgDuration}ms` : "—"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Log Table */}
       <Card className="overflow-hidden rounded-xl">

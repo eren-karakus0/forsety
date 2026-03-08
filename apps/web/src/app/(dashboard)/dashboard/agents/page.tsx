@@ -57,6 +57,18 @@ export default function AgentsPage() {
 
   const activeCount = agents.filter((a) => a.isActive).length;
   const inactiveCount = agents.filter((a) => !a.isActive).length;
+  const activePercent = agents.length > 0 ? Math.round((activeCount / agents.length) * 100) : 0;
+
+  // Collect all unique permissions for distribution
+  const permissionCounts: Record<string, number> = {};
+  agents.forEach((a) => {
+    a.permissions.forEach((p) => {
+      permissionCounts[p] = (permissionCounts[p] ?? 0) + 1;
+    });
+  });
+  const topPermissions = Object.entries(permissionCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -76,8 +88,8 @@ export default function AgentsPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Stats + Distribution */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="stat-card-teal rounded-xl transition-all duration-300 hover:shadow-md">
           <CardContent className="pt-5">
             <div className="flex items-center justify-between">
@@ -102,6 +114,24 @@ export default function AgentsPage() {
             <p className="mt-2 font-display text-2xl font-bold text-emerald-500">
               {activeCount}
             </p>
+            {/* Status Distribution Bar */}
+            {agents.length > 0 && (
+              <div className="mt-3">
+                <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted/50">
+                  <div
+                    className="rounded-full bg-emerald-500 transition-all duration-500"
+                    style={{ width: `${activePercent}%` }}
+                  />
+                  <div
+                    className="bg-red-400/60"
+                    style={{ width: `${100 - activePercent}%` }}
+                  />
+                </div>
+                <p className="mt-1.5 text-[10px] text-muted-foreground">
+                  {activePercent}% active
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card className="stat-card-violet rounded-xl transition-all duration-300 hover:shadow-md">
@@ -115,6 +145,19 @@ export default function AgentsPage() {
             <p className="mt-2 font-display text-2xl font-bold text-foreground">
               {inactiveCount}
             </p>
+            {/* Top Permissions */}
+            {topPermissions.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1">
+                {topPermissions.map(([perm, count]) => (
+                  <span
+                    key={perm}
+                    className="rounded-md bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-600"
+                  >
+                    {perm} ({count})
+                  </span>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -149,14 +192,14 @@ export default function AgentsPage() {
               <TableRow>
                 <TableCell colSpan={6} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50">
-                      <Users className="h-5 w-5 text-teal-400" />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-50 to-violet-50">
+                      <Users className="h-6 w-6 text-teal-400" />
                     </div>
                     <p className="text-sm font-medium text-foreground">
                       No agents registered
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Register agents via the API to get started
+                    <p className="max-w-xs text-xs text-muted-foreground">
+                      Register agents via the API to start tracking their access and memory operations
                     </p>
                   </div>
                 </TableCell>

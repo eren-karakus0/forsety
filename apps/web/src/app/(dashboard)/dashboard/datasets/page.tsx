@@ -3,6 +3,7 @@ import { getForsetyClient } from "@/lib/forsety";
 import {
   Button,
   Card,
+  CardContent,
   Badge,
   Table,
   TableHeader,
@@ -11,7 +12,7 @@ import {
   TableRow,
   TableCell,
 } from "@forsety/ui";
-import { Plus, ArrowRight, Database, AlertTriangle } from "lucide-react";
+import { Plus, ArrowRight, Database, AlertTriangle, HardDrive, FileText, Shield } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ interface DatasetRow {
   status: "active" | "pending" | "expired";
   createdAt: string;
   blobHash: string | null;
+  sizeBytes: number | null;
 }
 
 const statusVariant = {
@@ -49,6 +51,7 @@ async function getDatasets(): Promise<{ rows: DatasetRow[]; error: boolean }> {
             })
           : "—",
         blobHash: d.blobHash,
+        sizeBytes: d.sizeBytes,
       })),
       error: false,
     };
@@ -57,8 +60,22 @@ async function getDatasets(): Promise<{ rows: DatasetRow[]; error: boolean }> {
   }
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default async function DatasetsPage() {
   const { rows: datasets, error } = await getDatasets();
+
+  const totalSize = datasets.reduce((acc, d) => acc + (d.sizeBytes ?? 0), 0);
+  const licenseCounts = datasets.reduce<Record<string, number>>((acc, d) => {
+    const key = d.license === "—" ? "None" : d.license;
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+  const topLicense = Object.entries(licenseCounts).sort((a, b) => b[1] - a[1])[0];
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -88,6 +105,57 @@ export default async function DatasetsPage() {
           </Link>
         </Button>
       </div>
+
+      {/* Storage Summary */}
+      {!error && datasets.length > 0 && (
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="stat-card-gold rounded-xl">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold-50">
+                <FileText className="h-4 w-4 text-gold-500" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Total Datasets
+                </p>
+                <p className="font-display text-lg font-bold text-foreground">
+                  {datasets.length}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="stat-card-teal rounded-xl">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50">
+                <HardDrive className="h-4 w-4 text-teal-500" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Total Size
+                </p>
+                <p className="font-display text-lg font-bold text-foreground">
+                  {totalSize > 0 ? formatBytes(totalSize) : "—"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="stat-card-violet rounded-xl">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
+                <Shield className="h-4 w-4 text-violet-500" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Top License
+                </p>
+                <p className="font-display text-lg font-bold text-foreground">
+                  {topLicense ? topLicense[0] : "—"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Error Banner */}
       {error && (
@@ -139,17 +207,20 @@ export default async function DatasetsPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gold-50">
-                        <Database className="h-5 w-5 text-gold-400" />
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-50 to-teal-50">
+                        <Database className="h-6 w-6 text-gold-400" />
                       </div>
                       <p className="text-sm font-medium text-foreground">
                         No datasets yet
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Upload your first dataset to get started
+                      <p className="max-w-xs text-xs text-muted-foreground">
+                        Upload your first dataset to start building verifiable evidence trails
                       </p>
                       <Button size="sm" asChild className="mt-1 bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500">
-                        <Link href="/dashboard/upload">Upload Dataset</Link>
+                        <Link href="/dashboard/upload">
+                          <Plus className="mr-1.5 h-3.5 w-3.5" />
+                          Upload Dataset
+                        </Link>
                       </Button>
                     </div>
                   )}
