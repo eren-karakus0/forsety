@@ -15,6 +15,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Dev bypass: skip auth in development mode
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next();
+  }
+
   // Check for JWT cookie
   const token = request.cookies.get("forsety-auth")?.value;
   if (!token) {

@@ -1,6 +1,6 @@
-export interface SiwaMessageParams {
+export interface AuthMessageParams {
   domain: string;
-  address: string;
+  address: string; // 0x + 64 hex (Aptos format)
   nonce: string;
   chainId?: number;
   statement?: string;
@@ -8,18 +8,24 @@ export interface SiwaMessageParams {
   expirationMinutes?: number;
 }
 
-export interface SiwaVerifyParams {
-  message: string;
+export interface AuthVerifyParams {
+  /** The full message that was signed (APTOS prefix included) */
+  fullMessage: string;
+  /** Ed25519 hex signature */
   signature: string;
-  /** If provided, verify the message domain matches this expected value. */
+  /** Ed25519 public key hex */
+  publicKey: string;
+  /** Expected signer address for validation */
+  expectedAddress?: string;
+  /** Expected domain for validation */
   expectedDomain?: string;
-  /** If provided, verify the message URI matches this expected value. */
-  expectedUri?: string;
+  /** Expected chain ID for validation (e.g., 110 for Shelbynet) */
+  expectedChainId?: number;
 }
 
-export interface SiwaVerifyResult {
+export interface AuthVerifyResult {
   success: boolean;
-  address?: string;
+  address?: string; // 0x + 64 hex (Aptos format)
   nonce?: string;
   error?: string;
 }

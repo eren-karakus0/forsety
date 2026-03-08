@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@forsety/ui";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { LaunchAppButton } from "./launch-app-button";
 
 const navLinks = [
   { href: "#features", label: "Features" },
   { href: "#how-it-works", label: "How it Works" },
   { href: "#developers", label: "Developers" },
-  { href: "/dashboard", label: "Dashboard" },
 ];
 
 export function Navbar() {
@@ -50,11 +50,7 @@ export function Navbar() {
               GitHub
             </Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link href="/dashboard">
-              Launch App <ArrowRight className="ml-1 h-3.5 w-3.5" />
-            </Link>
-          </Button>
+          <LaunchAppButton size="sm" />
         </div>
 
         {/* Mobile Toggle */}
@@ -92,9 +88,7 @@ export function Navbar() {
                 GitHub
               </Link>
             </Button>
-            <Button size="sm" asChild>
-              <Link href="/dashboard">Get Started</Link>
-            </Button>
+            <LaunchAppButton size="sm">Get Started</LaunchAppButton>
           </div>
         </div>
       )}

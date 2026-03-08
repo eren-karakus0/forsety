@@ -1,32 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, gt } from "drizzle-orm";
-import { verifySiwaMessage, signJwt } from "@forsety/auth";
+import { verifyAuthMessage, signJwt } from "@forsety/auth";
 import { createDb, sessions, users } from "@forsety/db";
 import { getEnv } from "@/lib/env";
+import { SHELBYNET_CHAIN_ID, APTOS_NETWORK } from "@/lib/aptos-config";
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, signature } = await request.json();
+    const { fullMessage, signature, publicKey, address } = await request.json();
 
-    if (!message || !signature) {
+    if (!fullMessage || !signature || !publicKey) {
       return NextResponse.json(
-        { error: "Missing message or signature" },
+        { error: "Missing fullMessage, signature, or publicKey" },
         { status: 400 }
       );
     }
 
-    // Verify SIWA signature with domain/uri binding
+    // Verify Aptos signature with domain + chain ID binding
     const host = request.headers.get("host") ?? "localhost:3000";
-    const result = await verifySiwaMessage({
-      message,
+    const result = verifyAuthMessage({
+      fullMessage,
       signature,
+      publicKey,
+      expectedAddress: address,
       expectedDomain: host,
-      expectedUri: `https://${host}`,
+      expectedChainId: APTOS_NETWORK === "shelbynet" ? SHELBYNET_CHAIN_ID : undefined,
     });
 
     if (!result.success || !result.address || !result.nonce) {
       return NextResponse.json(
-        { error: "Verification failed" },
+        { error: result.error ?? "Verification failed" },
         { status: 401 }
       );
     }

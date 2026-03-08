@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useAccount, useSignMessage } from "wagmi";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -10,8 +10,7 @@ interface AuthState {
 }
 
 export function useForsetyAuth() {
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const { account, connected, signMessage } = useWallet();
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     isLoading: false,
@@ -19,26 +18,43 @@ export function useForsetyAuth() {
   });
 
   const signIn = useCallback(async () => {
-    if (!address || !isConnected) return;
+    if (!account?.address || !connected) return;
 
     setAuthState({ isAuthenticated: false, isLoading: true, error: null });
 
     try {
-      // 1. Get nonce from server (pass wallet address for message binding)
+      const address = account.address.toString();
+
+      // 1. Get nonce and pre-built message from server
       const nonceRes = await fetch(`/api/auth/nonce?address=${address}`);
       if (!nonceRes.ok) throw new Error("Failed to get nonce");
       const { nonce, message } = await nonceRes.json();
 
       if (!nonce || !message) throw new Error("Invalid nonce response");
 
-      // 2. Sign the SIWA message with wallet
-      const signature = await signMessageAsync({ message });
+      // 2. Sign with Aptos wallet — include address, application, chainId in envelope
+      const signResult = await signMessage({
+        message,
+        nonce,
+        address: true,
+        application: true,
+        chainId: true,
+      });
 
-      // 3. Verify signature on server
+      // 3. Verify on server — send fullMessage, signature, and publicKey
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, signature, address }),
+        body: JSON.stringify({
+          fullMessage: signResult.fullMessage,
+          signature: typeof signResult.signature === "string"
+            ? signResult.signature
+            : Array.isArray(signResult.signature)
+              ? signResult.signature[0]
+              : signResult.signature.toString(),
+          publicKey: account.publicKey?.toString() ?? "",
+          address,
+        }),
       });
 
       if (!verifyRes.ok) {
@@ -54,7 +70,7 @@ export function useForsetyAuth() {
         error: error instanceof Error ? error.message : "Sign in failed",
       });
     }
-  }, [address, isConnected, signMessageAsync]);
+  }, [account, connected, signMessage]);
 
   const signOut = useCallback(async () => {
     try {
@@ -68,7 +84,7 @@ export function useForsetyAuth() {
     ...authState,
     signIn,
     signOut,
-    address,
-    isConnected,
+    address: account?.address?.toString(),
+    isConnected: connected,
   };
 }

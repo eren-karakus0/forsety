@@ -1,13 +1,7 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletSelectorTrigger } from "@/components/wallet-selector";
 
 export function ConnectWallet() {
-  return (
-    <ConnectButton
-      chainStatus="icon"
-      accountStatus="avatar"
-      showBalance={false}
-    />
-  );
+  return <WalletSelectorTrigger />;
 }

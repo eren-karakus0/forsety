@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@forsety/ui";
 import { ArrowRight, Github } from "lucide-react";
+import { LaunchAppButton } from "./launch-app-button";
 
 export function CtaSection() {
   return (
@@ -16,12 +17,10 @@ export function CtaSection() {
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Button size="lg" asChild>
-              <Link href="/dashboard">
-                Launch Dashboard
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <LaunchAppButton size="lg">
+              Launch Dashboard
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </LaunchAppButton>
             <Button variant="outline" size="lg" asChild>
               <Link
                 href="https://github.com/eren-karakus0/forsety"

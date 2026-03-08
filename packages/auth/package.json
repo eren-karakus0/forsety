@@ -17,13 +17,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "jose": "^6.0.0",
-    "viem": "^2.20.0",
-    "siwe": "^2.3.0"
+    "@aptos-labs/siwa": "^0.5.2",
+    "@aptos-labs/ts-sdk": "^5.2.1",
+    "jose": "^6.0.0"
   },
   "devDependencies": {
     "@forsety/config-eslint": "workspace:*",
     "@forsety/config-typescript": "workspace:*",
+    "@types/node": "^22.0.0",
     "eslint": "^9.18.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"

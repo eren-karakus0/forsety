@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { WalletDisplay } from "./components/wallet-display";
 
-// Dynamic import with ssr:false ensures wallet providers (wagmi, RainbowKit)
+// Dynamic import with ssr:false ensures wallet providers (Aptos adapter)
 // never evaluate on the server, preventing indexedDB/storage errors during build.
 const Providers = dynamic(
   () => import("../providers").then((mod) => ({ default: mod.Providers })),
