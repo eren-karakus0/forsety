@@ -86,10 +86,10 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-navy-800">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
             Datasets
           </h1>
-          <p className="mt-1 text-sm text-navy-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Licensed datasets with verifiable evidence trails
           </p>
         </div>
@@ -111,17 +111,17 @@ export default async function DashboardPage() {
         ].map((stat) => (
           <Card
             key={stat.label}
-            className={
+            className={`transition-all duration-200 hover:shadow-md ${
               stat.accent
-                ? "border-gold-300/60 bg-gradient-to-br from-gold-50/80 to-white"
-                : "border-navy-200/60"
-            }
+                ? "border-gold-500/20 bg-gradient-to-br from-gold-500/5 to-transparent dark:border-gold-500/20 dark:from-gold-500/5"
+                : "border-border"
+            }`}
           >
             <CardContent className="pt-5">
-              <p className="text-xs font-medium uppercase tracking-wider text-navy-400">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {stat.label}
               </p>
-              <p className="mt-2 font-display text-2xl font-bold text-navy-800">
+              <p className="mt-2 font-display text-2xl font-bold text-foreground">
                 {stat.value}
               </p>
             </CardContent>
@@ -130,23 +130,23 @@ export default async function DashboardPage() {
       </div>
 
       {/* Table */}
-      <Card className="border-navy-200/60">
+      <Card>
         <Table>
           <TableHeader>
-            <TableRow className="border-navy-100 bg-navy-50/50 hover:bg-navy-50/50">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">
+            <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Name
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 License
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Created
               </TableHead>
-              <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-navy-500">
+              <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Actions
               </TableHead>
             </TableRow>
@@ -156,13 +156,13 @@ export default async function DashboardPage() {
               <TableRow>
                 <TableCell colSpan={5} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-navy-100">
-                      <Database className="h-5 w-5 text-navy-400" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <Database className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <p className="text-sm font-medium text-navy-600">
+                    <p className="text-sm font-medium text-foreground">
                       No datasets yet
                     </p>
-                    <p className="text-xs text-navy-400">
+                    <p className="text-xs text-muted-foreground">
                       Upload your first dataset to get started
                     </p>
                     <Button size="sm" asChild>
@@ -173,14 +173,14 @@ export default async function DashboardPage() {
               </TableRow>
             ) : (
               datasets.map((dataset) => (
-                <TableRow key={dataset.id} className="group">
+                <TableRow key={dataset.id} className="group transition-colors">
                   <TableCell>
                     <Link href={`/dashboard/${dataset.id}`}>
-                      <span className="text-sm font-medium text-navy-800 transition-colors group-hover:text-gold-600">
+                      <span className="text-sm font-medium text-foreground transition-colors group-hover:text-gold-500">
                         {dataset.name}
                       </span>
                       {dataset.blobHash && (
-                        <span className="mt-0.5 block font-mono text-[10px] text-navy-400">
+                        <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
                           {dataset.blobHash.slice(0, 16)}...
                         </span>
                       )}
@@ -197,7 +197,7 @@ export default async function DashboardPage() {
                         dataset.status.slice(1)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-navy-500">
+                  <TableCell className="text-sm text-muted-foreground">
                     {dataset.createdAt}
                   </TableCell>
                   <TableCell className="text-right">

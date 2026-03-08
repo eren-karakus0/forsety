@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import Image from "next/image";
+import { useState, useEffect } from "react";
 import { Button } from "@forsety/ui";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Github } from "lucide-react";
 import { LaunchAppButton } from "./launch-app-button";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -14,18 +16,33 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-navy-200/60 bg-white/80 backdrop-blur-md">
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "border-b border-white/10 bg-navy-950/60 backdrop-blur-xl"
+          : "bg-transparent"
+      }`}
+    >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-800">
-            <span className="font-display text-lg font-bold text-gold-400">
-              F
-            </span>
-          </div>
-          <span className="font-display text-xl font-semibold tracking-tight text-navy-800">
+          <Image
+            src="/logo-icon.svg"
+            alt="Forsety"
+            width={36}
+            height={36}
+            className="h-9 w-9"
+          />
+          <span className="font-display text-xl font-semibold tracking-tight text-white">
             Forsety
           </span>
         </Link>
@@ -36,21 +53,35 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-navy-600 transition-colors hover:bg-navy-100 hover:text-navy-800"
+              className="group relative rounded-lg px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white"
             >
               {link.label}
+              <span className="absolute bottom-1 left-3 right-3 h-px origin-left scale-x-0 bg-gold-500 transition-transform duration-300 group-hover:scale-x-100" />
             </Link>
           ))}
         </nav>
 
         {/* CTA */}
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="https://github.com/eren-karakus0/forsety" target="_blank" rel="noopener noreferrer">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:bg-white/10 hover:text-white"
+            asChild
+          >
+            <Link
+              href="https://github.com/eren-karakus0/forsety"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Github className="mr-2 h-4 w-4" />
               GitHub
             </Link>
           </Button>
-          <LaunchAppButton size="sm" />
+          <LaunchAppButton
+            size="sm"
+            className="bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 hover:from-gold-400 hover:to-gold-500 border-0"
+          />
         </div>
 
         {/* Mobile Toggle */}
@@ -60,38 +91,62 @@ export function Navbar() {
           aria-label="Toggle menu"
         >
           {mobileOpen ? (
-            <X className="h-6 w-6 text-navy-700" />
+            <X className="h-6 w-6 text-white" />
           ) : (
-            <Menu className="h-6 w-6 text-navy-700" />
+            <Menu className="h-6 w-6 text-white" />
           )}
         </button>
       </div>
 
       {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="border-t border-navy-200/60 bg-white px-6 pb-6 pt-4 md:hidden">
-          <nav className="flex flex-col gap-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-navy-600 hover:bg-navy-100"
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="mt-4 flex flex-col gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="https://github.com/eren-karakus0/forsety" target="_blank" rel="noopener noreferrer">
-                GitHub
-              </Link>
-            </Button>
-            <LaunchAppButton size="sm">Get Started</LaunchAppButton>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden border-t border-white/10 bg-navy-950/90 backdrop-blur-xl md:hidden"
+          >
+            <div className="px-6 pb-6 pt-4">
+              <nav className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-4 flex flex-col gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start text-white/70 hover:bg-white/10 hover:text-white"
+                  asChild
+                >
+                  <Link
+                    href="https://github.com/eren-karakus0/forsety"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Github className="mr-2 h-4 w-4" />
+                    GitHub
+                  </Link>
+                </Button>
+                <LaunchAppButton
+                  size="sm"
+                  className="bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 hover:from-gold-400 hover:to-gold-500 border-0"
+                >
+                  Get Started
+                </LaunchAppButton>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

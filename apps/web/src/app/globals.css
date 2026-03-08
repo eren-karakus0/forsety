@@ -32,11 +32,11 @@
   }
 
   .dark {
-    --background: 220 25% 5%;
+    --background: 222 40% 6%;
     --foreground: 210 20% 95%;
-    --card: 220 25% 8%;
+    --card: 222 37% 10%;
     --card-foreground: 210 20% 95%;
-    --popover: 220 25% 8%;
+    --popover: 222 37% 10%;
     --popover-foreground: 210 20% 95%;
     --primary: 42 65% 51%;
     --primary-foreground: 215 45% 10%;
@@ -48,8 +48,8 @@
     --accent-foreground: 215 45% 10%;
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 20% 18%;
-    --input: 220 20% 18%;
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
     --ring: 42 65% 51%;
 
     --color-navy: 42 65% 51%;
@@ -63,5 +63,78 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl shadow-xl;
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
+  }
+
+  .glow-teal {
+    box-shadow: 0 0 40px rgba(55, 170, 212, 0.15);
+  }
+
+  .glow-violet {
+    box-shadow: 0 0 40px rgba(97, 55, 212, 0.15);
+  }
+
+  .gradient-text-gold {
+    @apply bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-gold-teal {
+    @apply bg-gradient-to-r from-gold-400 to-teal-400 bg-clip-text text-transparent;
+  }
+
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #D4AF37, #37AAD4);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.5) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+}
+
+@layer utilities {
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .motion-safe\:animate-none,
+    [class*="animate-"] {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 }

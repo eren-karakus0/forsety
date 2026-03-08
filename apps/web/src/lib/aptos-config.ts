@@ -24,3 +24,35 @@ export const SHELBYNET_CONFIG = {
   fullnode: "https://api.shelbynet.shelby.xyz/v1",
   faucet: "https://faucet.shelbynet.shelby.xyz",
 };
+
+/** Shared wallet adapter props — single source of truth for providers.tsx & wallet-launch-flow.tsx */
+export function getWalletAdapterProps() {
+  const network = getAptosNetwork();
+  return {
+    autoConnect: true,
+    optInWallets: [
+      "Petra",
+      "OKX Wallet",
+      "Nightly",
+      "Backpack",
+      "Bitget Wallet",
+    ] as const,
+    dappConfig: {
+      network,
+      ...(network === Network.CUSTOM
+        ? {
+            aptosApiKeys: process.env.NEXT_PUBLIC_APTOS_API_KEY
+              ? {
+                  [APTOS_NETWORK]:
+                    process.env.NEXT_PUBLIC_APTOS_API_KEY,
+                }
+              : undefined,
+            fullnode: SHELBYNET_CONFIG.fullnode,
+          }
+        : {}),
+    },
+    onError: (error: Error) => {
+      console.error("Wallet adapter error:", error);
+    },
+  };
+}

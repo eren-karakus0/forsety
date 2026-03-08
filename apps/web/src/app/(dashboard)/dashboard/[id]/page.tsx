@@ -71,13 +71,13 @@ interface PolicyEntry {
 
 function MetadataRow({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
   return (
-    <div className="flex items-start justify-between border-b border-navy-100/80 py-3 last:border-0">
-      <span className="text-xs font-semibold uppercase tracking-wider text-navy-400">
+    <div className="flex items-start justify-between border-b border-border/60 py-3 last:border-0">
+      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       <span
         className={`max-w-[60%] text-right text-sm ${
-          mono ? "font-mono text-xs break-all text-navy-600" : "text-navy-800"
+          mono ? "font-mono text-xs break-all text-muted-foreground" : "text-foreground"
         }`}
       >
         {value || "—"}
@@ -157,7 +157,7 @@ export default function DatasetDetailPage() {
   if (!data) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <p className="text-sm text-navy-600">Dataset not found</p>
+        <p className="text-sm text-muted-foreground">Dataset not found</p>
         <Button variant="link" asChild>
           <Link href="/dashboard">Back to datasets</Link>
         </Button>
@@ -170,12 +170,12 @@ export default function DatasetDetailPage() {
   return (
     <div className="animate-fade-in">
       {/* Breadcrumb */}
-      <div className="mb-6 flex items-center gap-2 text-sm text-navy-400">
-        <Link href="/dashboard" className="transition-colors hover:text-navy-600">
+      <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+        <Link href="/dashboard" className="transition-colors hover:text-foreground">
           Datasets
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-navy-700">{dataset.name}</span>
+        <span className="text-foreground">{dataset.name}</span>
       </div>
 
       <Tabs defaultValue="overview">
@@ -190,36 +190,36 @@ export default function DatasetDetailPage() {
         </TabsList>
 
         <TabsContent value="access">
-          <Card className="border-navy-200/60">
-            <CardHeader className="border-b border-navy-100 bg-navy-50/50">
+          <Card>
+            <CardHeader className="border-b border-border bg-muted/50">
               <CardTitle className="text-sm">Access Log Timeline</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {accessLogs.length === 0 ? (
-                <div className="px-5 py-12 text-center text-sm text-navy-400">
+                <div className="px-5 py-12 text-center text-sm text-muted-foreground">
                   No access logs yet
                 </div>
               ) : (
-                <div className="divide-y divide-navy-100/80">
+                <div className="divide-y divide-border">
                   {accessLogs.map((log: AccessLogEntry) => (
-                    <div key={log.id} className="flex items-start gap-4 px-5 py-4">
-                      <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100">
-                        <Eye className="h-3.5 w-3.5 text-navy-500" />
+                    <div key={log.id} className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/30">
+                      <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                        <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary" className="font-mono text-[10px] uppercase">
                             {log.operationType}
                           </Badge>
-                          <span className="text-xs text-navy-400">
+                          <span className="text-xs text-muted-foreground">
                             {new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
                           </span>
                         </div>
-                        <p className="mt-1 font-mono text-xs text-navy-500 truncate">
+                        <p className="mt-1 font-mono text-xs text-muted-foreground truncate">
                           Accessor: {log.accessorAddress}
                         </p>
                         {log.readProof && (
-                          <p className="mt-0.5 font-mono text-[10px] text-navy-400 truncate">
+                          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground/70 truncate">
                             Proof: {log.readProof.slice(0, 32)}...
                           </p>
                         )}
@@ -233,29 +233,29 @@ export default function DatasetDetailPage() {
         </TabsContent>
 
         <TabsContent value="policies">
-          <Card className="border-navy-200/60">
-            <CardHeader className="border-b border-navy-100 bg-navy-50/50">
+          <Card>
+            <CardHeader className="border-b border-border bg-muted/50">
               <CardTitle className="text-sm">Policy Versions</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {policies.length === 0 ? (
-                <div className="px-5 py-12 text-center text-sm text-navy-400">
+                <div className="px-5 py-12 text-center text-sm text-muted-foreground">
                   No policies defined
                 </div>
               ) : (
-                <div className="divide-y divide-navy-100/80">
+                <div className="divide-y divide-border">
                   {policies.map((pol: PolicyEntry) => (
-                    <div key={pol.id} className="px-5 py-4">
+                    <div key={pol.id} className="px-5 py-4 transition-colors hover:bg-muted/30">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge className="bg-navy-800 text-[10px]">
+                          <Badge className="text-[10px]">
                             v{pol.version}
                           </Badge>
-                          <span className="text-xs text-navy-500">
+                          <span className="text-xs text-muted-foreground">
                             {pol.createdAt ? new Date(pol.createdAt).toLocaleDateString() : "—"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-navy-500">
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <span>{pol.readsConsumed ?? 0}/{pol.maxReads ?? "∞"} reads</span>
                           {pol.expiresAt && (
                             <span className={new Date(pol.expiresAt) < new Date() ? "text-red-500" : ""}>
@@ -272,7 +272,7 @@ export default function DatasetDetailPage() {
                         ))}
                       </div>
                       {pol.hash && (
-                        <p className="mt-1 font-mono text-[10px] text-navy-400">
+                        <p className="mt-1 font-mono text-[10px] text-muted-foreground/70">
                           Hash: {pol.hash.slice(0, 24)}...
                         </p>
                       )}
@@ -288,20 +288,20 @@ export default function DatasetDetailPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left: Metadata */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="border-navy-200/60">
+              <Card>
                 <CardContent className="pt-6">
                   <div className="mb-4 flex items-center justify-between">
-                    <h1 className="font-display text-xl font-bold text-navy-800">
+                    <h1 className="font-display text-xl font-bold text-foreground">
                       {dataset.name}
                     </h1>
                     <Badge variant="default">Active</Badge>
                   </div>
 
                   {dataset.description && (
-                    <p className="mb-4 text-sm text-navy-600">{dataset.description}</p>
+                    <p className="mb-4 text-sm text-muted-foreground">{dataset.description}</p>
                   )}
 
-                  <div className="rounded-lg bg-navy-50/50 p-4">
+                  <div className="rounded-lg bg-muted/50 p-4">
                     <MetadataRow label="Dataset ID" value={dataset.id} mono />
                     <MetadataRow label="Shelby Blob" value={dataset.shelbyBlobName} mono />
                     <MetadataRow label="Blob Hash" value={dataset.blobHash} mono />
@@ -319,30 +319,30 @@ export default function DatasetDetailPage() {
               </Card>
 
               {/* Licenses */}
-              <Card className="border-navy-200/60">
+              <Card>
                 <CardContent className="pt-6">
-                  <h2 className="mb-4 font-display text-base font-semibold text-navy-800">
+                  <h2 className="mb-4 font-display text-base font-semibold text-foreground">
                     Licenses
                   </h2>
                   {licenses.length === 0 ? (
-                    <p className="text-sm text-navy-400">No licenses attached</p>
+                    <p className="text-sm text-muted-foreground">No licenses attached</p>
                   ) : (
                     <div className="space-y-3">
                       {licenses.map((lic) => (
                         <div
                           key={lic.id}
-                          className="flex items-center justify-between rounded-lg border border-navy-100 bg-navy-50/30 px-4 py-3"
+                          className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3"
                         >
                           <div>
-                            <Badge variant="secondary" className="bg-gold-100 text-gold-800 font-mono">
+                            <Badge variant="secondary" className="font-mono">
                               {lic.spdxType}
                             </Badge>
-                            <p className="mt-1 font-mono text-[11px] text-navy-400">
+                            <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                               Grantor: {lic.grantorAddress.slice(0, 10)}...
                             </p>
                           </div>
                           {lic.termsHash && (
-                            <span className="font-mono text-[10px] text-navy-400">
+                            <span className="font-mono text-[10px] text-muted-foreground">
                               {lic.termsHash.slice(0, 12)}...
                             </span>
                           )}
@@ -356,12 +356,12 @@ export default function DatasetDetailPage() {
 
             {/* Right: Evidence Pack */}
             <div className="space-y-6">
-              <Card className="border-gold-300/60 bg-gradient-to-b from-gold-50/60 to-white">
+              <Card className="border-gold-500/20 bg-gradient-to-b from-gold-500/5 to-transparent dark:border-gold-500/20 dark:from-gold-500/5">
                 <CardContent className="pt-6">
-                  <h2 className="mb-1 font-display text-base font-semibold text-navy-800">
+                  <h2 className="mb-1 font-display text-base font-semibold text-foreground">
                     Evidence Pack
                   </h2>
-                  <p className="mb-5 text-xs text-navy-500">
+                  <p className="mb-5 text-xs text-muted-foreground">
                     Generate a cryptographic evidence pack for this dataset
                   </p>
 
@@ -418,14 +418,14 @@ export default function DatasetDetailPage() {
 
               {/* Evidence JSON Preview */}
               {evidence && (
-                <Card className="border-navy-200/60 overflow-hidden">
-                  <CardHeader className="border-b border-navy-100 bg-navy-50/50 py-2.5">
+                <Card className="overflow-hidden">
+                  <CardHeader className="border-b border-border bg-muted/50 py-2.5">
                     <CardTitle className="text-xs uppercase tracking-wider">
                       JSON Preview
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <pre className="max-h-80 overflow-auto p-4 font-mono text-[11px] leading-relaxed text-navy-600">
+                    <pre className="max-h-80 overflow-auto p-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
                       {JSON.stringify(evidence.json, null, 2)}
                     </pre>
                   </CardContent>

@@ -1,66 +1,98 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@forsety/ui";
-import { ArrowRight, Shield } from "lucide-react";
+import { ArrowRight, Shield, ChevronDown } from "lucide-react";
 import { LaunchAppButton } from "./launch-app-button";
+import { FadeIn } from "@/components/motion/fade-in";
+import { GradientOrb } from "@/components/motion/gradient-orb";
+import { motion } from "framer-motion";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-navy-50 to-white py-24 sm:py-32 lg:py-40">
-      {/* Background Pattern */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-16 -top-16 h-72 w-72 rounded-full bg-gold-400/10 blur-3xl" />
-        <div className="absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-navy-400/10 blur-3xl" />
-        {/* Tiwaz-inspired geometric lines */}
-        <svg
-          className="absolute right-0 top-0 h-full w-1/2 opacity-[0.03]"
-          viewBox="0 0 400 800"
-          fill="none"
-        >
-          <line x1="200" y1="0" x2="200" y2="800" stroke="currentColor" strokeWidth="2" className="text-navy-800" />
-          <line x1="200" y1="100" x2="100" y2="300" stroke="currentColor" strokeWidth="2" className="text-navy-800" />
-          <line x1="200" y1="100" x2="300" y2="300" stroke="currentColor" strokeWidth="2" className="text-navy-800" />
-          <line x1="200" y1="400" x2="80" y2="600" stroke="currentColor" strokeWidth="1.5" className="text-navy-800" />
-          <line x1="200" y1="400" x2="320" y2="600" stroke="currentColor" strokeWidth="1.5" className="text-navy-800" />
+    <section className="relative flex min-h-screen items-center overflow-hidden pt-16">
+      {/* Animated Gradient Orbs */}
+      <GradientOrb color="gold" size={500} className="-left-[10%] top-[10%]" blur={100} />
+      <GradientOrb color="teal" size={400} className="-right-[5%] top-[30%]" blur={90} />
+      <GradientOrb color="violet" size={350} className="bottom-[10%] left-[20%]" blur={80} />
+
+      {/* Tiwaz geometric pattern */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.04]">
+        <svg className="absolute right-0 top-0 h-full w-1/2" viewBox="0 0 400 800" fill="none">
+          <line x1="200" y1="0" x2="200" y2="800" stroke="currentColor" strokeWidth="1" className="text-white" />
+          <line x1="200" y1="100" x2="100" y2="300" stroke="currentColor" strokeWidth="1" className="text-white" />
+          <line x1="200" y1="100" x2="300" y2="300" stroke="currentColor" strokeWidth="1" className="text-white" />
+          <line x1="200" y1="400" x2="80" y2="600" stroke="currentColor" strokeWidth="0.5" className="text-white" />
+          <line x1="200" y1="400" x2="320" y2="600" stroke="currentColor" strokeWidth="0.5" className="text-white" />
         </svg>
       </div>
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-3xl text-center">
           {/* Badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-navy-200 bg-white/80 px-4 py-1.5 text-sm font-medium text-navy-700 shadow-sm backdrop-blur-sm">
-            <Shield className="h-4 w-4 text-gold-500" />
-            Built on Shelby Protocol
-          </div>
+          <FadeIn delay={0.1}>
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-white/80 backdrop-blur-sm">
+              <Shield className="h-4 w-4 text-gold-400" />
+              Built on Shelby Protocol
+            </div>
+          </FadeIn>
 
           {/* Headline */}
-          <h1 className="font-display text-4xl font-bold tracking-tight text-navy-900 sm:text-5xl lg:text-6xl">
-            Evidence Layer for{" "}
-            <span className="bg-gradient-to-r from-gold-500 to-gold-600 bg-clip-text text-transparent">
-              Licensed AI Data
-            </span>
-          </h1>
+          <FadeIn delay={0.2}>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-7xl">
+              Evidence Layer for{" "}
+              <span className="gradient-text-gold-teal">
+                Licensed AI Data
+              </span>
+            </h1>
+          </FadeIn>
 
           {/* Subtitle */}
-          <p className="mt-6 text-lg leading-relaxed text-navy-600 sm:text-xl">
-            We prove licensed access and compliant usage. Forsety creates
-            cryptographic evidence packs that verify every dataset interaction —
-            from upload to consumption.
-          </p>
+          <FadeIn delay={0.35}>
+            <p className="mt-6 text-lg leading-relaxed text-white/60 sm:text-xl">
+              We prove licensed access and compliant usage. Forsety creates
+              cryptographic evidence packs that verify every dataset interaction —
+              from upload to consumption.
+            </p>
+          </FadeIn>
 
           {/* CTAs */}
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <LaunchAppButton size="lg">
-              Get Started
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </LaunchAppButton>
-            <Button variant="outline" size="lg" asChild>
-              <Link href="https://github.com/eren-karakus0/forsety" target="_blank" rel="noopener noreferrer">
-                View on GitHub
-              </Link>
-            </Button>
-          </div>
+          <FadeIn delay={0.5}>
+            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+              <LaunchAppButton
+                size="lg"
+                className="bg-gradient-to-r from-gold-500 to-teal-500 text-navy-950 font-semibold hover:from-gold-400 hover:to-teal-400 border-0 glow-gold"
+              >
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </LaunchAppButton>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm"
+                asChild
+              >
+                <Link
+                  href="https://github.com/eren-karakus0/forsety"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View on GitHub
+                </Link>
+              </Button>
+            </div>
+          </FadeIn>
         </div>
       </div>
+
+      {/* Scroll indicator */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <ChevronDown className="h-6 w-6 text-white/30" />
+      </motion.div>
     </section>
   );
 }

@@ -18,7 +18,7 @@ export function WalletDisplay() {
 
   if (!connected || !account) {
     return (
-      <div className="flex items-center gap-2 text-sm text-navy-500">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Wallet className="h-4 w-4" />
         <span>Not connected</span>
       </div>
@@ -35,16 +35,16 @@ export function WalletDisplay() {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 rounded-lg bg-navy-100 px-2.5 py-1.5">
-        <Wallet className="h-3.5 w-3.5 text-navy-600" />
-        <span className="font-mono text-xs font-medium text-navy-700">
+      <div className="flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1.5">
+        <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="font-mono text-xs font-medium text-foreground">
           {truncateAddress(address)}
         </span>
       </div>
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-navy-500 hover:text-red-600"
+        className="h-8 w-8 text-muted-foreground hover:text-red-500"
         onClick={handleSignOut}
         title="Sign out"
       >

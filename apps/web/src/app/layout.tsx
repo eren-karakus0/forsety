@@ -34,6 +34,13 @@ export const metadata: Metadata = {
     "dataset verification",
   ],
   authors: [{ name: "eren-karakus0" }],
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon", type: "image/png", sizes: "32x32" },
+    ],
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://forsety.vercel.app"),
   openGraph: {
     title: "Forsety — Evidence Layer for Licensed AI Data Access",
     description:
@@ -55,7 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >

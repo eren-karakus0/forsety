@@ -1,7 +1,14 @@
-import { Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from "@forsety/ui";
+"use client";
 
-const codeSnippets = {
-  sdk: `import { ForsetyClient } from "@forsety/sdk";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@forsety/ui";
+import { Check, Copy } from "lucide-react";
+import { FadeIn } from "@/components/motion/fade-in";
+
+const codeSnippets: Record<string, { code: string; lang: "ts" | "json" | "bash" }> = {
+  sdk: {
+    lang: "ts",
+    code: `import { ForsetyClient } from "@forsety/sdk";
 
 const forsety = new ForsetyClient({
   databaseUrl: process.env.DATABASE_URL,
@@ -20,8 +27,10 @@ const dataset = await forsety.datasets.upload({
 
 // Generate evidence pack
 const evidence = await forsety.evidence.generate(dataset.id);`,
-
-  mcp: `// MCP tool call from an AI agent
+  },
+  mcp: {
+    lang: "json",
+    code: `// MCP tool call from an AI agent
 {
   "tool": "forsety_memory_store",
   "arguments": {
@@ -42,8 +51,10 @@ const evidence = await forsety.evidence.generate(dataset.id);`,
     "limit": 5
   }
 }`,
-
-  api: `# Log dataset access with policy enforcement
+  },
+  api: {
+    lang: "bash",
+    code: `# Log dataset access with policy enforcement
 curl -X POST /api/access \\
   -H "X-API-Key: fsy_abc123..." \\
   -d '{
@@ -59,66 +70,239 @@ curl /api/datasets/550e8400-.../evidence \\
 # Response: verifiable evidence bundle
 # with licenses, policies, access logs,
 # and cryptographic proofs`,
+  },
 };
+
+// Lightweight regex-based syntax highlighting
+function highlightCode(code: string, lang: "ts" | "json" | "bash"): React.ReactNode[] {
+  const lines = code.split("\n");
+
+  return lines.map((line, i) => {
+    let highlighted: React.ReactNode;
+
+    if (lang === "ts") {
+      highlighted = highlightTS(line);
+    } else if (lang === "json") {
+      highlighted = highlightJSON(line);
+    } else {
+      highlighted = highlightBash(line);
+    }
+
+    return (
+      <span key={i}>
+        {highlighted}
+        {i < lines.length - 1 ? "\n" : ""}
+      </span>
+    );
+  });
+}
+
+function highlightTS(line: string): React.ReactNode {
+  // Comments
+  if (line.trimStart().startsWith("//")) {
+    return <span className="text-white/30">{line}</span>;
+  }
+
+  // Apply keyword highlighting
+  const parts: React.ReactNode[] = [];
+  const regex = /(import|from|const|await|process\.env\.\w+|"[^"]*")/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(line)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(line.slice(lastIndex, match.index));
+    }
+    const token = match[0];
+    if (token === "import" || token === "from" || token === "const" || token === "await") {
+      parts.push(<span key={match.index} className="text-violet-400">{token}</span>);
+    } else if (token.startsWith('"')) {
+      parts.push(<span key={match.index} className="text-gold-400">{token}</span>);
+    } else if (token.startsWith("process.env.")) {
+      parts.push(<span key={match.index} className="text-teal-400">{token}</span>);
+    }
+    lastIndex = match.index + token.length;
+  }
+
+  if (lastIndex < line.length) {
+    parts.push(line.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? <>{parts}</> : line;
+}
+
+function highlightJSON(line: string): React.ReactNode {
+  if (line.trimStart().startsWith("//")) {
+    return <span className="text-white/30">{line}</span>;
+  }
+
+  const parts: React.ReactNode[] = [];
+  const regex = /("[\w_-]+")\s*:/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(line)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(highlightJSONValues(line.slice(lastIndex, match.index)));
+    }
+    parts.push(<span key={match.index} className="text-teal-400">{match[1]}</span>);
+    parts.push(":");
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < line.length) {
+    parts.push(highlightJSONValues(line.slice(lastIndex)));
+  }
+
+  return parts.length > 0 ? <>{parts}</> : line;
+}
+
+function highlightJSONValues(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const regex = /"[^"]*"|\b\d+\b/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    if (match[0].startsWith('"')) {
+      parts.push(<span key={`v${match.index}`} className="text-gold-400">{match[0]}</span>);
+    } else {
+      parts.push(<span key={`v${match.index}`} className="text-violet-400">{match[0]}</span>);
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? <>{parts}</> : text;
+}
+
+function highlightBash(line: string): React.ReactNode {
+  if (line.trimStart().startsWith("#")) {
+    return <span className="text-white/30">{line}</span>;
+  }
+
+  const parts: React.ReactNode[] = [];
+  const regex = /(curl|-X|-H|-d|POST|GET|\\)|(".*?")|('.*?')/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(line)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(line.slice(lastIndex, match.index));
+    }
+    const token = match[0];
+    if (token === "curl") {
+      parts.push(<span key={match.index} className="text-violet-400">{token}</span>);
+    } else if (token.startsWith('"') || token.startsWith("'")) {
+      parts.push(<span key={match.index} className="text-gold-400">{token}</span>);
+    } else if (token === "-X" || token === "-H" || token === "-d") {
+      parts.push(<span key={match.index} className="text-teal-400">{token}</span>);
+    } else {
+      parts.push(<span key={match.index} className="text-white/60">{token}</span>);
+    }
+    lastIndex = match.index + token.length;
+  }
+
+  if (lastIndex < line.length) {
+    parts.push(line.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? <>{parts}</> : line;
+}
+
+function CopyButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-white/50 transition-all hover:bg-white/20 hover:text-white"
+      aria-label="Copy code"
+    >
+      {copied ? (
+        <Check className="h-4 w-4 text-emerald-400" />
+      ) : (
+        <Copy className="h-4 w-4" />
+      )}
+    </button>
+  );
+}
 
 export function ForDevelopers() {
   return (
     <section
       id="developers"
-      className="border-t border-navy-100 bg-white py-20 sm:py-28"
+      className="border-t border-white/5 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-gold-600">
+        <FadeIn className="mx-auto max-w-2xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-gold-400">
             For Developers
           </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-navy-900 sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
             Integrate in Minutes
           </h2>
-          <p className="mt-4 text-lg text-navy-500">
+          <p className="mt-4 text-lg text-white/50">
             TypeScript SDK, MCP tools, and REST API — pick the integration that
             fits your stack.
           </p>
-        </div>
+        </FadeIn>
 
-        <div className="mx-auto mt-12 max-w-3xl">
-          <Card className="overflow-hidden border-navy-200">
-            <CardContent className="p-0">
+        <FadeIn delay={0.2}>
+          <div className="mx-auto mt-12 max-w-3xl">
+            <div className="glass-card overflow-hidden">
               <Tabs defaultValue="sdk">
-                <div className="border-b border-navy-100 bg-navy-50/50 px-4 pt-3">
+                <div className="border-b border-white/10 bg-white/[0.03] px-4 pt-3">
                   <TabsList className="bg-transparent">
                     <TabsTrigger
                       value="sdk"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                      className="text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-gold-400 data-[state=active]:shadow-none"
                     >
                       SDK
                     </TabsTrigger>
                     <TabsTrigger
                       value="mcp"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                      className="text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-teal-400 data-[state=active]:shadow-none"
                     >
                       MCP
                     </TabsTrigger>
                     <TabsTrigger
                       value="api"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                      className="text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-violet-400 data-[state=active]:shadow-none"
                     >
                       REST API
                     </TabsTrigger>
                   </TabsList>
                 </div>
 
-                {Object.entries(codeSnippets).map(([key, code]) => (
+                {Object.entries(codeSnippets).map(([key, { code, lang }]) => (
                   <TabsContent key={key} value={key} className="mt-0">
-                    <pre className="overflow-x-auto bg-navy-950 p-6 text-sm leading-relaxed">
-                      <code className="font-mono text-navy-200">{code}</code>
-                    </pre>
+                    <div className="relative">
+                      <CopyButton code={code} />
+                      <pre className="overflow-x-auto bg-navy-950/50 p-6 pr-14 text-sm leading-relaxed">
+                        <code className="font-mono text-white/70">
+                          {highlightCode(code, lang)}
+                        </code>
+                      </pre>
+                    </div>
                   </TabsContent>
                 ))}
               </Tabs>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </FadeIn>
       </div>
     </section>
   );

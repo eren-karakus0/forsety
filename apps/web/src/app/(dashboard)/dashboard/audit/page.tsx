@@ -122,10 +122,10 @@ function AuditPageContent() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-navy-800">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
             Audit Trail
           </h1>
-          <p className="mt-1 text-sm text-navy-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Complete audit log of all agent activities
           </p>
         </div>
@@ -168,13 +168,13 @@ function AuditPageContent() {
           </SelectContent>
         </Select>
 
-        <div className="ml-auto self-center text-sm text-navy-500">
+        <div className="ml-auto self-center text-sm text-muted-foreground">
           {logs.length} entries
         </div>
       </div>
 
       {/* Log Table */}
-      <Card className="border-navy-200/60">
+      <Card>
         {loading ? (
           <div className="space-y-3 p-6">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -182,26 +182,26 @@ function AuditPageContent() {
             ))}
           </div>
         ) : logs.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-navy-400">
+          <div className="px-5 py-16 text-center text-sm text-muted-foreground">
             No audit logs found
           </div>
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-navy-100 bg-navy-50/50 hover:bg-navy-50/50">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Time</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Agent</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Action</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Tool</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Resource</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-navy-500">Status</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-navy-500">Duration</TableHead>
+              <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Agent</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tool</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resource</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="text-xs text-navy-500 whitespace-nowrap">
+                <TableRow key={log.id} className="transition-colors">
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -214,7 +214,7 @@ function AuditPageContent() {
                     {log.agentId ? (
                       <Link
                         href={`/dashboard/agents/${log.agentId}`}
-                        className="text-xs font-medium text-navy-700 hover:text-gold-600 transition-colors"
+                        className="text-xs font-medium text-foreground hover:text-gold-500 transition-colors"
                       >
                         {getAgentName(log.agentId)}
                       </Link>
@@ -222,7 +222,7 @@ function AuditPageContent() {
                       <span className="text-xs font-medium text-red-500">Anonymous</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-xs font-medium text-navy-700">
+                  <TableCell className="text-xs font-medium text-foreground">
                     {log.action}
                   </TableCell>
                   <TableCell>
@@ -231,21 +231,21 @@ function AuditPageContent() {
                         {log.toolName}
                       </Badge>
                     ) : (
-                      <span className="text-xs text-navy-400">—</span>
+                      <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {log.resourceType ? (
-                      <span className="text-xs text-navy-600">
+                      <span className="text-xs text-muted-foreground">
                         {log.resourceType}
                         {log.resourceId && (
-                          <span className="ml-1 font-mono text-[10px] text-navy-400">
+                          <span className="ml-1 font-mono text-[10px] text-muted-foreground/70">
                             {log.resourceId.slice(0, 8)}
                           </span>
                         )}
                       </span>
                     ) : (
-                      <span className="text-xs text-navy-400">—</span>
+                      <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -258,7 +258,7 @@ function AuditPageContent() {
                       </p>
                     )}
                   </TableCell>
-                  <TableCell className="text-right text-xs text-navy-500">
+                  <TableCell className="text-right text-xs text-muted-foreground">
                     {log.durationMs != null ? `${log.durationMs}ms` : "—"}
                   </TableCell>
                 </TableRow>
