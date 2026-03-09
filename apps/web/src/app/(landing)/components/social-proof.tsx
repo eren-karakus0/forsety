@@ -61,11 +61,13 @@ export function SocialProof() {
         </ScrollReveal>
 
         {/* Partner logos */}
-        <FadeIn delay={0.15}>
-          <div className="mx-auto mt-12 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
-            {partners.map((partner) => (
+        <StaggerChildren
+          className="mx-auto mt-12 flex flex-wrap items-center justify-center gap-8 sm:gap-12"
+          staggerDelay={0.2}
+        >
+          {partners.map((partner) => (
+            <StaggerItem key={partner.name}>
               <a
-                key={partner.name}
                 href={partner.href}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -87,9 +89,9 @@ export function SocialProof() {
                   </p>
                 </div>
               </a>
-            ))}
-          </div>
-        </FadeIn>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
 
         <StaggerChildren
           className="mx-auto mt-16 grid max-w-3xl gap-8 sm:grid-cols-3"

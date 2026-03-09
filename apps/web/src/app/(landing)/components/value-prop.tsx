@@ -3,6 +3,10 @@
 import { AlertTriangle, Eye, Scale } from "lucide-react";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
+import {
+  StaggerChildren,
+  StaggerItem,
+} from "@/components/motion/stagger-children";
 import { TiwazBackground } from "./tiwaz-background";
 
 const painPoints = [
@@ -48,18 +52,21 @@ export function ValueProp() {
           </FadeIn>
         </ScrollReveal>
 
-        <FadeIn delay={0.3}>
-          <div className="mx-auto mt-16 grid max-w-3xl gap-8 sm:grid-cols-3">
-            {painPoints.map((point) => (
-              <div key={point.text} className="flex flex-col items-center gap-3 text-center">
+        <StaggerChildren
+          className="mx-auto mt-16 grid max-w-3xl gap-8 sm:grid-cols-3"
+          staggerDelay={0.15}
+        >
+          {painPoints.map((point) => (
+            <StaggerItem key={point.text}>
+              <div className="flex flex-col items-center gap-3 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-navy-200/60 bg-navy-50">
                   <point.icon className={`h-6 w-6 ${point.color}`} />
                 </div>
                 <p className="text-sm font-medium text-navy-600">{point.text}</p>
               </div>
-            ))}
-          </div>
-        </FadeIn>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
       </div>
     </section>
   );
