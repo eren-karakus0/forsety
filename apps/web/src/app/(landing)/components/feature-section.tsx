@@ -70,12 +70,12 @@ export function FeatureSection({
   const illustrationRotate = useTransform(
     scrollYProgress,
     [0, 0.5, 1],
-    isReversed ? [12, 0, -12] : [-12, 0, 12]
+    isReversed ? [30, 0, -30] : [-30, 0, 30]
   );
   const illustrationScale = useTransform(
     scrollYProgress,
     [0, 0.4, 0.6, 1],
-    [0.82, 1.02, 1.02, 0.88]
+    [0.7, 1.08, 1.08, 0.7]
   );
 
   return (
@@ -132,27 +132,28 @@ export function FeatureSection({
                 >
                   {description}
                 </p>
-
-                <ul className="mt-8 space-y-3">
-                  {highlights.map((item, i) => (
-                    <FadeIn key={item} delay={0.15 + i * 0.1} direction="left" distance={20}>
-                      <li className="flex items-start gap-3">
-                        <CheckCircle2
-                          className={`mt-0.5 h-5 w-5 shrink-0 ${accent.check}`}
-                        />
-                        <span
-                          className={`text-sm ${
-                            isDark ? "text-navy-200" : "text-navy-600"
-                          }`}
-                        >
-                          {item}
-                        </span>
-                      </li>
-                    </FadeIn>
-                  ))}
-                </ul>
               </FadeIn>
             </ScrollReveal>
+
+            {/* Highlights - separate stagger outside the main FadeIn */}
+            <ul className="mt-8 space-y-3">
+              {highlights.map((item, i) => (
+                <FadeIn key={item} delay={0.3 + i * 0.12} direction="left" distance={30}>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2
+                      className={`mt-0.5 h-5 w-5 shrink-0 ${accent.check}`}
+                    />
+                    <span
+                      className={`text-sm ${
+                        isDark ? "text-navy-200" : "text-navy-600"
+                      }`}
+                    >
+                      {item}
+                    </span>
+                  </li>
+                </FadeIn>
+              ))}
+            </ul>
           </div>
 
           {/* Illustration + section number overlay */}
