@@ -1,7 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef } from "react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
@@ -58,29 +57,9 @@ export function FeatureSection({
   const isDark = variant === "dark";
   const accent = accentMap[accentColor];
   const isReversed = tiwazSide === "left";
-  const reduced = useReducedMotion();
-
-  // Scroll-driven illustration rotation + scale
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-
-  const illustrationRotate = useTransform(
-    scrollYProgress,
-    [0, 0.5, 1],
-    isReversed ? [12, 0, -12] : [-12, 0, 12]
-  );
-  const illustrationScale = useTransform(
-    scrollYProgress,
-    [0, 0.4, 0.6, 1],
-    [0.82, 1.02, 1.02, 0.88]
-  );
 
   return (
     <section
-      ref={sectionRef}
       id={id}
       className={`section-fullscreen relative overflow-hidden ${
         isDark
@@ -134,21 +113,19 @@ export function FeatureSection({
                 </p>
 
                 <ul className="mt-8 space-y-3">
-                  {highlights.map((item, i) => (
-                    <FadeIn key={item} delay={0.15 + i * 0.1} direction="left" distance={20}>
-                      <li className="flex items-start gap-3">
-                        <CheckCircle2
-                          className={`mt-0.5 h-5 w-5 shrink-0 ${accent.check}`}
-                        />
-                        <span
-                          className={`text-sm ${
-                            isDark ? "text-navy-200" : "text-navy-600"
-                          }`}
-                        >
-                          {item}
-                        </span>
-                      </li>
-                    </FadeIn>
+                  {highlights.map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <CheckCircle2
+                        className={`mt-0.5 h-5 w-5 shrink-0 ${accent.check}`}
+                      />
+                      <span
+                        className={`text-sm ${
+                          isDark ? "text-navy-200" : "text-navy-600"
+                        }`}
+                      >
+                        {item}
+                      </span>
+                    </li>
                   ))}
                 </ul>
               </FadeIn>
@@ -173,19 +150,7 @@ export function FeatureSection({
                   >
                     {number}
                   </span>
-                  {/* Scroll-driven rotation wrapper */}
-                  {reduced ? (
-                    illustration
-                  ) : (
-                    <motion.div
-                      style={{
-                        rotate: illustrationRotate,
-                        scale: illustrationScale,
-                      }}
-                    >
-                      {illustration}
-                    </motion.div>
-                  )}
+                  {illustration}
                 </FadeIn>
               </ScrollReveal>
             ) : (
