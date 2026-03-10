@@ -20,18 +20,21 @@ interface LaunchAppButtonProps {
   size?: "sm" | "lg" | "default";
   children?: ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
 export function LaunchAppButton({
   size = "default",
   children,
   className,
+  onClick,
 }: LaunchAppButtonProps) {
   const router = useRouter();
   const { status } = useSession();
   const [activated, setActivated] = useState(false);
 
   const handleClick = () => {
+    onClick?.();
     // Fast-path: existing JWT session → skip wallet loading entirely
     if (status === "authenticated") {
       router.push("/dashboard");

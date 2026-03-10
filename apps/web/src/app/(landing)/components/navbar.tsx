@@ -146,6 +146,7 @@ export function Navbar() {
                   <LaunchAppButton
                     size="sm"
                     className="border-0 bg-white font-semibold text-navy-900 hover:bg-navy-100"
+                    onClick={() => setMobileOpen(false)}
                   >
                     Launch App
                   </LaunchAppButton>
