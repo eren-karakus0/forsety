@@ -344,7 +344,7 @@ describe("Aptos Auth", () => {
       expect(result.error).toBe("Domain binding expected but not found in message");
     });
 
-    it("should reject when expectedChainId is set but chain_id field is missing", () => {
+    it("should allow when expectedChainId is set but chain_id field is missing (lenient)", () => {
       const { privateKey, publicKey, address } = createTestKeypair();
       const nonce = generateNonce();
       const rawMessage = createAuthMessage({
@@ -370,10 +370,137 @@ describe("Aptos Auth", () => {
         signature: signature.toString(),
         publicKey: publicKey.toString(),
         expectedChainId: 110,
+        // strictChainId defaults to false (lenient)
+      });
+
+      // Lenient: missing chain_id is allowed, only mismatched chain_id is rejected
+      expect(result.success).toBe(true);
+      expect(result.address).toBe(address);
+      expect(result.nonce).toBe(nonce);
+    });
+
+    it("should reject when chain_id is missing and strictChainId=true", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      // Build envelope WITHOUT chain_id field
+      const fullMessage = [
+        "APTOS",
+        `address: ${address}`,
+        `application: forsety.app`,
+        `nonce: ${nonce}`,
+        `message: ${rawMessage}`,
+      ].join("\n");
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedChainId: 110,
+        strictChainId: true,
       });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Chain ID binding expected but not found in message");
+    });
+
+    it("should match domain with protocol prefix (https://example.com vs example.com)", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.vercel.app",
+        address,
+        nonce,
+      });
+
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 110,
+        application: "https://forsety.vercel.app",
+        nonce,
+        message: rawMessage,
+      });
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedDomain: "forsety.vercel.app",
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should match domain with default port (example.com:443 vs example.com)", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 110,
+        application: "forsety.app:443",
+        nonce,
+        message: rawMessage,
+      });
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedDomain: "forsety.app",
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should still reject truly different domains after normalization", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 110,
+        application: "https://evil.com",
+        nonce,
+        message: rawMessage,
+      });
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedDomain: "forsety.app",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Domain mismatch");
     });
 
     it("should pass when domain and chain ID match", () => {

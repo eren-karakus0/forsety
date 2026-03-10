@@ -5,7 +5,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useForsetyAuth } from "@/lib/auth-client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@forsety/ui";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, AlertTriangle, X } from "lucide-react";
 import { WalletSelector } from "@/components/wallet-selector";
 import { useSession } from "./session-context";
 
@@ -24,11 +24,25 @@ export function WalletAuthButton({
 }: WalletAuthButtonProps) {
   const router = useRouter();
   const { connected } = useWallet();
-  const { isAuthenticated, isLoading, signIn } = useForsetyAuth();
+  const { isAuthenticated, isLoading, error, signIn } = useForsetyAuth();
   const { refresh } = useSession();
   const pendingAuth = useRef(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const autoOpened = useRef(false);
+  const [dismissedError, setDismissedError] = useState(false);
+
+  // Reset dismissed state when a new error appears
+  useEffect(() => {
+    if (error) setDismissedError(false);
+  }, [error]);
+
+  // Auto-dismiss error after 8 seconds
+  useEffect(() => {
+    if (error && !dismissedError) {
+      const timer = setTimeout(() => setDismissedError(true), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, dismissedError]);
 
   // Auto-open wallet selector on mount (when user clicked the launch button)
   useEffect(() => {
@@ -68,6 +82,8 @@ export function WalletAuthButton({
     signIn();
   };
 
+  const showError = error && !dismissedError;
+
   if (isLoading) {
     return (
       <Button size={size} disabled className={className}>
@@ -79,6 +95,29 @@ export function WalletAuthButton({
 
   return (
     <>
+      {showError && (
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="flex-1">
+            <p>{error}</p>
+            <button
+              onClick={() => {
+                setDismissedError(true);
+                signIn();
+              }}
+              className="mt-1 text-xs font-medium text-red-300 underline underline-offset-2 hover:text-red-200"
+            >
+              Try Again
+            </button>
+          </div>
+          <button
+            onClick={() => setDismissedError(true)}
+            className="shrink-0 text-red-400 hover:text-red-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <Button size={size} onClick={handleClick} className={className}>
         {children ?? (
           <>

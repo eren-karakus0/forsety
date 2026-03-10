@@ -4,6 +4,7 @@ import { verifyAuthMessage, signJwt } from "@forsety/auth";
 import { createDb, sessions, users } from "@forsety/db";
 import { getEnv } from "@/lib/env";
 import { SHELBYNET_CHAIN_ID, APTOS_NETWORK } from "@/lib/aptos-config";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,8 +17,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Guard: publicKey must be a valid hex string (Ed25519 = 64 hex chars, with optional 0x prefix)
+    const pubKeyHex = typeof publicKey === "string" ? publicKey.replace(/^0x/, "") : "";
+    if (!/^[0-9a-fA-F]{64}$/.test(pubKeyHex)) {
+      return NextResponse.json(
+        { error: "Invalid public key format" },
+        { status: 400 }
+      );
+    }
+
+    // Guard: signature must be a valid hex string (Ed25519 = 128 hex chars, with optional 0x prefix)
+    const sigHex = typeof signature === "string" ? signature.replace(/^0x/, "") : "";
+    if (!/^[0-9a-fA-F]{128}$/.test(sigHex)) {
+      return NextResponse.json(
+        { error: "Invalid signature format" },
+        { status: 400 }
+      );
+    }
+
     // Verify Aptos signature with domain + chain ID binding
     const host = request.headers.get("host") ?? "localhost:3000";
+    const strictChainId = process.env.AUTH_STRICT_CHAIN_ID === "true";
     const result = verifyAuthMessage({
       fullMessage,
       signature,
@@ -25,9 +45,21 @@ export async function POST(request: NextRequest) {
       expectedAddress: address,
       expectedDomain: host,
       expectedChainId: APTOS_NETWORK === "shelbynet" ? SHELBYNET_CHAIN_ID : undefined,
+      strictChainId,
     });
 
     if (!result.success || !result.address || !result.nonce) {
+      console.error("[Auth Verify] Failed:", {
+        error: result.error,
+        host,
+        address,
+        hasFullMessage: !!fullMessage,
+        hasSignature: !!signature,
+      });
+      Sentry.captureMessage("Auth verification failed", {
+        level: "warning",
+        extra: { error: result.error, host, address },
+      });
       return NextResponse.json(
         { error: result.error ?? "Verification failed" },
         { status: 401 }
@@ -87,7 +119,9 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch {
+  } catch (error) {
+    console.error("[Auth Verify] Unexpected error:", error);
+    Sentry.captureException(error, { extra: { route: "/api/auth/verify" } });
     return NextResponse.json(
       { error: "Verification failed" },
       { status: 500 }

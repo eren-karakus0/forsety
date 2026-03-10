@@ -16,7 +16,8 @@
     "FORSETY_HMAC_SECRET",
     "NEXT_PUBLIC_SENTRY_DSN",
     "SENTRY_AUTH_TOKEN",
-    "NEXT_RUNTIME"
+    "NEXT_RUNTIME",
+    "AUTH_STRICT_CHAIN_ID"
   ],
   "tasks": {
     "build": {
@@ -34,7 +35,8 @@
         "NODE_ENV",
         "FORSETY_HMAC_SECRET",
         "NEXT_PUBLIC_SENTRY_DSN",
-        "SENTRY_AUTH_TOKEN"
+        "SENTRY_AUTH_TOKEN",
+        "AUTH_STRICT_CHAIN_ID"
       ]
     },
     "dev": {

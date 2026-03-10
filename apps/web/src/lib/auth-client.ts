@@ -20,6 +20,17 @@ export function useForsetyAuth() {
   const signIn = useCallback(async () => {
     if (!account?.address || !connected) return;
 
+    // Guard: publicKey must be available and non-empty
+    const pubKeyStr = account.publicKey?.toString();
+    if (!pubKeyStr || pubKeyStr.length < 10) {
+      setAuthState({
+        isAuthenticated: false,
+        isLoading: false,
+        error: "Wallet did not provide a public key. Please reconnect your wallet.",
+      });
+      return;
+    }
+
     setAuthState({ isAuthenticated: false, isLoading: true, error: null });
 
     try {
@@ -43,19 +54,29 @@ export function useForsetyAuth() {
         chainId: true,
       });
 
-      // 3. Verify on server - send fullMessage, signature, and publicKey
+      // 3. Normalize signature to hex string
+      let signatureHex: string;
+      if (typeof signResult.signature === "string") {
+        signatureHex = signResult.signature;
+      } else if (signResult.signature instanceof Uint8Array) {
+        signatureHex = Array.from(signResult.signature, (b) =>
+          b.toString(16).padStart(2, "0")
+        ).join("");
+      } else if (Array.isArray(signResult.signature)) {
+        signatureHex = signResult.signature[0] as string;
+      } else {
+        signatureHex = signResult.signature.toString();
+      }
+
+      // 4. Verify on server - send fullMessage, signature, and publicKey
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           fullMessage: signResult.fullMessage,
-          signature: typeof signResult.signature === "string"
-            ? signResult.signature
-            : Array.isArray(signResult.signature)
-              ? signResult.signature[0]
-              : signResult.signature.toString(),
-          publicKey: account.publicKey?.toString() ?? "",
+          signature: signatureHex,
+          publicKey: pubKeyStr,
           address,
         }),
       });

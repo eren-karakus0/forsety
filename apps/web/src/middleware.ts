@@ -14,7 +14,7 @@ function getClientIp(request: NextRequest): string {
   const xff = request.headers.get("x-forwarded-for");
   if (xff) {
     const parts = xff.split(",").map((s) => s.trim());
-    return parts[parts.length - 1] ?? "unknown";
+    return parts[0] ?? "unknown";
   }
   return request.headers.get("x-real-ip") ?? "unknown";
 }

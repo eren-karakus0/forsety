@@ -87,6 +87,19 @@ function parseChainIdFromFullMessage(fullMessage: string): number | null {
 }
 
 /**
+ * Normalize a domain string for comparison.
+ * Strips protocol prefix (https://, http://), default ports (:443, :80),
+ * trailing slashes, and lowercases.
+ */
+function normalizeDomain(value: string): string {
+  let d = value.trim().toLowerCase();
+  d = d.replace(/^https?:\/\//, "");
+  d = d.replace(/:(443|80)$/, "");
+  d = d.replace(/\/+$/, "");
+  return d;
+}
+
+/**
  * Verify a signed Aptos auth message.
  *
  * The wallet's signMessage() returns a fullMessage in APTOS envelope format
@@ -154,17 +167,21 @@ export function verifyAuthMessage(params: AuthVerifyParams): AuthVerifyResult {
       if (!application) {
         return { success: false, error: "Domain binding expected but not found in message" };
       }
-      if (application !== params.expectedDomain) {
+      if (normalizeDomain(application) !== normalizeDomain(params.expectedDomain)) {
         return { success: false, error: "Domain mismatch" };
       }
     }
 
-    // Validate chain ID if expected — fail-closed when field is missing
+    // Validate chain ID if expected
+    // - If chain_id IS present in envelope → strict match (reject on mismatch)
+    // - If chain_id is MISSING from envelope:
+    //     strictChainId=true  → reject (fail-closed)
+    //     strictChainId=false → allow  (some wallets don't include it)
     if (params.expectedChainId !== undefined) {
-      if (chainId === null) {
+      if (chainId === null && params.strictChainId) {
         return { success: false, error: "Chain ID binding expected but not found in message" };
       }
-      if (chainId !== params.expectedChainId) {
+      if (chainId !== null && chainId !== params.expectedChainId) {
         return { success: false, error: "Chain ID mismatch" };
       }
     }

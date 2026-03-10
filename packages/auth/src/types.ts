@@ -21,6 +21,8 @@ export interface AuthVerifyParams {
   expectedDomain?: string;
   /** Expected chain ID for validation (e.g., 110 for Shelbynet) */
   expectedChainId?: number;
+  /** When true, reject if chain_id is missing from envelope (default: false = lenient) */
+  strictChainId?: boolean;
 }
 
 export interface AuthVerifyResult {
