@@ -76,8 +76,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[Auth Nonce] Error:", error);
     Sentry.captureException(error, { extra: { route: "/api/auth/nonce" } });
+    const detail = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Failed to generate nonce" },
+      { error: "Failed to generate nonce", debug: detail },
       { status: 500 }
     );
   }
