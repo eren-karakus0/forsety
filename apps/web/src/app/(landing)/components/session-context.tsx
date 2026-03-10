@@ -34,7 +34,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   });
 
   const checkSession = useCallback(() => {
-    fetch("/api/auth/session", { credentials: "include" })
+    fetch("/api/auth/session", { credentials: "include", cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (data.authenticated === true) {
