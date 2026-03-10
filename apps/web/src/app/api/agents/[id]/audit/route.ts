@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -26,10 +27,6 @@ export async function GET(
 
     return NextResponse.json({ logs });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: "Failed to get audit logs", details: message },
-      { status: 500 }
-    );
+    return apiError("Failed to get audit logs", error);
   }
 }

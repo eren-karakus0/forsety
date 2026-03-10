@@ -13,7 +13,10 @@
     "MCP_PORT",
     "MCP_HOST",
     "MCP_CORS_ORIGIN",
-    "FORSETY_HMAC_SECRET"
+    "FORSETY_HMAC_SECRET",
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "SENTRY_AUTH_TOKEN",
+    "NEXT_RUNTIME"
   ],
   "tasks": {
     "build": {
@@ -29,7 +32,9 @@
         "NEXT_PUBLIC_APTOS_NETWORK",
         "NEXT_PUBLIC_APTOS_API_KEY",
         "NODE_ENV",
-        "FORSETY_HMAC_SECRET"
+        "FORSETY_HMAC_SECRET",
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "SENTRY_AUTH_TOKEN"
       ]
     },
     "dev": {
@@ -43,6 +48,9 @@
       "dependsOn": ["^build"]
     },
     "test": {
+      "dependsOn": ["^build"]
+    },
+    "test:coverage": {
       "dependsOn": ["^build"]
     },
     "clean": {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { sanitizeAgent } from "@forsety/sdk";
+import { apiError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
   if (!validateApiKey(request)) return unauthorizedResponse();
@@ -36,11 +37,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: "Failed to register agent", details: message },
-      { status: 500 }
-    );
+    return apiError("Failed to register agent", error);
   }
 }
 
@@ -52,10 +49,6 @@ export async function GET(request: NextRequest) {
     const agents = await client.agents.list();
     return NextResponse.json({ agents: agents.map(sanitizeAgent) });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: "Failed to list agents", details: message },
-      { status: 500 }
-    );
+    return apiError("Failed to list agents", error);
   }
 }

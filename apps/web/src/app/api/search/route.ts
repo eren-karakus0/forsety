@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getForsetyClient } from "@/lib/forsety";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   if (!validateApiKey(request)) {
@@ -47,7 +48,6 @@ export async function GET(request: NextRequest) {
     const results = await client.vectorSearch.searchMemories(agentId, query, limit);
     return NextResponse.json({ type, query, results, total: results.length });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Search failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError("Search failed", error);
   }
 }

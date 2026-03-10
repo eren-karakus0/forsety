@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getForsetyClient } from "@/lib/forsety";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(
   _request: NextRequest,
@@ -28,9 +29,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Verification failed" },
-      { status: 500 }
-    );
+    return apiError("Verification failed", error);
   }
 }

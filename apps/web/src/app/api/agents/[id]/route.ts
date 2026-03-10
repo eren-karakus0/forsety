@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { sanitizeAgent } from "@forsety/sdk";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -22,11 +23,7 @@ export async function GET(
 
     return NextResponse.json({ agent: sanitizeAgent(agent), auditSummary });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: "Failed to get agent", details: message },
-      { status: 500 }
-    );
+    return apiError("Failed to get agent", error);
   }
 }
 
@@ -63,10 +60,6 @@ export async function PATCH(
 
     return NextResponse.json({ agent: sanitizeAgent(existing) });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: "Failed to update agent", details: message },
-      { status: 500 }
-    );
+    return apiError("Failed to update agent", error);
   }
 }

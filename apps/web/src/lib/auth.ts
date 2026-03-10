@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { verifyJwt } from "@forsety/auth";
 import { getEnv } from "./env";
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 /**
  * Dual auth: accepts JWT cookie (dashboard) OR API key header (programmatic).
@@ -11,7 +17,7 @@ export function validateApiKey(request: NextRequest): boolean {
     request.headers.get("x-api-key") ??
     request.headers.get("authorization")?.replace("Bearer ", "");
 
-  if (apiKey && apiKey === getEnv().FORSETY_API_KEY) {
+  if (apiKey && safeCompare(apiKey, getEnv().FORSETY_API_KEY)) {
     return true;
   }
 

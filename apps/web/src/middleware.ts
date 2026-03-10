@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { checkRateLimit, getRateLimitTier, RATE_LIMIT_TIERS } from "@/lib/rate-limit";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
@@ -9,34 +10,68 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+function getClientIp(request: NextRequest): string {
+  const xff = request.headers.get("x-forwarded-for");
+  if (xff) {
+    const parts = xff.split(",").map((s) => s.trim());
+    return parts[parts.length - 1] ?? "unknown";
+  }
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
 export async function middleware(request: NextRequest) {
-  // Only protect dashboard routes
-  if (!request.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.next();
-  }
+  const { pathname } = request.nextUrl;
 
-  // Dev bypass: skip auth in development mode
-  if (process.env.NODE_ENV === "development") {
-    return NextResponse.next();
-  }
+  // Rate limiting for API routes
+  if (pathname.startsWith("/api/")) {
+    const ip = getClientIp(request);
+    const tier = getRateLimitTier(pathname, request.method);
+    const config = RATE_LIMIT_TIERS[tier];
+    const result = checkRateLimit(tier, ip, config);
 
-  // Check for JWT cookie
-  const token = request.cookies.get("forsety-auth")?.value;
-  if (!token) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+    if (!result.allowed) {
+      const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(retryAfter),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
+    }
 
-  try {
-    await jwtVerify(token, getJwtSecret());
-    return NextResponse.next();
-  } catch {
-    // Invalid or expired token - clear cookie and redirect
-    const response = NextResponse.redirect(new URL("/", request.url));
-    response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
+    const response = NextResponse.next();
+    response.headers.set("X-RateLimit-Remaining", String(result.remaining));
     return response;
   }
+
+  // Dashboard auth protection
+  if (pathname.startsWith("/dashboard")) {
+    if (process.env.NODE_ENV === "development") {
+      return NextResponse.next();
+    }
+
+    const token = request.cookies.get("forsety-auth")?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    try {
+      await jwtVerify(token, getJwtSecret());
+      return NextResponse.next();
+    } catch {
+      const response = NextResponse.redirect(new URL("/", request.url));
+      response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
+      return response;
+    }
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/api/:path*"],
 };

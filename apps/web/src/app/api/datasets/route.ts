@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   if (!validateApiKey(request)) return unauthorizedResponse();
@@ -13,10 +14,7 @@ export async function GET(request: NextRequest) {
     const datasets = await client.datasets.list();
     return NextResponse.json({ datasets });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch datasets", details: String(error) },
-      { status: 500 }
-    );
+    return apiError("Failed to fetch datasets", error);
   }
 }
 
@@ -69,10 +67,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to upload dataset", details: String(error) },
-      { status: 500 }
-    );
+    return apiError("Failed to upload dataset", error);
   } finally {
     if (tempPath) {
       try { unlinkSync(tempPath); } catch { /* ignore */ }

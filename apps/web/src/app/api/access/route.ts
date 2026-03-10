@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { apiError } from "@/lib/api-error";
 
 const VALID_OPERATION_TYPES = ["read", "download", "verify"] as const;
 
@@ -53,9 +54,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const status = message.includes("Access denied") ? 403 : 500;
-    return NextResponse.json(
-      { error: "Failed to log access", details: message },
-      { status }
-    );
+    return apiError("Failed to log access", error, status);
   }
 }

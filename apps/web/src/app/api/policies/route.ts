@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   if (!validateApiKey(request)) return unauthorizedResponse();
@@ -18,10 +19,7 @@ export async function GET(request: NextRequest) {
     const policies = await client.policies.getByDatasetId(datasetId);
     return NextResponse.json({ policies });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch policies", details: String(error) },
-      { status: 500 }
-    );
+    return apiError("Failed to fetch policies", error);
   }
 }
 
@@ -50,9 +48,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(policy, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to create policy", details: String(error) },
-      { status: 500 }
-    );
+    return apiError("Failed to create policy", error);
   }
 }

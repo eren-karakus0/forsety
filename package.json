@@ -9,6 +9,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
     "clean": "turbo run clean",
     "seed": "tsx tooling/scripts/seed-demo.ts",
     "seed:local": "tsx tooling/scripts/seed-demo.ts --local-only",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
     "@forsety/db": "workspace:*",
+    "@vitest/coverage-v8": "^2.1.9",
     "canonicalize": "^2.1.0",
     "drizzle-orm": "^0.38.0",
     "tsx": "^4.19.0",

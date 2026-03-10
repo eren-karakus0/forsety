@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { apiError } from "@/lib/api-error";
 
 export async function POST(
   request: NextRequest,
@@ -46,9 +47,6 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create share link" },
-      { status: 500 }
-    );
+    return apiError("Failed to create share link", error);
   }
 }
