@@ -11,6 +11,7 @@ export function getForsetyClient(): ForsetyClient {
       shelbyNetwork: "shelbynet",
       shelbyWalletAddress: env.SHELBY_WALLET_ADDRESS,
       shelbyMode: process.env.SHELBY_MOCK === "true" ? "mock" : "live",
+      hmacSecret: env.FORSETY_HMAC_SECRET,
     });
   }
   return client;

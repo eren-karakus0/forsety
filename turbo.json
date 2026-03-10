@@ -12,7 +12,8 @@
     "NODE_ENV",
     "MCP_PORT",
     "MCP_HOST",
-    "MCP_CORS_ORIGIN"
+    "MCP_CORS_ORIGIN",
+    "FORSETY_HMAC_SECRET"
   ],
   "tasks": {
     "build": {
@@ -27,7 +28,8 @@
         "JWT_SECRET",
         "NEXT_PUBLIC_APTOS_NETWORK",
         "NEXT_PUBLIC_APTOS_API_KEY",
-        "NODE_ENV"
+        "NODE_ENV",
+        "FORSETY_HMAC_SECRET"
       ]
     },
     "dev": {

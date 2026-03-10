@@ -8,6 +8,41 @@
       "when": 1772876110713,
       "tag": "0000_baseline_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1772876200000,
+      "tag": "0001_add_embeddings",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772876300000,
+      "tag": "0002_add_sessions_users",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772876400000,
+      "tag": "0003_add_encryption_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772876500000,
+      "tag": "0004_add_shared_evidence_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772876600000,
+      "tag": "0005_add_pack_json_canonical",
+      "breakpoints": true
     }
   ]
 }

@@ -17,6 +17,7 @@ export interface ForsetyMcpServerConfig {
   databaseUrl: string;
   shelbyMode?: "live" | "mock";
   shelbyWalletAddress?: string;
+  hmacSecret: string;
 }
 
 export function createForsetyMcpServer(
@@ -27,6 +28,7 @@ export function createForsetyMcpServer(
     databaseUrl: config.databaseUrl,
     shelbyMode: config.shelbyMode ?? "mock",
     shelbyWalletAddress: config.shelbyWalletAddress,
+    hmacSecret: config.hmacSecret,
   });
 
   const authMiddleware = new AuthMiddleware(client.agents);

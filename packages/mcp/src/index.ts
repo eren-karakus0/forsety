@@ -8,12 +8,19 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
+const hmacSecret = process.env.FORSETY_HMAC_SECRET;
+if (!hmacSecret) {
+  console.error("FORSETY_HMAC_SECRET environment variable is required");
+  process.exit(1);
+}
+
 const config = {
   databaseUrl,
   shelbyMode: (process.env.SHELBY_MOCK === "true" ? "mock" : "live") as
     | "mock"
     | "live",
   shelbyWalletAddress: process.env.SHELBY_WALLET_ADDRESS,
+  hmacSecret,
 };
 
 // Parse --transport flag (default: stdio)

@@ -81,6 +81,7 @@ export interface ForsetyConfig {
   databaseUrl?: string;
   apiBaseUrl?: string;
   shelbyMode?: "live" | "mock";
+  hmacSecret: string;
 }
 
 export const UploadDatasetInputSchema = z.object({

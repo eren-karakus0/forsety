@@ -190,11 +190,23 @@ export async function fetchAgentAuditLogs(
 }
 
 export async function fetchAllAuditLogs(
-  filters?: { agentId?: string | null; status?: string; limit?: number }
+  filters?: {
+    agentId?: string | null;
+    status?: string;
+    resourceId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    limit?: number;
+    offset?: number;
+  }
 ) {
   try {
     const client = getForsetyClient();
-    const logs = await client.agentAudit.listAll(filters);
+    const logs = await client.agentAudit.listAll({
+      ...filters,
+      dateFrom: filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
+      dateTo: filters?.dateTo ? new Date(filters.dateTo) : undefined,
+    });
     return logs.map((l) => ({
       ...l,
       timestamp: l.timestamp.toISOString(),
@@ -204,16 +216,139 @@ export async function fetchAllAuditLogs(
   }
 }
 
+export async function countAuditLogs(
+  filters?: {
+    agentId?: string | null;
+    status?: string;
+    resourceId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }
+) {
+  try {
+    const client = getForsetyClient();
+    return client.agentAudit.countFiltered({
+      ...filters,
+      dateFrom: filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
+      dateTo: filters?.dateTo ? new Date(filters.dateTo) : undefined,
+    });
+  } catch {
+    return 0;
+  }
+}
+
+export async function fetchAllEvidencePacks(filters?: { limit?: number; offset?: number }) {
+  try {
+    const client = getForsetyClient();
+    const packs = await client.evidence.listAll(filters);
+    return packs.map((p) => ({
+      ...p,
+      generatedAt: p.generatedAt.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchEvidencePackById(id: string) {
+  try {
+    const client = getForsetyClient();
+    const pack = await client.evidence.getById(id);
+    if (!pack) return null;
+
+    // Get dataset info
+    const dataset = await client.datasets.getWithLicense(pack.datasetId);
+
+    return {
+      ...pack,
+      generatedAt: pack.generatedAt.toISOString(),
+      datasetName: dataset?.dataset.name ?? "Unknown",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchAccessLogs(datasetId: string) {
   try {
     const client = getForsetyClient();
     const logs = await client.access.getByDatasetId(datasetId);
     return logs.map((l) => ({
       ...l,
-      timestamp: l.timestamp?.toISOString() ?? new Date().toISOString(),
+      timestamp: l.timestamp?.toISOString() ?? null,
     }));
   } catch {
     return [];
+  }
+}
+
+export async function fetchAllPolicies() {
+  try {
+    const client = getForsetyClient();
+    const pols = await client.policies.listAll();
+    return pols.map((p) => ({
+      ...p,
+      expiresAt: p.expiresAt?.toISOString() ?? null,
+      createdAt: p.createdAt.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchDatasetsList() {
+  try {
+    const client = getForsetyClient();
+    const list = await client.datasets.list();
+    return list.map((d) => ({ id: d.id, name: d.name }));
+  } catch {
+    return [];
+  }
+}
+
+export async function createPolicy(input: {
+  datasetId: string;
+  allowedAccessors: string[];
+  maxReads?: number;
+  expiresAt?: string;
+}) {
+  try {
+    const client = getForsetyClient();
+    const result = await client.policies.create({
+      datasetId: input.datasetId,
+      allowedAccessors: input.allowedAccessors,
+      maxReads: input.maxReads,
+      expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
+    });
+    return { success: true, policy: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create policy",
+    };
+  }
+}
+
+export async function createShareLink(input: {
+  evidencePackId: string;
+  mode: "full" | "redacted";
+  ttlHours: number;
+}) {
+  try {
+    const client = getForsetyClient();
+    const link = await client.share.createShareLink(input);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://forsety.vercel.app";
+    return {
+      success: true,
+      token: link.token,
+      url: `${baseUrl}/verify/${link.token}`,
+      expiresAt: link.expiresAt.toISOString(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create share link",
+    };
   }
 }
 
@@ -223,5 +358,132 @@ export async function fetchPolicies(datasetId: string) {
     return client.policies.getByDatasetId(datasetId);
   } catch {
     return [];
+  }
+}
+
+// --- Item 2: Update Policy (creates new version) ---
+
+export async function updatePolicy(
+  policyId: string,
+  input: {
+    allowedAccessors: string[];
+    maxReads?: number;
+    expiresAt?: string;
+  }
+) {
+  try {
+    const client = getForsetyClient();
+    const existing = await client.policies.getById(policyId);
+    if (!existing) return { success: false, error: "Policy not found" };
+
+    const result = await client.policies.create({
+      datasetId: existing.datasetId,
+      allowedAccessors: input.allowedAccessors,
+      maxReads: input.maxReads,
+      expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
+    });
+    return { success: true, policy: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update policy",
+    };
+  }
+}
+
+// --- Item 3: Dataset Search & Filter ---
+
+export async function fetchDatasetsWithStatus() {
+  try {
+    const client = getForsetyClient();
+    const [datasetsWithLicenses, latestPolicies] = await Promise.all([
+      client.datasets.listWithLicenses(),
+      client.policies.getLatestPerDataset(),
+    ]);
+
+    return datasetsWithLicenses.map((d) => {
+      const policy = latestPolicies.get(d.id);
+      let status: "active" | "warning" | "expired" | "no-policy" = "no-policy";
+      if (policy) {
+        if (!policy.expiresAt) {
+          status = "active";
+        } else {
+          const exp = new Date(policy.expiresAt);
+          const now = new Date();
+          if (exp < now) status = "expired";
+          else if (exp.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) status = "warning";
+          else status = "active";
+        }
+      }
+      return {
+        id: d.id,
+        name: d.name,
+        license: d.licenseSpdx ?? "-",
+        status,
+        createdAt: d.createdAt ? new Date(d.createdAt).toISOString() : null,
+        blobHash: d.blobHash,
+        sizeBytes: d.sizeBytes,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+// --- Item 4: Violation Count ---
+
+export async function fetchViolationCount() {
+  try {
+    const client = getForsetyClient();
+    return client.agentAudit.countFiltered({ status: "denied" });
+  } catch {
+    return 0;
+  }
+}
+
+// --- Item 6: Bulk Dataset Operations ---
+
+export async function bulkDeleteDatasets(ids: string[]) {
+  try {
+    const client = getForsetyClient();
+    const results = [];
+    for (const id of ids) {
+      const deleted = await client.datasets.delete(id);
+      results.push({ id, deleted: !!deleted });
+    }
+    return { success: true, results };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Bulk delete failed",
+    };
+  }
+}
+
+export async function bulkExportDatasets(ids: string[]) {
+  try {
+    const client = getForsetyClient();
+    const data = [];
+    for (const id of ids) {
+      const result = await client.datasets.getWithLicense(id);
+      if (result) {
+        data.push({
+          dataset: {
+            ...result.dataset,
+            createdAt: result.dataset.createdAt.toISOString(),
+          },
+          licenses: result.licenses.map((l) => ({
+            ...l,
+            createdAt: l.createdAt.toISOString(),
+          })),
+        });
+      }
+    }
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Bulk export failed",
+    };
   }
 }

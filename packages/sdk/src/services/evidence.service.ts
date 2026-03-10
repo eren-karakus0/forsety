@@ -1,5 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { createHash } from "node:crypto";
+import canonicalize from "canonicalize";
 import type { Database } from "@forsety/db";
 import {
   datasets,
@@ -154,18 +155,43 @@ export class EvidenceService {
       })),
     };
 
+    const canonicalJson = canonicalize(packJson) ?? JSON.stringify(packJson);
     const packHash = createHash("sha256")
-      .update(JSON.stringify(packJson))
+      .update(canonicalJson)
       .digest("hex");
 
     await this.db.insert(evidencePacks).values({
       datasetId,
       packJson: packJson as unknown as Record<string, unknown>,
+      packJsonCanonical: canonicalJson,
       packHash,
       generatedBy,
     });
 
     return { json: packJson, hash: packHash };
+  }
+
+  async listAll(filters?: { limit?: number; offset?: number }) {
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+
+    const rows = await this.db
+      .select({
+        id: evidencePacks.id,
+        datasetId: evidencePacks.datasetId,
+        datasetName: datasets.name,
+        packHash: evidencePacks.packHash,
+        packJson: evidencePacks.packJson,
+        generatedAt: evidencePacks.generatedAt,
+        generatedBy: evidencePacks.generatedBy,
+      })
+      .from(evidencePacks)
+      .innerJoin(datasets, eq(evidencePacks.datasetId, datasets.id))
+      .orderBy(desc(evidencePacks.generatedAt))
+      .limit(limit)
+      .offset(offset);
+
+    return rows;
   }
 
   async getByDatasetId(datasetId: string) {

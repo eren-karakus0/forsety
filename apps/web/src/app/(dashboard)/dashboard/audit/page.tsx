@@ -1,15 +1,16 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { fetchAgents, fetchAllAuditLogs } from "../actions";
+import { fetchAgents, fetchAllAuditLogs, countAuditLogs, fetchDatasetsList } from "../actions";
 import {
   Button,
   Card,
   CardContent,
   Badge,
   Skeleton,
+  Input,
   Table,
   TableHeader,
   TableBody,
@@ -22,7 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@forsety/ui";
-import { Download, ClipboardList, CheckCircle2, ShieldAlert, AlertCircle } from "lucide-react";
+import {
+  Download,
+  ClipboardList,
+  CheckCircle2,
+  ShieldAlert,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  FileSpreadsheet,
+} from "lucide-react";
 
 interface AuditLog {
   id: string;
@@ -41,6 +51,13 @@ interface AgentInfo {
   id: string;
   name: string;
 }
+
+interface DatasetInfo {
+  id: string;
+  name: string;
+}
+
+const PAGE_SIZE = 50;
 
 const statusVariant: Record<string, "default" | "destructive" | "secondary"> = {
   success: "default",
@@ -72,21 +89,36 @@ function AuditPageContent() {
   const filterAgentId = searchParams.get("agentId");
 
   const [agents, setAgents] = useState<AgentInfo[]>([]);
+  const [datasets, setDatasets] = useState<DatasetInfo[]>([]);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState<string>(filterAgentId ?? "all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [datasetFilter, setDatasetFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
-    fetchAgents().then((a) =>
-      setAgents(a.map((ag: { id: string; name: string }) => ({ id: ag.id, name: ag.name })))
-    );
+    Promise.all([fetchAgents(), fetchDatasetsList()]).then(([a, d]) => {
+      setAgents(a.map((ag: { id: string; name: string }) => ({ id: ag.id, name: ag.name })));
+      setDatasets(d);
+    });
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    const filters: { agentId?: string | null; status?: string; limit?: number } = {
-      limit: 100,
+  const buildFilters = useCallback(() => {
+    const filters: {
+      agentId?: string | null;
+      status?: string;
+      resourceId?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      limit?: number;
+      offset?: number;
+    } = {
+      limit: PAGE_SIZE,
+      offset: (currentPage - 1) * PAGE_SIZE,
     };
 
     if (selectedAgent === "anonymous") {
@@ -95,19 +127,44 @@ function AuditPageContent() {
       filters.agentId = selectedAgent;
     }
 
-    if (statusFilter !== "all") {
-      filters.status = statusFilter;
-    }
+    if (statusFilter !== "all") filters.status = statusFilter;
+    if (datasetFilter !== "all") filters.resourceId = datasetFilter;
+    if (dateFrom) filters.dateFrom = dateFrom;
+    if (dateTo) filters.dateTo = dateTo;
 
-    fetchAllAuditLogs(filters)
-      .then((l) => setLogs(l as AuditLog[]))
+    return filters;
+  }, [selectedAgent, statusFilter, datasetFilter, dateFrom, dateTo, currentPage]);
+
+  useEffect(() => {
+    setLoading(true);
+    const filters = buildFilters();
+
+    const countFilters = { ...filters };
+    delete countFilters.limit;
+    delete countFilters.offset;
+
+    Promise.all([
+      fetchAllAuditLogs(filters),
+      countAuditLogs(countFilters),
+    ])
+      .then(([l, c]) => {
+        setLogs(l as AuditLog[]);
+        setTotalCount(c);
+      })
       .finally(() => setLoading(false));
-  }, [selectedAgent, statusFilter]);
+  }, [buildFilters]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedAgent, statusFilter, datasetFilter, dateFrom, dateTo]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const getAgentName = (agentId: string | null) =>
     agentId ? (agents.find((a) => a.id === agentId)?.name ?? agentId.slice(0, 8)) : "Anonymous";
 
-  const handleExport = () => {
+  const handleExportJson = () => {
     const blob = new Blob([JSON.stringify(logs, null, 2)], {
       type: "application/json",
     });
@@ -115,6 +172,36 @@ function AuditPageContent() {
     const a = document.createElement("a");
     a.href = url;
     a.download = `audit-trail-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCsv = () => {
+    const headers = ["Time", "Agent", "Action", "Tool", "Resource Type", "Resource ID", "Status", "Error", "Duration (ms)"];
+    const rows = logs.map((l) => [
+      l.timestamp,
+      getAgentName(l.agentId),
+      l.action,
+      l.toolName ?? "",
+      l.resourceType ?? "",
+      l.resourceId ?? "",
+      l.status,
+      l.errorMessage ?? "",
+      l.durationMs?.toString() ?? "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `audit-trail-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -137,21 +224,32 @@ function AuditPageContent() {
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleExport}
-          disabled={logs.length === 0}
-          className="hover:border-gold-500/30 hover:text-gold-600"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Export JSON
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={logs.length === 0}
+            className="hover:border-gold-500/30 hover:text-gold-600"
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportJson}
+            disabled={logs.length === 0}
+            className="hover:border-gold-500/30 hover:text-gold-600"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            JSON
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-          <SelectTrigger className="w-[200px] rounded-lg">
+          <SelectTrigger className="w-[180px] rounded-lg">
             <SelectValue placeholder="All Agents" />
           </SelectTrigger>
           <SelectContent>
@@ -166,7 +264,7 @@ function AuditPageContent() {
         </Select>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px] rounded-lg">
+          <SelectTrigger className="w-[140px] rounded-lg">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -177,9 +275,38 @@ function AuditPageContent() {
           </SelectContent>
         </Select>
 
+        <Select value={datasetFilter} onValueChange={setDatasetFilter}>
+          <SelectTrigger className="w-[180px] rounded-lg">
+            <SelectValue placeholder="All Datasets" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Datasets</SelectItem>
+            {datasets.map((d) => (
+              <SelectItem key={d.id} value={d.id}>
+                {d.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          placeholder="From"
+          className="w-[150px] rounded-lg"
+        />
+        <Input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          placeholder="To"
+          className="w-[150px] rounded-lg"
+        />
+
         <div className="ml-auto flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground">
           <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-gold-400 to-teal-400" />
-          {logs.length} entries
+          {totalCount} total
         </div>
       </div>
 
@@ -360,6 +487,35 @@ function AuditPageContent() {
           </Table>
         )}
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="hover:border-gold-500/30"
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="hover:border-gold-500/30"
+          >
+            Next
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

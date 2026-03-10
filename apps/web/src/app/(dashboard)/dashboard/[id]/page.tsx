@@ -20,6 +20,7 @@ import {
   AlertDescription,
 } from "@forsety/ui";
 import { Download, Layers, Check, ChevronRight, Eye, Loader2, Database } from "lucide-react";
+import { computeDatasetStatus, statusConfig } from "../datasets/dataset-status";
 
 interface DatasetDetail {
   dataset: {
@@ -218,7 +219,7 @@ export default function DatasetDetailPage() {
                             {log.operationType}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                            {log.timestamp ? new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-"}
                           </span>
                         </div>
                         <p className="mt-1 font-mono text-xs text-muted-foreground truncate">
@@ -305,7 +306,12 @@ export default function DatasetDetailPage() {
                         {dataset.name}
                       </h1>
                     </div>
-                    <Badge variant="default">Active</Badge>
+                    {(() => {
+                      const latestPolicy = policies[policies.length - 1];
+                      const status = computeDatasetStatus(latestPolicy);
+                      const cfg = statusConfig[status];
+                      return <Badge variant={cfg.variant} className={cfg.className}>{cfg.label}</Badge>;
+                    })()}
                   </div>
 
                   {dataset.description && (

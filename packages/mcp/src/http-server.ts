@@ -27,6 +27,7 @@ export function startHttpServer(
     databaseUrl: config.databaseUrl,
     shelbyMode: config.shelbyMode ?? "mock",
     shelbyWalletAddress: config.shelbyWalletAddress,
+    hmacSecret: config.hmacSecret,
   });
 
   const sessions = new Map<string, StreamableHTTPServerTransport>();

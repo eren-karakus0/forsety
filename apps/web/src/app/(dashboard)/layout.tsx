@@ -15,6 +15,8 @@ import {
 import {
   LayoutDashboard,
   Database,
+  Layers,
+  Shield,
   Users,
   ClipboardList,
   Upload,
@@ -34,6 +36,8 @@ const Providers = dynamic(
 const navLinks = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/datasets", label: "Datasets", icon: Database },
+  { href: "/dashboard/evidence", label: "Evidence", icon: Layers },
+  { href: "/dashboard/policies", label: "Policies", icon: Shield },
   { href: "/dashboard/agents", label: "Agents", icon: Users },
   { href: "/dashboard/audit", label: "Audit", icon: ClipboardList },
   { href: "/dashboard/upload", label: "Upload", icon: Upload },

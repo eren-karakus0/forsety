@@ -104,6 +104,14 @@ export class DatasetService {
     }));
   }
 
+  async delete(id: string) {
+    const [deleted] = await this.db
+      .delete(datasets)
+      .where(eq(datasets.id, id))
+      .returning();
+    return deleted ?? null;
+  }
+
   async getWithLicense(id: string) {
     const dataset = await this.getById(id);
     if (!dataset) return null;

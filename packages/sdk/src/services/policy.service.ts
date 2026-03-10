@@ -1,7 +1,7 @@
 import { eq, max, desc } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
-import { policies } from "@forsety/db";
+import { policies, datasets } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
 
 export interface CreatePolicyInput {
@@ -57,6 +57,46 @@ export class PolicyService {
     });
 
     return result;
+  }
+
+  async listAll(filters?: { limit?: number; offset?: number }) {
+    const limit = filters?.limit ?? 100;
+    const offset = filters?.offset ?? 0;
+
+    return this.db
+      .select({
+        id: policies.id,
+        datasetId: policies.datasetId,
+        datasetName: datasets.name,
+        version: policies.version,
+        hash: policies.hash,
+        allowedAccessors: policies.allowedAccessors,
+        maxReads: policies.maxReads,
+        readsConsumed: policies.readsConsumed,
+        expiresAt: policies.expiresAt,
+        createdAt: policies.createdAt,
+        createdBy: policies.createdBy,
+      })
+      .from(policies)
+      .innerJoin(datasets, eq(policies.datasetId, datasets.id))
+      .orderBy(desc(policies.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getLatestPerDataset() {
+    const allPolicies = await this.db
+      .select()
+      .from(policies)
+      .orderBy(desc(policies.version));
+
+    const map = new Map<string, typeof policies.$inferSelect>();
+    for (const p of allPolicies) {
+      if (!map.has(p.datasetId)) {
+        map.set(p.datasetId, p);
+      }
+    }
+    return map;
   }
 
   async getByDatasetId(datasetId: string) {

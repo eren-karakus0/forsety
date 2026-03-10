@@ -12,13 +12,17 @@
     "clean": "turbo run clean",
     "seed": "tsx tooling/scripts/seed-demo.ts",
     "seed:local": "tsx tooling/scripts/seed-demo.ts --local-only",
-    "check:shelby": "tsx tooling/scripts/check-shelby.ts"
+    "check:shelby": "tsx tooling/scripts/check-shelby.ts",
+    "changeset": "changeset",
+    "backfill:canonical": "tsx tooling/scripts/backfill-canonical.ts"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@forsety/db": "workspace:*",
+    "canonicalize": "^2.1.0",
     "drizzle-orm": "^0.38.0",
-    "turbo": "^2.5.0",
     "tsx": "^4.19.0",
+    "turbo": "^2.5.0",
     "typescript": "^5.7.0"
   }
 }

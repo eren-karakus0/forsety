@@ -7,6 +7,7 @@ export const evidencePacks = pgTable("evidence_packs", {
     .notNull()
     .references(() => datasets.id, { onDelete: "cascade" }),
   packJson: jsonb("pack_json").$type<Record<string, unknown>>().notNull(),
+  packJsonCanonical: text("pack_json_canonical"),
   packHash: text("pack_hash").notNull(),
   generatedAt: timestamp("generated_at", { withTimezone: true })
     .defaultNow()

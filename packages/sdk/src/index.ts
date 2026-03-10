@@ -65,6 +65,9 @@ export type { Embedder } from "./embeddings/local-embedder.js";
 
 export { ShieldStoreService } from "./services/shield-store.service.js";
 
+export { ShareService } from "./services/share.service.js";
+export type { CreateShareLinkInput } from "./services/share.service.js";
+
 export { encrypt, decrypt, isEncryptedPayload } from "./crypto/aes.js";
 export type { EncryptedPayload } from "./crypto/aes.js";
 

@@ -1,4 +1,4 @@
-import { eq, and, desc, gte, isNull, count } from "drizzle-orm";
+import { eq, and, desc, gte, lte, isNull, count } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { agentAuditLogs } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
@@ -67,6 +67,10 @@ export class AgentAuditService {
   async listAll(filters?: {
     agentId?: string | null;
     status?: string;
+    resourceType?: string;
+    resourceId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
     limit?: number;
     offset?: number;
   }) {
@@ -82,6 +86,22 @@ export class AgentAuditService {
       conditions.push(eq(agentAuditLogs.status, filters.status));
     }
 
+    if (filters?.resourceType) {
+      conditions.push(eq(agentAuditLogs.resourceType, filters.resourceType));
+    }
+
+    if (filters?.resourceId) {
+      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
+    }
+
     const limit = filters?.limit ?? 100;
     const offset = filters?.offset ?? 0;
 
@@ -92,6 +112,51 @@ export class AgentAuditService {
       .orderBy(desc(agentAuditLogs.timestamp))
       .limit(limit)
       .offset(offset);
+  }
+
+  /** Count filtered audit logs for pagination */
+  async countFiltered(filters?: {
+    agentId?: string | null;
+    status?: string;
+    resourceType?: string;
+    resourceId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<number> {
+    const conditions = [];
+
+    if (filters?.agentId === null) {
+      conditions.push(isNull(agentAuditLogs.agentId));
+    } else if (filters?.agentId) {
+      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
+    }
+
+    if (filters?.status) {
+      conditions.push(eq(agentAuditLogs.status, filters.status));
+    }
+
+    if (filters?.resourceType) {
+      conditions.push(eq(agentAuditLogs.resourceType, filters.resourceType));
+    }
+
+    if (filters?.resourceId) {
+      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
+    }
+
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(agentAuditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    return result?.total ?? 0;
   }
 
   async getByAgent(

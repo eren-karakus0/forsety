@@ -36,3 +36,9 @@ export type {
   EncryptionMetadata,
   NewEncryptionMetadata,
 } from "./encryption-metadata";
+
+export { sharedEvidenceLinks } from "./shared-evidence-links";
+export type {
+  SharedEvidenceLink,
+  NewSharedEvidenceLink,
+} from "./shared-evidence-links";

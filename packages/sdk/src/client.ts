@@ -15,6 +15,7 @@ import { VectorSearchService } from "./services/vector-search.service.js";
 import { LocalEmbedder } from "./embeddings/local-embedder.js";
 import type { Embedder } from "./embeddings/local-embedder.js";
 import { ShieldStoreService } from "./services/shield-store.service.js";
+import { ShareService } from "./services/share.service.js";
 
 export class ForsetyClient {
   private config: ForsetyConfig;
@@ -31,6 +32,7 @@ export class ForsetyClient {
   public readonly agentAudit: AgentAuditService;
   public readonly vectorSearch: VectorSearchService;
   public readonly shieldStore: ShieldStoreService;
+  public readonly share: ShareService;
 
   constructor(config: ForsetyConfig) {
     this.config = {
@@ -75,6 +77,14 @@ export class ForsetyClient {
     const embedder: Embedder = new LocalEmbedder();
     this.vectorSearch = new VectorSearchService(this.db, embedder);
     this.shieldStore = new ShieldStoreService(this.db, this.recallVault);
+    if (!config.hmacSecret) {
+      throw new Error("hmacSecret is required in ForsetyConfig");
+    }
+    this.share = new ShareService(
+      this.db,
+      config.hmacSecret,
+      this.agentAudit
+    );
   }
 
   getDb(): Database {

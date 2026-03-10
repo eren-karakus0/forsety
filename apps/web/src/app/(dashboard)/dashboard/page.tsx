@@ -18,6 +18,7 @@ import {
   Shield,
   CheckCircle2,
   Wifi,
+  Layers,
 } from "lucide-react";
 import {
   FadeInWrapper,
@@ -144,6 +145,22 @@ export default async function OverviewPage() {
       iconBg: "bg-gold-50",
     },
     {
+      href: "/dashboard/evidence",
+      icon: Layers,
+      title: "Evidence",
+      description: "View cryptographic evidence packs",
+      iconColor: "text-gold-600",
+      iconBg: "bg-gold-50",
+    },
+    {
+      href: "/dashboard/policies",
+      icon: Shield,
+      title: "Policies",
+      description: "Manage access control policies",
+      iconColor: "text-violet-500",
+      iconBg: "bg-violet-50",
+    },
+    {
       href: "/dashboard/agents",
       icon: Users,
       title: "Agents",
@@ -156,7 +173,7 @@ export default async function OverviewPage() {
       icon: ClipboardList,
       title: "Audit Trail",
       description: "Review the global activity trail",
-      iconColor: "text-violet-500",
+      iconColor: "text-violet-600",
       iconBg: "bg-violet-50",
     },
     {
