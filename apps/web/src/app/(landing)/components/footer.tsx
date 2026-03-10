@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { FooterDashboardLink } from "./footer-dashboard-link";
 
 const footerLinks = {
   Product: [
@@ -66,15 +67,19 @@ export function Footer() {
               <ul className="mt-3 space-y-2">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-navy-400 transition-colors hover:text-gold-500"
-                      {...(link.href.startsWith("http")
-                        ? { target: "_blank", rel: "noopener noreferrer" }
-                        : {})}
-                    >
-                      {link.label}
-                    </Link>
+                    {link.href === "/dashboard" ? (
+                      <FooterDashboardLink />
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-navy-400 transition-colors hover:text-gold-500"
+                        {...(link.href.startsWith("http")
+                          ? { target: "_blank", rel: "noopener noreferrer" }
+                          : {})}
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -312,6 +312,70 @@ describe("Aptos Auth", () => {
       expect(result.error).toBe("Chain ID mismatch");
     });
 
+    it("should reject when expectedDomain is set but application field is missing", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      // Build envelope WITHOUT application field
+      const fullMessage = [
+        "APTOS",
+        `address: ${address}`,
+        `chain_id: 110`,
+        `nonce: ${nonce}`,
+        `message: ${rawMessage}`,
+      ].join("\n");
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedDomain: "forsety.app",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Domain binding expected but not found in message");
+    });
+
+    it("should reject when expectedChainId is set but chain_id field is missing", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      // Build envelope WITHOUT chain_id field
+      const fullMessage = [
+        "APTOS",
+        `address: ${address}`,
+        `application: forsety.app`,
+        `nonce: ${nonce}`,
+        `message: ${rawMessage}`,
+      ].join("\n");
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedChainId: 110,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Chain ID binding expected but not found in message");
+    });
+
     it("should pass when domain and chain ID match", () => {
       const { privateKey, publicKey, address } = createTestKeypair();
       const nonce = generateNonce();

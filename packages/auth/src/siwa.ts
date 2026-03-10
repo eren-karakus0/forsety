@@ -149,15 +149,21 @@ export function verifyAuthMessage(params: AuthVerifyParams): AuthVerifyResult {
       }
     }
 
-    // Validate domain if expected
-    if (params.expectedDomain && application) {
+    // Validate domain if expected — fail-closed when field is missing
+    if (params.expectedDomain) {
+      if (!application) {
+        return { success: false, error: "Domain binding expected but not found in message" };
+      }
       if (application !== params.expectedDomain) {
         return { success: false, error: "Domain mismatch" };
       }
     }
 
-    // Validate chain ID if expected
-    if (params.expectedChainId !== undefined && chainId !== null) {
+    // Validate chain ID if expected — fail-closed when field is missing
+    if (params.expectedChainId !== undefined) {
+      if (chainId === null) {
+        return { success: false, error: "Chain ID binding expected but not found in message" };
+      }
       if (chainId !== params.expectedChainId) {
         return { success: false, error: "Chain ID mismatch" };
       }

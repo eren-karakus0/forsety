@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export function CursorGlow() {
@@ -10,11 +10,13 @@ export function CursorGlow() {
   const springX = useSpring(mouseX, { damping: 25, stiffness: 150 });
   const springY = useSpring(mouseY, { damping: 25, stiffness: 150 });
 
-  const isTouchDevice = useRef(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    isTouchDevice.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice.current) return;
+    const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (isTouch) return;
+
+    setVisible(true);
 
     const handleMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
@@ -25,7 +27,7 @@ export function CursorGlow() {
     return () => window.removeEventListener("mousemove", handleMove);
   }, [mouseX, mouseY]);
 
-  if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0)) {
+  if (!visible) {
     return null;
   }
 

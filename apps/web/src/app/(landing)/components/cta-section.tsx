@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@forsety/ui";
 import { ArrowRight, Github } from "lucide-react";
+import { LaunchAppButton } from "./launch-app-button";
 import { FadeIn } from "@/components/motion/fade-in";
 import { GradientOrb } from "@/components/motion/gradient-orb";
 import { Magnetic } from "@/components/motion/magnetic";
@@ -46,16 +47,13 @@ export function CtaSection() {
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Magnetic strength={0.15}>
                 <div className="gradient-border-animated rounded-xl">
-                  <Button
+                  <LaunchAppButton
                     size="lg"
                     className="bg-gradient-to-r from-gold-500 to-teal-500 text-white font-semibold hover:from-gold-400 hover:to-teal-400 border-0 glow-gold-lg"
-                    asChild
                   >
-                    <Link href="/dashboard">
-                      Launch Dashboard
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
+                    Launch Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </LaunchAppButton>
                 </div>
               </Magnetic>
               <Magnetic strength={0.15}>

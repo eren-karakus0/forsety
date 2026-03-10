@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef } from "react";
 import { Button } from "@forsety/ui";
 import { ArrowRight, Shield, ChevronDown } from "lucide-react";
+import { LaunchAppButton } from "./launch-app-button";
 import { FadeIn } from "@/components/motion/fade-in";
 import { GradientOrb } from "@/components/motion/gradient-orb";
 import { Magnetic } from "@/components/motion/magnetic";
@@ -106,16 +107,13 @@ export function Hero() {
           <FadeIn delay={0.5}>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Magnetic strength={0.15}>
-                <Button
+                <LaunchAppButton
                   size="lg"
                   className="bg-gradient-to-r from-gold-500 to-teal-500 text-white font-semibold hover:from-gold-400 hover:to-teal-400 border-0 glow-gold-lg"
-                  asChild
                 >
-                  <Link href="/dashboard">
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </LaunchAppButton>
               </Magnetic>
               <Magnetic strength={0.15}>
                 <Button
