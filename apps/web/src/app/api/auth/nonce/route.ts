@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAuthMessage, generateNonce } from "@forsety/auth";
 import { createDb, sessions } from "@forsety/db";
 import { getEnv } from "@/lib/env";
+import * as Sentry from "@sentry/nextjs";
 
 // Address-based rate limiter: prevents nonce flooding for a single wallet.
 // IP-based rate limiting is handled by the middleware.
@@ -33,42 +34,51 @@ function checkAddrRateLimit(address: string): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const address = request.nextUrl.searchParams.get("address");
+  try {
+    const address = request.nextUrl.searchParams.get("address");
 
-  if (!address || !/^0x[a-fA-F0-9]{1,64}$/.test(address)) {
+    if (!address || !/^0x[a-fA-F0-9]{1,64}$/.test(address)) {
+      return NextResponse.json(
+        { error: "Valid Aptos address is required (?address=0x...)" },
+        { status: 400 }
+      );
+    }
+
+    const addrLower = address.toLowerCase();
+
+    if (!checkAddrRateLimit(addrLower)) {
+      return NextResponse.json(
+        { error: "Too many requests. Try again later." },
+        { status: 429 }
+      );
+    }
+
+    const env = getEnv();
+    const nonce = generateNonce();
+    const host = request.headers.get("host") ?? "localhost:3000";
+
+    const message = createAuthMessage({
+      domain: host,
+      address,
+      nonce,
+      uri: `https://${host}`,
+    });
+
+    // Persist nonce in sessions table (5 min expiry)
+    const db = createDb(env.DATABASE_URL);
+    await db.insert(sessions).values({
+      walletAddress: addrLower,
+      nonce,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    return NextResponse.json({ nonce, message });
+  } catch (error) {
+    console.error("[Auth Nonce] Error:", error);
+    Sentry.captureException(error, { extra: { route: "/api/auth/nonce" } });
     return NextResponse.json(
-      { error: "Valid Aptos address is required (?address=0x...)" },
-      { status: 400 }
+      { error: "Failed to generate nonce" },
+      { status: 500 }
     );
   }
-
-  const addrLower = address.toLowerCase();
-
-  if (!checkAddrRateLimit(addrLower)) {
-    return NextResponse.json(
-      { error: "Too many requests. Try again later." },
-      { status: 429 }
-    );
-  }
-
-  const env = getEnv();
-  const nonce = generateNonce();
-  const host = request.headers.get("host") ?? "localhost:3000";
-
-  const message = createAuthMessage({
-    domain: host,
-    address,
-    nonce,
-    uri: `https://${host}`,
-  });
-
-  // Persist nonce in sessions table (5 min expiry)
-  const db = createDb(env.DATABASE_URL);
-  await db.insert(sessions).values({
-    walletAddress: addrLower,
-    nonce,
-    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-  });
-
-  return NextResponse.json({ nonce, message });
 }

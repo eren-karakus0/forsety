@@ -40,7 +40,10 @@ export function useForsetyAuth() {
       const nonceRes = await fetch(`/api/auth/nonce?address=${address}`, {
         credentials: "include",
       });
-      if (!nonceRes.ok) throw new Error("Failed to get nonce");
+      if (!nonceRes.ok) {
+        const nonceData = await nonceRes.json().catch(() => ({}));
+        throw new Error(nonceData.error ?? `Nonce request failed (${nonceRes.status})`);
+      }
       const { nonce, message } = await nonceRes.json();
 
       if (!nonce || !message) throw new Error("Invalid nonce response");
