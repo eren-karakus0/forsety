@@ -26,7 +26,9 @@ export function useForsetyAuth() {
       const address = account.address.toString();
 
       // 1. Get nonce and pre-built message from server
-      const nonceRes = await fetch(`/api/auth/nonce?address=${address}`);
+      const nonceRes = await fetch(`/api/auth/nonce?address=${address}`, {
+        credentials: "include",
+      });
       if (!nonceRes.ok) throw new Error("Failed to get nonce");
       const { nonce, message } = await nonceRes.json();
 
@@ -45,6 +47,7 @@ export function useForsetyAuth() {
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           fullMessage: signResult.fullMessage,
           signature: typeof signResult.signature === "string"
@@ -74,7 +77,7 @@ export function useForsetyAuth() {
 
   const signOut = useCallback(async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     } finally {
       setAuthState({ isAuthenticated: false, isLoading: false, error: null });
     }

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@forsety/ui";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { WalletSelector } from "@/components/wallet-selector";
+import { useSession } from "./session-context";
 
 interface WalletAuthButtonProps {
   size?: "sm" | "lg" | "default";
@@ -24,6 +25,7 @@ export function WalletAuthButton({
   const router = useRouter();
   const { connected } = useWallet();
   const { isAuthenticated, isLoading, signIn } = useForsetyAuth();
+  const { refresh } = useSession();
   const pendingAuth = useRef(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const autoOpened = useRef(false);
@@ -45,12 +47,13 @@ export function WalletAuthButton({
     }
   }, [connected, isAuthenticated, isLoading, signIn]);
 
-  // Redirect on successful auth
+  // Redirect on successful auth and refresh session context
   useEffect(() => {
     if (isAuthenticated) {
+      refresh();
       router.push("/dashboard");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, refresh]);
 
   const handleClick = () => {
     if (isAuthenticated) {

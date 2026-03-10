@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -13,11 +14,13 @@ type SessionStatus = "checking" | "authenticated" | "anonymous";
 interface SessionState {
   status: SessionStatus;
   address: string | null;
+  refresh: () => void;
 }
 
 const SessionContext = createContext<SessionState>({
   status: "checking",
   address: null,
+  refresh: () => {},
 });
 
 export function useSession() {
@@ -25,13 +28,13 @@ export function useSession() {
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<SessionState>({
+  const [state, setState] = useState<{ status: SessionStatus; address: string | null }>({
     status: "checking",
     address: null,
   });
 
-  useEffect(() => {
-    fetch("/api/auth/session")
+  const checkSession = useCallback(() => {
+    fetch("/api/auth/session", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data.authenticated === true) {
@@ -45,7 +48,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
   return (
-    <SessionContext.Provider value={state}>{children}</SessionContext.Provider>
+    <SessionContext.Provider value={{ ...state, refresh: checkSession }}>
+      {children}
+    </SessionContext.Provider>
   );
 }
