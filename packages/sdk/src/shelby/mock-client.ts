@@ -54,10 +54,14 @@ export class ShelbyMockWrapper {
   }
 
   async downloadDataset(
-    _blobName: string,
-    _outputPath: string
+    blobName: string,
+    outputPath: string
   ): Promise<void> {
-    // No-op in mock mode
+    const { writeFileSync } = await import("node:fs");
+    writeFileSync(
+      outputPath,
+      `[Forsety Mock] Placeholder content for blob: ${blobName}\nGenerated at: ${new Date().toISOString()}\n`
+    );
   }
 
   async deleteBlob(blobName: string): Promise<void> {

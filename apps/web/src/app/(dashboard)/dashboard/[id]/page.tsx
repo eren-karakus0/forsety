@@ -96,6 +96,8 @@ export default function DatasetDetailPage() {
   const [policies, setPolicies] = useState<PolicyEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -112,6 +114,45 @@ export default function DatasetDetailPage() {
       .catch(() => setError("Failed to load dataset"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleDownloadDataset = async () => {
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      // Preflight: check auth + policy before triggering native download
+      const check = await fetch(`/api/datasets/${id}/download`, {
+        method: "HEAD",
+        credentials: "include",
+      });
+      if (!check.ok) {
+        // HEAD may not return body; use status to determine error
+        const messages: Record<number, string> = {
+          400: "Accessor address required",
+          401: "Unauthorized",
+          403: "Access denied",
+          404: "Dataset not found or not available for download",
+        };
+        setDownloadError(messages[check.status] ?? "Download failed");
+        return;
+      }
+      // Native browser download: streams to disk without JS RAM buffering.
+      // Cookies are sent automatically by the browser.
+      const a = document.createElement("a");
+      a.href = `/api/datasets/${id}/download`;
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Refresh access logs after a short delay to show new download entry
+      setTimeout(() => {
+        fetchAccessLogs(id).then(setAccessLogs).catch(() => {});
+      }, 2000);
+    } catch {
+      setDownloadError("Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const handleGenerateEvidence = async () => {
     setGenerating(true);
@@ -371,8 +412,47 @@ export default function DatasetDetailPage() {
               </Card>
             </div>
 
-            {/* Right: Evidence Pack */}
+            {/* Right: Download + Evidence Pack */}
             <div className="space-y-6">
+              {/* Download Dataset */}
+              <Card className="rounded-xl border-border/50">
+                <CardContent className="pt-6">
+                  <h2 className="mb-1 font-display text-base font-semibold text-foreground">
+                    Download Dataset
+                  </h2>
+                  <p className="mb-5 text-xs text-muted-foreground">
+                    Download and create access proof automatically
+                  </p>
+
+                  <Button
+                    onClick={handleDownloadDataset}
+                    disabled={downloading || !dataset.shelbyBlobName}
+                    className="w-full bg-gradient-to-r from-gold-500 to-teal-500 text-white border-0 hover:from-gold-400 hover:to-teal-400"
+                  >
+                    {downloading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Downloading...
+                      </>
+                    ) : !dataset.shelbyBlobName ? (
+                      "No blob available"
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Dataset
+                      </>
+                    )}
+                  </Button>
+
+                  {downloadError && (
+                    <Alert variant="destructive" className="mt-3 rounded-xl">
+                      <AlertDescription>{downloadError}</AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Evidence Pack */}
               <Card className="stat-card-gold rounded-xl">
                 <CardContent className="pt-6">
                   <h2 className="mb-1 font-display text-base font-semibold text-foreground">
