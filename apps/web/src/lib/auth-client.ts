@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { useNetwork } from "@/lib/network-context";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -11,6 +12,7 @@ interface AuthState {
 
 export function useForsetyAuth() {
   const { account, connected, signMessage } = useWallet();
+  const { activeNetwork } = useNetwork();
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     isLoading: false,
@@ -71,7 +73,7 @@ export function useForsetyAuth() {
         signatureHex = signResult.signature.toString();
       }
 
-      // 4. Verify on server - send fullMessage, signature, and publicKey
+      // 4. Verify on server - send fullMessage, signature, publicKey, and network
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,6 +83,7 @@ export function useForsetyAuth() {
           signature: signatureHex,
           publicKey: pubKeyStr,
           address,
+          network: activeNetwork,
         }),
       });
 
@@ -97,7 +100,7 @@ export function useForsetyAuth() {
         error: error instanceof Error ? error.message : "Sign in failed",
       });
     }
-  }, [account, connected, signMessage]);
+  }, [account, connected, signMessage, activeNetwork]);
 
   const signOut = useCallback(async () => {
     try {

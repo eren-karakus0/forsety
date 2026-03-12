@@ -536,5 +536,162 @@ describe("Aptos Auth", () => {
       expect(result.address).toBe(address);
       expect(result.nonce).toBe(nonce);
     });
+
+    it("should verify with chain_id=1 (mainnet)", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 1,
+        application: "forsety.app",
+        nonce,
+        message: rawMessage,
+      });
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedChainId: 1,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.address).toBe(address);
+    });
+
+    it("should verify with chain_id=2 (testnet)", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 2,
+        application: "forsety.app",
+        nonce,
+        message: rawMessage,
+      });
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedChainId: 2,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.address).toBe(address);
+    });
+
+    it("should reject chain_id mismatch across networks", () => {
+      const { privateKey, publicKey, address } = createTestKeypair();
+      const nonce = generateNonce();
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      // Envelope says chain_id=2 (testnet)
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 2,
+        application: "forsety.app",
+        nonce,
+        message: rawMessage,
+      });
+
+      const messageBytes = new TextEncoder().encode(fullMessage);
+      const signature = privateKey.sign(messageBytes);
+
+      // But we expect chain_id=1 (mainnet)
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: signature.toString(),
+        publicKey: publicKey.toString(),
+        expectedChainId: 1,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Chain ID mismatch");
+    });
+
+    it("should reject non-Ed25519 key without crashing", () => {
+      const nonce = generateNonce();
+      const address = "0x" + "ab".repeat(32);
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 2,
+        application: "forsety.app",
+        nonce,
+        message: rawMessage,
+      });
+
+      // Non-Ed25519 key and sig (longer than standard)
+      const fakePubKey = "ab".repeat(48); // 96 hex chars — not 64
+      const fakeSig = "cd".repeat(96);    // 192 hex chars — not 128
+
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: fakeSig,
+        publicKey: fakePubKey,
+        expectedAddress: address,
+      });
+
+      // Must reject — no local verification possible for non-Ed25519
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Non-Ed25519");
+    });
+
+    it("should reject short non-Ed25519 key without crashing", () => {
+      const nonce = generateNonce();
+      const address = "0x" + "ab".repeat(32);
+      const rawMessage = createAuthMessage({
+        domain: "forsety.app",
+        address,
+        nonce,
+      });
+
+      const fullMessage = buildAptosEnvelope({
+        address,
+        chainId: 2,
+        application: "forsety.app",
+        nonce,
+        message: rawMessage,
+      });
+
+      // Very short — should still reject gracefully, not crash
+      const result = verifyAuthMessage({
+        fullMessage,
+        signature: "abcd",
+        publicKey: "1234",
+        expectedAddress: address,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Non-Ed25519");
+    });
   });
 });

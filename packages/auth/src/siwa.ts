@@ -114,7 +114,20 @@ export function verifyAuthMessage(params: AuthVerifyParams): AuthVerifyResult {
       return { success: false, error: "Invalid message format: missing APTOS prefix" };
     }
 
-    // Parse public key and signature
+    // Parse public key and signature — require Ed25519 format
+    // Keyless (non-Ed25519) accounts cannot be verified locally and are rejected.
+    // When Aptos provides a local verification API for keyless proofs, this can be extended.
+    const pubKeyClean = publicKeyHex.replace(/^0x/, "");
+    const sigClean = (typeof signature === "string" ? signature : "").replace(/^0x/, "");
+    const isStandardEd25519 = /^[0-9a-fA-F]{64}$/.test(pubKeyClean) && /^[0-9a-fA-F]{128}$/.test(sigClean);
+
+    if (!isStandardEd25519) {
+      return {
+        success: false,
+        error: "Non-Ed25519 credentials are not supported. Please use a standard wallet (e.g. Petra).",
+      };
+    }
+
     const publicKey = new Ed25519PublicKey(publicKeyHex);
     const sig = new Ed25519Signature(signature);
 
