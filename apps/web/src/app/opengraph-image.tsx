@@ -16,7 +16,7 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #f0f3f9 0%, #ffffff 30%, #f0f3f9 60%, #d1f0f5 100%)",
+          background: "linear-gradient(135deg, #0A1628 0%, #0F1B2E 40%, #0A1628 70%, #0D1424 100%)",
           fontFamily: "system-ui, sans-serif",
           position: "relative",
           overflow: "hidden",
@@ -26,24 +26,24 @@ export default async function Image() {
         <div
           style={{
             position: "absolute",
-            top: "-80px",
-            left: "-100px",
-            width: "400px",
-            height: "400px",
+            top: "-100px",
+            left: "-120px",
+            width: "450px",
+            height: "450px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(212,175,55,0.10) 0%, transparent 70%)",
           }}
         />
         {/* Teal gradient orb */}
         <div
           style={{
             position: "absolute",
-            bottom: "-60px",
-            right: "-80px",
-            width: "350px",
-            height: "350px",
+            bottom: "-80px",
+            right: "-100px",
+            width: "400px",
+            height: "400px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(55,170,212,0.10) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(55,170,212,0.08) 0%, transparent 70%)",
           }}
         />
 
@@ -53,14 +53,15 @@ export default async function Image() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "80px",
-            height: "80px",
-            borderRadius: "16px",
-            background: "#1a2847",
-            marginBottom: "32px",
+            width: "88px",
+            height: "88px",
+            borderRadius: "18px",
+            background: "linear-gradient(135deg, #1a2847 0%, #273C6B 100%)",
+            border: "1px solid rgba(212,175,55,0.25)",
+            marginBottom: "36px",
           }}
         >
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <svg width="44" height="44" viewBox="0 0 40 40" fill="none">
             <path
               d="M20 6L20 34M20 10L12 18M20 10L28 18"
               stroke="#D4AF37"
@@ -77,7 +78,7 @@ export default async function Image() {
             fontSize: "56px",
             fontWeight: 800,
             letterSpacing: "-0.03em",
-            color: "#0d1424",
+            color: "#FFFFFF",
             textAlign: "center",
             lineHeight: 1.1,
             maxWidth: "900px",
@@ -91,14 +92,14 @@ export default async function Image() {
         <div
           style={{
             fontSize: "22px",
-            color: "#4164b2",
+            color: "rgba(255,255,255,0.55)",
             textAlign: "center",
             marginTop: "20px",
             maxWidth: "700px",
             display: "flex",
           }}
         >
-          Cryptographic proof of compliant data access. Built on Shelby Protocol.
+          Cryptographic proof of compliant data access — built on Walrus &amp; Aptos
         </div>
 
         {/* Bottom badge */}
@@ -111,14 +112,14 @@ export default async function Image() {
             gap: "8px",
             padding: "8px 20px",
             borderRadius: "999px",
-            border: "1px solid #d9e0f0",
-            background: "#f0f3f9",
+            border: "1px solid rgba(212,175,55,0.20)",
+            background: "rgba(255,255,255,0.04)",
           }}
         >
           <div
             style={{
               fontSize: "16px",
-              color: "#6783c1",
+              color: "rgba(212,175,55,0.7)",
               display: "flex",
             }}
           >

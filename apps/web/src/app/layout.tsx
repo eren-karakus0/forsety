@@ -45,15 +45,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Forsety - Evidence Layer for Licensed AI Data Access",
     description:
-      "Cryptographic evidence packs that verify every dataset interaction. Built on Shelby Protocol.",
+      "Cryptographic evidence packs that verify every dataset interaction. Built on Walrus & Aptos.",
     type: "website",
     locale: "en_US",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Forsety" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Forsety - Evidence Layer for Licensed AI Data Access",
     description:
-      "Cryptographic evidence packs that verify every dataset interaction. Built on Shelby Protocol.",
+      "Cryptographic evidence packs that verify every dataset interaction. Built on Walrus & Aptos.",
+    images: ["/opengraph-image"],
   },
 };
 

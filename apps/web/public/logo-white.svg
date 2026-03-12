@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" fill="none">
+  <!-- Forsety Logo: Monochrome White (no background) -->
+  <g>
+    <!-- Tiwaz Rune (white, no bg square) -->
+    <path d="M20 6L20 34M20 10L12 18M20 10L28 18" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Wordmark (white) -->
+    <text x="52" y="28" font-family="Space Grotesk, system-ui, sans-serif" font-weight="700" font-size="24" fill="#FFFFFF" letter-spacing="-0.02em">Forsety</text>
+  </g>
+</svg>
