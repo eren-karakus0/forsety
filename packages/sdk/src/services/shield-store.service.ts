@@ -1,3 +1,19 @@
+/**
+ * @deferred Phase 4 — not exposed in API/MCP/UI.
+ *
+ * ShieldStoreService provides client-side encryption on top of RecallVault.
+ * The encryption key never touches the server. Currently the SDK and DB
+ * schema are implemented but the service is not wired into any API route,
+ * MCP tool, or dashboard UI.
+ *
+ * Phase 4 requirements:
+ * - Expose via MCP tool (forsety_shield_store / forsety_shield_retrieve)
+ * - Add dashboard UI for encrypted memory viewer (decrypt in browser)
+ * - Client-side key derivation flow (SIWA signature → AES key)
+ * - Key rotation support (re-encrypt all memories with new key)
+ *
+ * See docs/DEFERRED.md for full roadmap.
+ */
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { encryptionMetadata } from "@forsety/db";

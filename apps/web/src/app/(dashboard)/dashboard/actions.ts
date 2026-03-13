@@ -486,6 +486,40 @@ export async function fetchViolationCount() {
   }
 }
 
+// --- Agent Registration ---
+
+export async function registerAgent(input: {
+  name: string;
+  description?: string;
+  permissions?: string[];
+  allowedDatasets?: string[];
+}) {
+  try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { success: false, error: "Not authenticated" };
+
+    const client = getForsetyClient();
+    const result = await client.agents.register({
+      name: input.name,
+      description: input.description,
+      ownerAddress: wallet,
+      permissions: input.permissions,
+      allowedDatasets: input.allowedDatasets,
+    });
+
+    return {
+      success: true,
+      agentId: result.agent.id,
+      apiKey: result.apiKey,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Registration failed",
+    };
+  }
+}
+
 // --- Item 6: Bulk Dataset Operations ---
 
 export async function bulkDeleteDatasets(ids: string[]) {
