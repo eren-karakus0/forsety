@@ -117,6 +117,25 @@ export class AgentService {
     return updated ?? null;
   }
 
+  async rotateApiKey(id: string): Promise<{ apiKey: string } | null> {
+    const agent = await this.getById(id);
+    if (!agent) return null;
+    if (!agent.isActive) {
+      throw new ForsetyValidationError(
+        "Cannot rotate key for inactive agent"
+      );
+    }
+
+    const newApiKey = generateApiKey();
+    const hashedKey = hashApiKey(newApiKey);
+    await this.db
+      .update(agents)
+      .set({ agentApiKey: hashedKey })
+      .where(eq(agents.id, id));
+
+    return { apiKey: newApiKey };
+  }
+
   async deactivate(id: string) {
     await this.db
       .update(agents)

@@ -9,10 +9,13 @@ const mockUpdate = vi.fn();
 const mockRevoke = vi.fn();
 const mockDatasetGetById = vi.fn();
 
+const mockListByOwner = vi.fn();
+
 vi.mock("@/lib/forsety", () => ({
   getForsetyClient: () => ({
     licenses: {
       listAll: mockListAll,
+      listByOwner: mockListByOwner,
       attach: mockAttach,
       getById: mockGetById,
       update: mockUpdate,
@@ -70,18 +73,18 @@ const MOCK_DATASET = {
 describe("GET /api/licenses", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockValidateAuth.mockResolvedValue(true);
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xowner", trusted: true });
   });
 
   it("should return 401 when not authed", async () => {
-    mockValidateAuth.mockResolvedValue(false);
+    mockResolveAccessor.mockResolvedValue(null);
     const req = new NextRequest("http://localhost/api/licenses");
     const res = await ListLicenses(req);
     expect(res.status).toBe(401);
   });
 
   it("should return licenses list", async () => {
-    mockListAll.mockResolvedValue([MOCK_LICENSE]);
+    mockListByOwner.mockResolvedValue([MOCK_LICENSE]);
     const req = new NextRequest("http://localhost/api/licenses");
     const res = await ListLicenses(req);
     expect(res.status).toBe(200);
@@ -157,7 +160,14 @@ describe("POST /api/licenses", () => {
 describe("GET /api/licenses/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockValidateAuth.mockResolvedValue(true);
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xowner", trusted: true });
+  });
+
+  it("should return 401 when not authed", async () => {
+    mockResolveAccessor.mockResolvedValue(null);
+    const req = new NextRequest("http://localhost/api/licenses/lic-1");
+    const res = await GetLicense(req, makeParams());
+    expect(res.status).toBe(401);
   });
 
   it("should return 404 when not found", async () => {
@@ -167,11 +177,21 @@ describe("GET /api/licenses/[id]", () => {
     expect(res.status).toBe(404);
   });
 
-  it("should return license", async () => {
+  it("should return license when owner", async () => {
     mockGetById.mockResolvedValue(MOCK_LICENSE);
+    mockDatasetGetById.mockResolvedValue(MOCK_DATASET);
     const req = new NextRequest("http://localhost/api/licenses/lic-1");
     const res = await GetLicense(req, makeParams());
     expect(res.status).toBe(200);
+  });
+
+  it("should return 403 when not owner", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xstranger", trusted: true });
+    mockGetById.mockResolvedValue(MOCK_LICENSE);
+    mockDatasetGetById.mockResolvedValue(MOCK_DATASET);
+    const req = new NextRequest("http://localhost/api/licenses/lic-1");
+    const res = await GetLicense(req, makeParams());
+    expect(res.status).toBe(403);
   });
 });
 

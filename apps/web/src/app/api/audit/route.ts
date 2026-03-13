@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const url = new URL(request.url);
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
 
     const client = getForsetyClient();
-    const logs = await client.agentAudit.listAll({
+    const logs = await client.agentAudit.listByOwner(auth.accessor, {
       agentId: agentId === "anonymous" ? null : agentId,
       status,
       limit,

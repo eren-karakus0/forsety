@@ -84,6 +84,36 @@ export class PolicyService {
       .offset(offset);
   }
 
+  /** List policies scoped to datasets owned by ownerAddress. */
+  async listByOwner(
+    ownerAddress: string,
+    filters?: { limit?: number; offset?: number }
+  ) {
+    const limit = filters?.limit ?? 100;
+    const offset = filters?.offset ?? 0;
+
+    return this.db
+      .select({
+        id: policies.id,
+        datasetId: policies.datasetId,
+        datasetName: datasets.name,
+        version: policies.version,
+        hash: policies.hash,
+        allowedAccessors: policies.allowedAccessors,
+        maxReads: policies.maxReads,
+        readsConsumed: policies.readsConsumed,
+        expiresAt: policies.expiresAt,
+        createdAt: policies.createdAt,
+        createdBy: policies.createdBy,
+      })
+      .from(policies)
+      .innerJoin(datasets, eq(policies.datasetId, datasets.id))
+      .where(eq(datasets.ownerAddress, ownerAddress))
+      .orderBy(desc(policies.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
   async getLatestPerDataset() {
     const allPolicies = await this.db
       .select()

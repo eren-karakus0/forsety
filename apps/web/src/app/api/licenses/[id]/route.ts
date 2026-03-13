@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveAccessor, validateAuth, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
@@ -27,22 +27,29 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const isAuthed = await validateAuth(request);
-  if (!isAuthed) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
     const client = getForsetyClient();
-    const license = await client.licenses.getById(id);
 
-    if (!license) {
+    const result = await getLicenseOwner(client, id);
+    if (!result) {
       return NextResponse.json(
         { error: "License not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(license);
+    if (result.ownerAddress !== auth.accessor) {
+      return NextResponse.json(
+        { error: "Forbidden: not dataset owner" },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json(result.license);
   } catch (error) {
     return apiError("Failed to fetch license", error);
   }

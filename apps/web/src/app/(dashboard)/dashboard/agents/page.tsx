@@ -17,6 +17,7 @@ import {
   TableCell,
 } from "@forsety/ui";
 import { Users, ArrowRight, Activity, UserX } from "lucide-react";
+import { RegisterAgentDialog } from "./register-agent-dialog";
 
 interface AgentRow {
   id: string;
@@ -73,18 +74,21 @@ export default function AgentsPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="page-header-accent">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
-            <Users className="h-5 w-5 text-teal-500" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
+              <Users className="h-5 w-5 text-teal-500" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+                Agents
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Registered AI agents with RecallVault access
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-              Agents
-            </h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Registered AI agents with RecallVault access
-            </p>
-          </div>
+          <RegisterAgentDialog />
         </div>
       </div>
 

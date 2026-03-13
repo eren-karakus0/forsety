@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveAccessor, validateAuth, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 import { z } from "zod";
@@ -15,8 +15,8 @@ const listQuerySchema = z.object({
  * GET /api/licenses?datasetId=...&includeRevoked=true&limit=50&offset=0
  */
 export async function GET(request: NextRequest) {
-  const isAuthed = await validateAuth(request);
-  if (!isAuthed) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const url = new URL(request.url);
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
 
     const client = getForsetyClient();
-    const data = await client.licenses.listAll(parsed.data);
+    const data = await client.licenses.listByOwner(auth.accessor, parsed.data);
 
     return NextResponse.json({ data });
   } catch (error) {

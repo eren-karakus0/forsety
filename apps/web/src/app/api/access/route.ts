@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveAccessor, validateAuth, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 import { z } from "zod";
@@ -17,8 +17,8 @@ const accessQuerySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const isAuthed = await validateAuth(request);
-  if (!isAuthed) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const url = new URL(request.url);
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
     const filters = parsed.data;
     const client = getForsetyClient();
     const [data, total] = await Promise.all([
-      client.access.listAll(filters),
-      client.access.count(filters),
+      client.access.listByOwner(auth.accessor, filters),
+      client.access.countByOwner(auth.accessor, filters),
     ]);
 
     return NextResponse.json({

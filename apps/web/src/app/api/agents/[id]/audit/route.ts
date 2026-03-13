@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
@@ -7,17 +7,31 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
+    const client = getForsetyClient();
+
+    // Verify the agent belongs to the caller
+    const agent = await client.agents.getById(id);
+    if (!agent) {
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    }
+    if (agent.ownerAddress !== auth.accessor) {
+      return NextResponse.json(
+        { error: "Forbidden: not agent owner" },
+        { status: 403 }
+      );
+    }
+
     const url = new URL(request.url);
     const action = url.searchParams.get("action") ?? undefined;
     const status = url.searchParams.get("status") ?? undefined;
     const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
     const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
 
-    const client = getForsetyClient();
     const logs = await client.agentAudit.getByAgent(id, {
       action,
       status,

@@ -56,11 +56,11 @@ const MOCK_DATASET = {
 describe("GET /api/datasets/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockValidateAuth.mockResolvedValue(true);
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xowner", trusted: true });
   });
 
   it("should return 401 when no auth", async () => {
-    mockValidateAuth.mockResolvedValue(false);
+    mockResolveAccessor.mockResolvedValue(null);
     const req = new NextRequest("http://localhost/api/datasets/ds-1");
     const res = await GET(req, makeParams());
     expect(res.status).toBe(401);
@@ -78,6 +78,14 @@ describe("GET /api/datasets/[id]", () => {
     const req = new NextRequest("http://localhost/api/datasets/ds-1");
     const res = await GET(req, makeParams());
     expect(res.status).toBe(200);
+  });
+
+  it("should return 403 when caller is not owner", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xstranger", trusted: true });
+    mockGetWithLicense.mockResolvedValue({ dataset: MOCK_DATASET, licenses: [] });
+    const req = new NextRequest("http://localhost/api/datasets/ds-1");
+    const res = await GET(req, makeParams());
+    expect(res.status).toBe(403);
   });
 });
 

@@ -1,7 +1,7 @@
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
-import { licenses } from "@forsety/db";
+import { licenses, datasets } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
 
 export interface AttachLicenseInput {
@@ -120,6 +120,45 @@ export class LicenseService {
       .select()
       .from(licenses)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(licenses.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /** List licenses scoped to datasets owned by ownerAddress. */
+  async listByOwner(
+    ownerAddress: string,
+    filters?: {
+      datasetId?: string;
+      includeRevoked?: boolean;
+      limit?: number;
+      offset?: number;
+    }
+  ) {
+    const limit = filters?.limit ?? 100;
+    const offset = filters?.offset ?? 0;
+
+    const conditions = [eq(datasets.ownerAddress, ownerAddress)];
+    if (filters?.datasetId)
+      conditions.push(eq(licenses.datasetId, filters.datasetId));
+    if (!filters?.includeRevoked)
+      conditions.push(isNull(licenses.revokedAt));
+
+    return this.db
+      .select({
+        id: licenses.id,
+        datasetId: licenses.datasetId,
+        spdxType: licenses.spdxType,
+        grantorAddress: licenses.grantorAddress,
+        terms: licenses.terms,
+        termsHash: licenses.termsHash,
+        metadataBlobId: licenses.metadataBlobId,
+        createdAt: licenses.createdAt,
+        revokedAt: licenses.revokedAt,
+      })
+      .from(licenses)
+      .innerJoin(datasets, eq(licenses.datasetId, datasets.id))
+      .where(and(...conditions))
       .orderBy(desc(licenses.createdAt))
       .limit(limit)
       .offset(offset);
