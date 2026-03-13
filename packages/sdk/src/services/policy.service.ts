@@ -1,8 +1,8 @@
-import { eq, max, desc } from "drizzle-orm";
-import { createHash } from "node:crypto";
+import { eq, max, desc, sql, and } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { policies, datasets } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
+import { canonicalHash } from "../crypto/canonical-hash.js";
 
 export interface CreatePolicyInput {
   datasetId: string;
@@ -40,9 +40,7 @@ export class PolicyService {
         version: nextVersion,
       };
 
-      const hash = createHash("sha256")
-        .update(JSON.stringify(policyData))
-        .digest("hex");
+      const hash = canonicalHash(policyData as unknown as Record<string, unknown>);
 
       const [policy] = await tx
         .insert(policies)
@@ -162,8 +160,7 @@ export class PolicyService {
     datasetId: string,
     accessorAddress: string
   ): Promise<{ allowed: boolean; policy: typeof policies.$inferSelect | null }> {
-    const allPolicies = await this.getByDatasetId(datasetId);
-    const latestPolicy = allPolicies[allPolicies.length - 1];
+    const latestPolicy = await this.getLatest(datasetId);
 
     if (!latestPolicy) {
       return { allowed: false, policy: null };
@@ -192,15 +189,12 @@ export class PolicyService {
   }
 
   async incrementReads(policyId: string) {
-    const policy = await this.getById(policyId);
-    if (!policy) return null;
-
     const [updated] = await this.db
       .update(policies)
-      .set({ readsConsumed: policy.readsConsumed + 1 })
+      .set({ readsConsumed: sql`${policies.readsConsumed} + 1` })
       .where(eq(policies.id, policyId))
       .returning();
 
-    return updated!;
+    return updated ?? null;
   }
 }

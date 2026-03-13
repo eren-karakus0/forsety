@@ -28,9 +28,13 @@ export async function uploadDataset(formData: FormData): Promise<UploadResult> {
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const license = formData.get("license") as string;
-  const ownerAddress = formData.get("ownerAddress") as string;
 
-  if (!name || !license || !ownerAddress) {
+  const ownerAddress = await getWalletFromSession();
+  if (!ownerAddress) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  if (!name || !license) {
     return { success: false, error: "Missing required fields" };
   }
 
@@ -86,9 +90,12 @@ export interface EvidenceResult {
 
 export async function fetchDatasetDetail(id: string) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return null;
+
     const client = getForsetyClient();
     const result = await client.datasets.getWithLicense(id);
-    if (!result) return null;
+    if (!result || result.dataset.ownerAddress !== wallet) return null;
     return {
       dataset: {
         ...result.dataset,
@@ -106,7 +113,15 @@ export async function fetchDatasetDetail(id: string) {
 
 export async function generateEvidencePack(datasetId: string): Promise<EvidenceResult> {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { success: false, error: "Not authenticated" };
+
     const client = getForsetyClient();
+    const dataset = await client.datasets.getById(datasetId);
+    if (!dataset || dataset.ownerAddress !== wallet) {
+      return { success: false, error: "Forbidden" };
+    }
+
     const result = await client.evidence.generatePack(datasetId);
     return {
       success: true,
@@ -246,11 +261,12 @@ export async function countAuditLogs(
   }
 ) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return 0;
+
     const client = getForsetyClient();
-    return client.agentAudit.countFiltered({
-      ...filters,
-      dateFrom: filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
-      dateTo: filters?.dateTo ? new Date(filters.dateTo) : undefined,
+    return client.agentAudit.countByOwner(wallet, {
+      status: filters?.status,
     });
   } catch {
     return 0;
@@ -275,17 +291,23 @@ export async function fetchAllEvidencePacks(filters?: { limit?: number; offset?:
 
 export async function fetchEvidencePackById(id: string) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return null;
+
     const client = getForsetyClient();
     const pack = await client.evidence.getById(id);
     if (!pack) return null;
 
-    // Get dataset info
-    const dataset = await client.datasets.getWithLicense(pack.datasetId);
+    // Verify ownership via dataset
+    const dataset = await client.datasets.getById(pack.datasetId);
+    if (!dataset || dataset.ownerAddress !== wallet) return null;
+
+    const datasetWithLicense = await client.datasets.getWithLicense(pack.datasetId);
 
     return {
       ...pack,
       generatedAt: pack.generatedAt.toISOString(),
-      datasetName: dataset?.dataset.name ?? "Unknown",
+      datasetName: datasetWithLicense?.dataset.name ?? "Unknown",
     };
   } catch {
     return null;
@@ -294,7 +316,13 @@ export async function fetchEvidencePackById(id: string) {
 
 export async function fetchAccessLogs(datasetId: string) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
+
     const client = getForsetyClient();
+    const dataset = await client.datasets.getById(datasetId);
+    if (!dataset || dataset.ownerAddress !== wallet) return [];
+
     const logs = await client.access.getByDatasetId(datasetId);
     return logs.map((l) => ({
       ...l,
@@ -342,7 +370,15 @@ export async function createPolicy(input: {
   expiresAt?: string;
 }) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { success: false, error: "Not authenticated" };
+
     const client = getForsetyClient();
+    const dataset = await client.datasets.getById(input.datasetId);
+    if (!dataset || dataset.ownerAddress !== wallet) {
+      return { success: false, error: "Forbidden" };
+    }
+
     const result = await client.policies.create({
       datasetId: input.datasetId,
       allowedAccessors: input.allowedAccessors,
@@ -401,9 +437,18 @@ export async function updatePolicy(
   }
 ) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { success: false, error: "Not authenticated" };
+
     const client = getForsetyClient();
     const existing = await client.policies.getById(policyId);
     if (!existing) return { success: false, error: "Policy not found" };
+
+    // Verify ownership via dataset
+    const dataset = await client.datasets.getById(existing.datasetId);
+    if (!dataset || dataset.ownerAddress !== wallet) {
+      return { success: false, error: "Forbidden" };
+    }
 
     const result = await client.policies.create({
       datasetId: existing.datasetId,
@@ -524,9 +569,17 @@ export async function registerAgent(input: {
 
 export async function bulkDeleteDatasets(ids: string[]) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { success: false, error: "Not authenticated" };
+
     const client = getForsetyClient();
     const results = [];
     for (const id of ids) {
+      const dataset = await client.datasets.getById(id);
+      if (!dataset || dataset.ownerAddress !== wallet) {
+        results.push({ id, archived: false, error: "Forbidden" });
+        continue;
+      }
       const archived = await client.datasets.archive(id);
       results.push({ id, archived: !!archived });
     }
@@ -541,9 +594,15 @@ export async function bulkDeleteDatasets(ids: string[]) {
 
 export async function bulkExportDatasets(ids: string[]) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { success: false, error: "Not authenticated" };
+
     const client = getForsetyClient();
     const data = [];
     for (const id of ids) {
+      const dataset = await client.datasets.getById(id);
+      if (!dataset || dataset.ownerAddress !== wallet) continue;
+
       const result = await client.datasets.getWithLicense(id);
       if (result) {
         data.push({

@@ -29,8 +29,10 @@ export async function GET(
     const url = new URL(request.url);
     const action = url.searchParams.get("action") ?? undefined;
     const status = url.searchParams.get("status") ?? undefined;
-    const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
-    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+    const rawLimit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+    const limit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 50, 1), 500);
+    const rawOffset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+    const offset = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0, 0);
 
     const logs = await client.agentAudit.getByAgent(id, {
       action,

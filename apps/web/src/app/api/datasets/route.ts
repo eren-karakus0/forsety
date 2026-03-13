@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { resolveAccessor, validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   let tempPath: string | null = null;
 
@@ -29,13 +30,14 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null;
     const name = formData.get("name") as string;
     const description = (formData.get("description") as string) || undefined;
-    const ownerAddress = formData.get("ownerAddress") as string;
+    // ownerAddress comes from auth context, NOT from formData (prevents spoofing)
+    const ownerAddress = auth.accessor;
     const spdxType = formData.get("spdxType") as string;
     const grantorAddress = (formData.get("grantorAddress") as string) || ownerAddress;
 
-    if (!name || !ownerAddress || !spdxType) {
+    if (!name || !spdxType) {
       return NextResponse.json(
-        { error: "Missing required fields: name, ownerAddress, spdxType" },
+        { error: "Missing required fields: name, spdxType" },
         { status: 400 }
       );
     }
