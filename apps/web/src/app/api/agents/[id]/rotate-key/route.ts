@@ -51,7 +51,9 @@ export async function POST(
         resourceId: id,
         status: "success",
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error(`[forsety] audit log for key rotation agent=${id} failed:`, err);
+      });
 
     return NextResponse.json({
       apiKey: result.apiKey,
