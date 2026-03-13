@@ -43,6 +43,13 @@
       "when": 1772876600000,
       "tag": "0005_add_pack_json_canonical",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772876700000,
+      "tag": "0006_add_archived_at_and_revoked_at",
+      "breakpoints": true
     }
   ]
 }

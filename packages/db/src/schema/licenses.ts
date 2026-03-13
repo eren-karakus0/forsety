@@ -14,6 +14,7 @@ export const licenses = pgTable("licenses", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
 });
 
 export type License = typeof licenses.$inferSelect;
