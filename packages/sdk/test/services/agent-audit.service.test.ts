@@ -63,19 +63,36 @@ describe("AgentAuditService", () => {
 
   describe("getSummary", () => {
     it("should compute correct summary counts", async () => {
-      const logs = [
+      const recentLogs = [
         { action: "memory.store", status: "success", timestamp: new Date() },
         { action: "memory.store", status: "success", timestamp: new Date() },
         { action: "dataset.access", status: "denied", timestamp: new Date() },
         { action: "memory.store", status: "error", timestamp: new Date() },
       ];
 
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue(logs),
+      let callCount = 0;
+      mockSelect.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // First call: SQL aggregation for counts
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([
+                { total: 4, success: 2, denied: 1, error: 1 },
+              ]),
+            }),
+          };
+        }
+        // Second call: recent actions with limit
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue(recentLogs),
+              }),
+            }),
           }),
-        }),
+        };
       });
 
       const summary = await service.getSummary("a1");
@@ -87,12 +104,27 @@ describe("AgentAuditService", () => {
     });
 
     it("should return empty summary for no logs", async () => {
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([]),
+      let callCount = 0;
+      mockSelect.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([
+                { total: 0, success: 0, denied: 0, error: 0 },
+              ]),
+            }),
+          };
+        }
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue([]),
+              }),
+            }),
           }),
-        }),
+        };
       });
 
       const summary = await service.getSummary("a1");

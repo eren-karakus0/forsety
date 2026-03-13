@@ -1,4 +1,4 @@
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, inArray } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
@@ -103,15 +103,21 @@ export class DatasetService {
     const allDatasets = await this.list();
     if (allDatasets.length === 0) return [];
 
-    const allLicenses = await this.db
+    // Only fetch licenses for listed datasets (scoped)
+    const datasetIds = allDatasets.map((d) => d.id);
+    const datasetLicenses = await this.db
       .select()
       .from(licenses)
-      .where(isNull(licenses.revokedAt))
+      .where(
+        and(
+          inArray(licenses.datasetId, datasetIds),
+          isNull(licenses.revokedAt)
+        )
+      )
       .orderBy(licenses.createdAt);
 
     const licenseMap = new Map<string, string>();
-    for (const lic of allLicenses) {
-      // Last license per dataset wins (latest)
+    for (const lic of datasetLicenses) {
       licenseMap.set(lic.datasetId, lic.spdxType);
     }
 
@@ -140,14 +146,21 @@ export class DatasetService {
     const ownerDatasets = await this.listByOwner(ownerAddress);
     if (ownerDatasets.length === 0) return [];
 
-    const allLicenses = await this.db
+    // Only fetch licenses for owner's datasets (not all licenses)
+    const datasetIds = ownerDatasets.map((d) => d.id);
+    const datasetLicenses = await this.db
       .select()
       .from(licenses)
-      .where(isNull(licenses.revokedAt))
+      .where(
+        and(
+          inArray(licenses.datasetId, datasetIds),
+          isNull(licenses.revokedAt)
+        )
+      )
       .orderBy(licenses.createdAt);
 
     const licenseMap = new Map<string, string>();
-    for (const lic of allLicenses) {
+    for (const lic of datasetLicenses) {
       licenseMap.set(lic.datasetId, lic.spdxType);
     }
 

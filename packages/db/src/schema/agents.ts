@@ -5,6 +5,7 @@ import {
   boolean,
   timestamp,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const agents = pgTable("agents", {
@@ -21,7 +22,9 @@ export const agents = pgTable("agents", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+}, (t) => [
+  index("idx_agents_owner_active").on(t.ownerAddress, t.isActive),
+]);
 
 export type Agent = typeof agents.$inferSelect;
 export type NewAgent = typeof agents.$inferInsert;

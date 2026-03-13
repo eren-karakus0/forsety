@@ -29,7 +29,10 @@ export const policies = pgTable(
       .notNull(),
     createdBy: text("created_by"),
   },
-  (t) => [unique("uq_policies_dataset_version").on(t.datasetId, t.version)]
+  (t) => [
+    unique("uq_policies_dataset_version").on(t.datasetId, t.version),
+    index("idx_policies_dataset_version").on(t.datasetId, t.version),
+  ]
 );
 
 export type Policy = typeof policies.$inferSelect;

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, jsonb, timestamp, index } from "drizzle-orm/pg-core";
 import { datasets } from "./datasets";
 
 export const licenses = pgTable("licenses", {
@@ -15,7 +15,9 @@ export const licenses = pgTable("licenses", {
     .defaultNow()
     .notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
-});
+}, (t) => [
+  index("idx_licenses_dataset_revoked").on(t.datasetId, t.revokedAt, t.createdAt),
+]);
 
 export type License = typeof licenses.$inferSelect;
 export type NewLicense = typeof licenses.$inferInsert;

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { datasets } from "./datasets";
 import { policies } from "./policies";
 
@@ -18,7 +18,10 @@ export const accessLogs = pgTable("access_logs", {
   timestamp: timestamp("timestamp", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+}, (t) => [
+  index("idx_access_logs_dataset_timestamp").on(t.datasetId, t.timestamp),
+  index("idx_access_logs_accessor_timestamp").on(t.accessorAddress, t.timestamp),
+]);
 
 export type AccessLog = typeof accessLogs.$inferSelect;
 export type NewAccessLog = typeof accessLogs.$inferInsert;

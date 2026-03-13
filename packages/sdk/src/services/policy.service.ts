@@ -1,4 +1,4 @@
-import { eq, max, desc, sql } from "drizzle-orm";
+import { eq, max, desc, sql, and } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { policies, datasets } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
@@ -113,16 +113,30 @@ export class PolicyService {
   }
 
   async getLatestPerDataset() {
-    const allPolicies = await this.db
+    // Subquery: max version per dataset
+    const maxVersions = this.db
+      .select({
+        datasetId: policies.datasetId,
+        maxVersion: max(policies.version).as("max_version"),
+      })
+      .from(policies)
+      .groupBy(policies.datasetId)
+      .as("mv");
+
+    const results = await this.db
       .select()
       .from(policies)
-      .orderBy(desc(policies.version));
+      .innerJoin(
+        maxVersions,
+        and(
+          eq(policies.datasetId, maxVersions.datasetId),
+          eq(policies.version, maxVersions.maxVersion)
+        )
+      );
 
     const map = new Map<string, typeof policies.$inferSelect>();
-    for (const p of allPolicies) {
-      if (!map.has(p.datasetId)) {
-        map.set(p.datasetId, p);
-      }
+    for (const r of results) {
+      map.set(r.policies.datasetId, r.policies);
     }
     return map;
   }

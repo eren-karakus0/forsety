@@ -1,4 +1,4 @@
-import { eq, and, desc, gte, lte, isNull, count } from "drizzle-orm";
+import { eq, and, desc, gte, lte, isNull, count, sql } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { agentAuditLogs, agents } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
@@ -293,28 +293,34 @@ export class AgentAuditService {
       conditions.push(gte(agentAuditLogs.timestamp, since));
     }
 
-    const logs = await this.db
-      .select()
+    // SQL aggregation — single query for counts
+    const [counts] = await this.db
+      .select({
+        total: count(),
+        success: count(sql`CASE WHEN ${agentAuditLogs.status} = 'success' THEN 1 END`),
+        denied: count(sql`CASE WHEN ${agentAuditLogs.status} = 'denied' THEN 1 END`),
+        error: count(sql`CASE WHEN ${agentAuditLogs.status} = 'error' THEN 1 END`),
+      })
+      .from(agentAuditLogs)
+      .where(and(...conditions));
+
+    // Recent 10 actions — separate query with limit
+    const recentActions = await this.db
+      .select({
+        action: agentAuditLogs.action,
+        status: agentAuditLogs.status,
+        timestamp: agentAuditLogs.timestamp,
+      })
       .from(agentAuditLogs)
       .where(and(...conditions))
-      .orderBy(desc(agentAuditLogs.timestamp));
-
-    const totalActions = logs.length;
-    const successCount = logs.filter((l) => l.status === "success").length;
-    const deniedCount = logs.filter((l) => l.status === "denied").length;
-    const errorCount = logs.filter((l) => l.status === "error").length;
-
-    const recentActions = logs.slice(0, 10).map((l) => ({
-      action: l.action,
-      status: l.status,
-      timestamp: l.timestamp,
-    }));
+      .orderBy(desc(agentAuditLogs.timestamp))
+      .limit(10);
 
     return {
-      totalActions,
-      successCount,
-      deniedCount,
-      errorCount,
+      totalActions: counts?.total ?? 0,
+      successCount: counts?.success ?? 0,
+      deniedCount: counts?.denied ?? 0,
+      errorCount: counts?.error ?? 0,
       recentActions,
     };
   }

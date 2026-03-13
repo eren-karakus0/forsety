@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, bigint, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, bigint, timestamp, index } from "drizzle-orm/pg-core";
 
 export const datasets = pgTable("datasets", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -13,7 +13,9 @@ export const datasets = pgTable("datasets", {
     .defaultNow()
     .notNull(),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
-});
+}, (t) => [
+  index("idx_datasets_owner_archived").on(t.ownerAddress, t.archivedAt, t.createdAt),
+]);
 
 export type Dataset = typeof datasets.$inferSelect;
 export type NewDataset = typeof datasets.$inferInsert;
