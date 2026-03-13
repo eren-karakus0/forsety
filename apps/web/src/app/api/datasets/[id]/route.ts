@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveAccessor, validateAuth, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
@@ -7,8 +7,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const isAuthed = await validateAuth(request);
-  if (!isAuthed) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
@@ -19,6 +19,13 @@ export async function GET(
       return NextResponse.json(
         { error: "Dataset not found" },
         { status: 404 }
+      );
+    }
+
+    if (result.dataset.ownerAddress !== auth.accessor) {
+      return NextResponse.json(
+        { error: "Forbidden: not dataset owner" },
+        { status: 403 }
       );
     }
 

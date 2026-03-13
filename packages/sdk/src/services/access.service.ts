@@ -160,6 +160,63 @@ export class AccessService {
     return result[0]?.count ?? 0;
   }
 
+  /** List access logs scoped to datasets owned by ownerAddress. */
+  async listByOwner(ownerAddress: string, filters?: AccessLogFilters) {
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+
+    const conditions = this.buildOwnerConditions(ownerAddress, filters);
+
+    return this.db
+      .select({
+        id: accessLogs.id,
+        datasetId: accessLogs.datasetId,
+        policyId: accessLogs.policyId,
+        accessorAddress: accessLogs.accessorAddress,
+        operationType: accessLogs.operationType,
+        blobHashAtRead: accessLogs.blobHashAtRead,
+        readProof: accessLogs.readProof,
+        policyVersion: accessLogs.policyVersion,
+        policyHash: accessLogs.policyHash,
+        licenseHash: accessLogs.licenseHash,
+        timestamp: accessLogs.timestamp,
+      })
+      .from(accessLogs)
+      .innerJoin(datasets, eq(accessLogs.datasetId, datasets.id))
+      .where(and(...conditions))
+      .orderBy(desc(accessLogs.timestamp))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /** Count access logs scoped to datasets owned by ownerAddress. */
+  async countByOwner(ownerAddress: string, filters?: AccessLogFilters) {
+    const conditions = this.buildOwnerConditions(ownerAddress, filters);
+
+    const result = await this.db
+      .select({ count: sqlCount() })
+      .from(accessLogs)
+      .innerJoin(datasets, eq(accessLogs.datasetId, datasets.id))
+      .where(and(...conditions));
+
+    return result[0]?.count ?? 0;
+  }
+
+  private buildOwnerConditions(ownerAddress: string, filters?: AccessLogFilters) {
+    const conditions = [eq(datasets.ownerAddress, ownerAddress)];
+    if (filters?.datasetId)
+      conditions.push(eq(accessLogs.datasetId, filters.datasetId));
+    if (filters?.accessorAddress)
+      conditions.push(eq(accessLogs.accessorAddress, filters.accessorAddress));
+    if (filters?.operationType)
+      conditions.push(eq(accessLogs.operationType, filters.operationType));
+    if (filters?.from)
+      conditions.push(gte(accessLogs.timestamp, filters.from));
+    if (filters?.to)
+      conditions.push(lte(accessLogs.timestamp, filters.to));
+    return conditions;
+  }
+
   private buildConditions(filters?: AccessLogFilters) {
     const conditions = [];
     if (filters?.datasetId)

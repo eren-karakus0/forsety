@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, validateApiKey, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const client = getForsetyClient();
-    const datasets = await client.datasets.list();
+    const datasets = await client.datasets.listByOwner(auth.accessor);
     return NextResponse.json({ datasets });
   } catch (error) {
     return apiError("Failed to fetch datasets", error);

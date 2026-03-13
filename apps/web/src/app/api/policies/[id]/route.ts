@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
@@ -7,7 +7,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
@@ -21,6 +22,15 @@ export async function GET(
       );
     }
 
+    // Verify caller owns the parent dataset
+    const dataset = await client.datasets.getById(policy.datasetId);
+    if (!dataset || dataset.ownerAddress !== auth.accessor) {
+      return NextResponse.json(
+        { error: "Forbidden: not dataset owner" },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(policy);
   } catch (error) {
     return apiError("Failed to fetch policy", error);
@@ -31,7 +41,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
@@ -44,6 +55,15 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Policy not found" },
         { status: 404 }
+      );
+    }
+
+    // Verify caller owns the parent dataset
+    const dataset = await client.datasets.getById(existing.datasetId);
+    if (!dataset || dataset.ownerAddress !== auth.accessor) {
+      return NextResponse.json(
+        { error: "Forbidden: not dataset owner" },
+        { status: 403 }
       );
     }
 

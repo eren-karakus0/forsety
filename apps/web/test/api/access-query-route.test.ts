@@ -2,25 +2,25 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
 // --- Mock dependencies ---
-const mockListAll = vi.fn();
-const mockCount = vi.fn();
+const mockListByOwner = vi.fn();
+const mockCountByOwner = vi.fn();
 
 vi.mock("@/lib/forsety", () => ({
   getForsetyClient: () => ({
     access: {
-      listAll: mockListAll,
-      count: mockCount,
+      listByOwner: mockListByOwner,
+      countByOwner: mockCountByOwner,
     },
   }),
 }));
 
-const mockValidateAuth = vi.fn();
+const mockResolveAccessor = vi.fn();
 
 vi.mock("@/lib/auth", async () => {
   const { NextResponse } = await import("next/server");
   return {
-    resolveAccessor: vi.fn(),
-    validateAuth: (...args: unknown[]) => mockValidateAuth(...args),
+    resolveAccessor: (...args: unknown[]) => mockResolveAccessor(...args),
+    validateAuth: vi.fn().mockResolvedValue(false),
     unauthorizedResponse: vi.fn().mockReturnValue(
       NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     ),
@@ -37,14 +37,16 @@ vi.mock("@sentry/nextjs", () => ({ captureException: vi.fn() }));
 
 import { GET } from "../../src/app/api/access/route";
 
+const OWNER = "0xowner";
+
 describe("GET /api/access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockValidateAuth.mockResolvedValue(true);
+    mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
   });
 
   it("should return 401 when not authed", async () => {
-    mockValidateAuth.mockResolvedValue(false);
+    mockResolveAccessor.mockResolvedValue(null);
     const req = new NextRequest("http://localhost/api/access");
     const res = await GET(req);
     expect(res.status).toBe(401);
@@ -52,8 +54,8 @@ describe("GET /api/access", () => {
 
   it("should return access logs with pagination", async () => {
     const logs = [{ id: "log-1", datasetId: "ds-1" }];
-    mockListAll.mockResolvedValue(logs);
-    mockCount.mockResolvedValue(1);
+    mockListByOwner.mockResolvedValue(logs);
+    mockCountByOwner.mockResolvedValue(1);
 
     const req = new NextRequest("http://localhost/api/access");
     const res = await GET(req);
@@ -64,15 +66,16 @@ describe("GET /api/access", () => {
   });
 
   it("should pass filters to service", async () => {
-    mockListAll.mockResolvedValue([]);
-    mockCount.mockResolvedValue(0);
+    mockListByOwner.mockResolvedValue([]);
+    mockCountByOwner.mockResolvedValue(0);
 
     const req = new NextRequest(
       "http://localhost/api/access?datasetId=550e8400-e29b-41d4-a716-446655440000&operationType=download&limit=10&offset=5"
     );
     const res = await GET(req);
     expect(res.status).toBe(200);
-    expect(mockListAll).toHaveBeenCalledWith(
+    expect(mockListByOwner).toHaveBeenCalledWith(
+      OWNER,
       expect.objectContaining({
         datasetId: "550e8400-e29b-41d4-a716-446655440000",
         operationType: "download",
@@ -109,15 +112,16 @@ describe("GET /api/access", () => {
   });
 
   it("should accept valid date range", async () => {
-    mockListAll.mockResolvedValue([]);
-    mockCount.mockResolvedValue(0);
+    mockListByOwner.mockResolvedValue([]);
+    mockCountByOwner.mockResolvedValue(0);
 
     const req = new NextRequest(
       "http://localhost/api/access?from=2025-01-01T00:00:00Z&to=2025-12-31T23:59:59Z"
     );
     const res = await GET(req);
     expect(res.status).toBe(200);
-    expect(mockListAll).toHaveBeenCalledWith(
+    expect(mockListByOwner).toHaveBeenCalledWith(
+      OWNER,
       expect.objectContaining({
         from: expect.any(Date),
         to: expect.any(Date),

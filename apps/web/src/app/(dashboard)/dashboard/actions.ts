@@ -3,8 +3,19 @@
 import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { cookies } from "next/headers";
+import { verifyJwt } from "@forsety/auth";
 import { getForsetyClient } from "@/lib/forsety";
+import { getEnv } from "@/lib/env";
 import { sanitizeAgent } from "@forsety/sdk";
+
+async function getWalletFromSession(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("forsety-auth")?.value;
+  if (!token) return null;
+  const payload = await verifyJwt(token, getEnv().JWT_SECRET);
+  return payload?.sub ?? null;
+}
 
 export interface UploadResult {
   success: boolean;
@@ -114,10 +125,13 @@ export async function generateEvidencePack(datasetId: string): Promise<EvidenceR
 
 export async function fetchDashboardStats() {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 };
+
     const client = getForsetyClient();
     const [datasets, agents] = await Promise.all([
-      client.datasets.listWithLicenses(),
-      client.agents.list(),
+      client.datasets.listWithLicensesByOwner(wallet),
+      client.agents.listByOwner(wallet),
     ]);
 
     const activeAgents = agents.filter((a) => a.isActive).length;
@@ -134,8 +148,11 @@ export async function fetchDashboardStats() {
 
 export async function fetchAgents() {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
+
     const client = getForsetyClient();
-    const agents = await client.agents.list();
+    const agents = await client.agents.listByOwner(wallet);
     return agents.map((a) => ({
       ...sanitizeAgent(a),
       createdAt: a.createdAt.toISOString(),
@@ -201,8 +218,11 @@ export async function fetchAllAuditLogs(
   }
 ) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
+
     const client = getForsetyClient();
-    const logs = await client.agentAudit.listAll({
+    const logs = await client.agentAudit.listByOwner(wallet, {
       ...filters,
       dateFrom: filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
       dateTo: filters?.dateTo ? new Date(filters.dateTo) : undefined,
@@ -239,8 +259,11 @@ export async function countAuditLogs(
 
 export async function fetchAllEvidencePacks(filters?: { limit?: number; offset?: number }) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
+
     const client = getForsetyClient();
-    const packs = await client.evidence.listAll(filters);
+    const packs = await client.evidence.listByOwner(wallet, filters);
     return packs.map((p) => ({
       ...p,
       generatedAt: p.generatedAt.toISOString(),
@@ -284,8 +307,11 @@ export async function fetchAccessLogs(datasetId: string) {
 
 export async function fetchAllPolicies() {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
+
     const client = getForsetyClient();
-    const pols = await client.policies.listAll();
+    const pols = await client.policies.listByOwner(wallet);
     return pols.map((p) => ({
       ...p,
       expiresAt: p.expiresAt?.toISOString() ?? null,
@@ -298,8 +324,11 @@ export async function fetchAllPolicies() {
 
 export async function fetchDatasetsList() {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
+
     const client = getForsetyClient();
-    const list = await client.datasets.list();
+    const list = await client.datasets.listByOwner(wallet);
     return list.map((d) => ({ id: d.id, name: d.name }));
   } catch {
     return [];
@@ -395,9 +424,14 @@ export async function updatePolicy(
 
 export async function fetchDatasetsWithStatus() {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
+
     const client = getForsetyClient();
-    // Use listAll to include archived datasets (UI filters them with toggle)
-    const allDatasets = await client.datasets.listAll();
+    // Use owner-scoped query; list includes non-archived, listAll for including archived
+    const allDatasets = (await client.datasets.listAll()).filter(
+      (d) => d.ownerAddress === wallet
+    );
     if (allDatasets.length === 0) return [];
 
     const allLicenses = await client.licenses.listAll({ includeRevoked: false, limit: 10000 });
@@ -442,8 +476,11 @@ export async function fetchDatasetsWithStatus() {
 
 export async function fetchViolationCount() {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return 0;
+
     const client = getForsetyClient();
-    return client.agentAudit.countFiltered({ status: "denied" });
+    return client.agentAudit.countByOwner(wallet, { status: "denied" });
   } catch {
     return 0;
   }

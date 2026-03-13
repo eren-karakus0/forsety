@@ -194,6 +194,32 @@ export class EvidenceService {
     return rows;
   }
 
+  /** List evidence packs scoped to datasets owned by ownerAddress. */
+  async listByOwner(
+    ownerAddress: string,
+    filters?: { limit?: number; offset?: number }
+  ) {
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+
+    return this.db
+      .select({
+        id: evidencePacks.id,
+        datasetId: evidencePacks.datasetId,
+        datasetName: datasets.name,
+        packHash: evidencePacks.packHash,
+        packJson: evidencePacks.packJson,
+        generatedAt: evidencePacks.generatedAt,
+        generatedBy: evidencePacks.generatedBy,
+      })
+      .from(evidencePacks)
+      .innerJoin(datasets, eq(evidencePacks.datasetId, datasets.id))
+      .where(eq(datasets.ownerAddress, ownerAddress))
+      .orderBy(desc(evidencePacks.generatedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
   async getByDatasetId(datasetId: string) {
     return this.db
       .select()

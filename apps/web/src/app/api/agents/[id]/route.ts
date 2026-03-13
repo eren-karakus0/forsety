@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { sanitizeAgent } from "@forsety/sdk";
 import { apiError } from "@/lib/api-error";
@@ -8,7 +8,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
@@ -17,6 +18,13 @@ export async function GET(
 
     if (!agent) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    }
+
+    if (agent.ownerAddress !== auth.accessor) {
+      return NextResponse.json(
+        { error: "Forbidden: not agent owner" },
+        { status: 403 }
+      );
     }
 
     const auditSummary = await client.agentAudit.getSummary(id);
@@ -31,7 +39,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
@@ -41,6 +50,13 @@ export async function PATCH(
     const existing = await client.agents.getById(id);
     if (!existing) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    }
+
+    if (existing.ownerAddress !== auth.accessor) {
+      return NextResponse.json(
+        { error: "Forbidden: not agent owner" },
+        { status: 403 }
+      );
     }
 
     if (body.isActive === false) {

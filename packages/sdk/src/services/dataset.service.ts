@@ -1,4 +1,4 @@
-import { eq, isNull } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
@@ -110,6 +110,42 @@ export class DatasetService {
     }
 
     return allDatasets.map((d) => ({
+      ...d,
+      licenseSpdx: licenseMap.get(d.id) ?? null,
+    }));
+  }
+
+  /** List active (non-archived) datasets owned by a specific address. */
+  async listByOwner(ownerAddress: string) {
+    return this.db
+      .select()
+      .from(datasets)
+      .where(
+        and(
+          eq(datasets.ownerAddress, ownerAddress),
+          isNull(datasets.archivedAt)
+        )
+      )
+      .orderBy(datasets.createdAt);
+  }
+
+  /** List datasets with licenses, scoped to a specific owner. */
+  async listWithLicensesByOwner(ownerAddress: string) {
+    const ownerDatasets = await this.listByOwner(ownerAddress);
+    if (ownerDatasets.length === 0) return [];
+
+    const allLicenses = await this.db
+      .select()
+      .from(licenses)
+      .where(isNull(licenses.revokedAt))
+      .orderBy(licenses.createdAt);
+
+    const licenseMap = new Map<string, string>();
+    for (const lic of allLicenses) {
+      licenseMap.set(lic.datasetId, lic.spdxType);
+    }
+
+    return ownerDatasets.map((d) => ({
       ...d,
       licenseSpdx: licenseMap.get(d.id) ?? null,
     }));

@@ -1,6 +1,6 @@
 import { eq, and, desc, gte, lte, isNull, count } from "drizzle-orm";
 import type { Database } from "@forsety/db";
-import { agentAuditLogs } from "@forsety/db";
+import { agentAuditLogs, agents } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
 
 export interface LogAuditInput {
@@ -155,6 +155,96 @@ export class AgentAuditService {
       .select({ total: count() })
       .from(agentAuditLogs)
       .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    return result?.total ?? 0;
+  }
+
+  /** List audit logs scoped to agents owned by ownerAddress. */
+  async listByOwner(
+    ownerAddress: string,
+    filters?: {
+      agentId?: string | null;
+      status?: string;
+      resourceType?: string;
+      resourceId?: string;
+      dateFrom?: Date;
+      dateTo?: Date;
+      limit?: number;
+      offset?: number;
+    }
+  ) {
+    const conditions = [eq(agents.ownerAddress, ownerAddress)];
+
+    if (filters?.agentId === null) {
+      conditions.push(isNull(agentAuditLogs.agentId));
+    } else if (filters?.agentId) {
+      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
+    }
+
+    if (filters?.status) {
+      conditions.push(eq(agentAuditLogs.status, filters.status));
+    }
+
+    if (filters?.resourceType) {
+      conditions.push(eq(agentAuditLogs.resourceType, filters.resourceType));
+    }
+
+    if (filters?.resourceId) {
+      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
+    }
+
+    const limit = filters?.limit ?? 100;
+    const offset = filters?.offset ?? 0;
+
+    return this.db
+      .select({
+        id: agentAuditLogs.id,
+        agentId: agentAuditLogs.agentId,
+        action: agentAuditLogs.action,
+        toolName: agentAuditLogs.toolName,
+        resourceType: agentAuditLogs.resourceType,
+        resourceId: agentAuditLogs.resourceId,
+        input: agentAuditLogs.input,
+        output: agentAuditLogs.output,
+        status: agentAuditLogs.status,
+        errorMessage: agentAuditLogs.errorMessage,
+        durationMs: agentAuditLogs.durationMs,
+        timestamp: agentAuditLogs.timestamp,
+      })
+      .from(agentAuditLogs)
+      .innerJoin(agents, eq(agentAuditLogs.agentId, agents.id))
+      .where(and(...conditions))
+      .orderBy(desc(agentAuditLogs.timestamp))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /** Count audit logs scoped to agents owned by ownerAddress. */
+  async countByOwner(
+    ownerAddress: string,
+    filters?: {
+      status?: string;
+    }
+  ): Promise<number> {
+    const conditions = [eq(agents.ownerAddress, ownerAddress)];
+
+    if (filters?.status) {
+      conditions.push(eq(agentAuditLogs.status, filters.status));
+    }
+
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(agentAuditLogs)
+      .innerJoin(agents, eq(agentAuditLogs.agentId, agents.id))
+      .where(and(...conditions));
 
     return result?.total ?? 0;
   }

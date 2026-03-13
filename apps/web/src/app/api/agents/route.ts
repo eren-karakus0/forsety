@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { sanitizeAgent } from "@forsety/sdk";
 import { apiError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const body = await request.json();
-    const { name, description, ownerAddress, permissions, allowedDatasets, metadata } = body;
+    const { name, description, permissions, allowedDatasets, metadata } = body;
 
-    if (!name || !ownerAddress) {
+    if (!name) {
       return NextResponse.json(
-        { error: "Missing required fields: name, ownerAddress" },
+        { error: "Missing required fields: name" },
         { status: 400 }
       );
     }
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     const result = await client.agents.register({
       name,
       description,
-      ownerAddress,
+      ownerAddress: auth.accessor,
       permissions,
       allowedDatasets,
       metadata,
@@ -42,11 +43,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const client = getForsetyClient();
-    const agents = await client.agents.list();
+    const agents = await client.agents.listByOwner(auth.accessor);
     return NextResponse.json({ agents: agents.map(sanitizeAgent) });
   } catch (error) {
     return apiError("Failed to list agents", error);
