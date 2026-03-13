@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
@@ -79,7 +79,17 @@ export class DatasetService {
     return result[0] ?? null;
   }
 
+  /** List active (non-archived) datasets. */
   async list() {
+    return this.db
+      .select()
+      .from(datasets)
+      .where(isNull(datasets.archivedAt))
+      .orderBy(datasets.createdAt);
+  }
+
+  /** List all datasets including archived (admin view). */
+  async listAll() {
     return this.db.select().from(datasets).orderBy(datasets.createdAt);
   }
 
@@ -90,6 +100,7 @@ export class DatasetService {
     const allLicenses = await this.db
       .select()
       .from(licenses)
+      .where(isNull(licenses.revokedAt))
       .orderBy(licenses.createdAt);
 
     const licenseMap = new Map<string, string>();
@@ -104,7 +115,35 @@ export class DatasetService {
     }));
   }
 
+  /** Soft-delete: set archivedAt timestamp. */
+  async archive(id: string) {
+    const [updated] = await this.db
+      .update(datasets)
+      .set({ archivedAt: new Date() })
+      .where(eq(datasets.id, id))
+      .returning();
+    return updated ?? null;
+  }
+
+  /** Restore an archived dataset. */
+  async restore(id: string) {
+    const [updated] = await this.db
+      .update(datasets)
+      .set({ archivedAt: null })
+      .where(eq(datasets.id, id))
+      .returning();
+    return updated ?? null;
+  }
+
+  /** Hard-delete: only allowed on archived datasets. */
   async delete(id: string) {
+    const dataset = await this.getById(id);
+    if (!dataset) return null;
+    if (!dataset.archivedAt) {
+      throw new ForsetyValidationError(
+        "Dataset must be archived before deletion. Use archive() first."
+      );
+    }
     const [deleted] = await this.db
       .delete(datasets)
       .where(eq(datasets.id, id))

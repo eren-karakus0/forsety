@@ -37,8 +37,10 @@ export type {
 
 export { DatasetService } from "./services/dataset.service.js";
 export { LicenseService } from "./services/license.service.js";
+export type { AttachLicenseInput, UpdateLicenseInput } from "./services/license.service.js";
 export { PolicyService } from "./services/policy.service.js";
 export { AccessService } from "./services/access.service.js";
+export type { AccessLogFilters } from "./services/access.service.js";
 export { EvidenceService } from "./services/evidence.service.js";
 export type { EvidencePackData } from "./services/evidence.service.js";
 

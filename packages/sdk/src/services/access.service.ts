@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte, desc, isNull, count as sqlCount } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { accessLogs, datasets, licenses } from "@forsety/db";
@@ -12,6 +12,16 @@ export interface LogAccessInput {
   operationType: string;
   blobHashAtRead?: string;
   readProof?: string;
+}
+
+export interface AccessLogFilters {
+  datasetId?: string;
+  accessorAddress?: string;
+  operationType?: string;
+  from?: Date;
+  to?: Date;
+  limit?: number;
+  offset?: number;
 }
 
 export class AccessService {
@@ -59,11 +69,12 @@ export class AccessService {
       shelbyBlobName = dataset?.shelbyBlobName ?? undefined;
     }
 
-    // Resolve license hash from DB
+    // Resolve license hash from DB — latest active (non-revoked) license
     const datasetLicenses = await this.db
       .select({ termsHash: licenses.termsHash })
       .from(licenses)
-      .where(eq(licenses.datasetId, input.datasetId))
+      .where(and(eq(licenses.datasetId, input.datasetId), isNull(licenses.revokedAt)))
+      .orderBy(desc(licenses.createdAt))
       .limit(1);
     const licenseHash = datasetLicenses[0]?.termsHash ?? undefined;
 
@@ -119,5 +130,48 @@ export class AccessService {
       .from(accessLogs)
       .where(eq(accessLogs.accessorAddress, accessorAddress))
       .orderBy(accessLogs.timestamp);
+  }
+
+  /** List access logs with filtering and pagination. */
+  async listAll(filters?: AccessLogFilters) {
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+
+    const conditions = this.buildConditions(filters);
+
+    return this.db
+      .select()
+      .from(accessLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(accessLogs.timestamp))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /** Count access logs matching filters (for pagination total). */
+  async count(filters?: AccessLogFilters) {
+    const conditions = this.buildConditions(filters);
+
+    const result = await this.db
+      .select({ count: sqlCount() })
+      .from(accessLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    return result[0]?.count ?? 0;
+  }
+
+  private buildConditions(filters?: AccessLogFilters) {
+    const conditions = [];
+    if (filters?.datasetId)
+      conditions.push(eq(accessLogs.datasetId, filters.datasetId));
+    if (filters?.accessorAddress)
+      conditions.push(eq(accessLogs.accessorAddress, filters.accessorAddress));
+    if (filters?.operationType)
+      conditions.push(eq(accessLogs.operationType, filters.operationType));
+    if (filters?.from)
+      conditions.push(gte(accessLogs.timestamp, filters.from));
+    if (filters?.to)
+      conditions.push(lte(accessLogs.timestamp, filters.to));
+    return conditions;
   }
 }

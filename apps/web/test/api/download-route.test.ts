@@ -7,21 +7,24 @@ const mockGetById = vi.fn();
 const mockCheckAccess = vi.fn();
 const mockLogAccess = vi.fn();
 const mockDownloadDataset = vi.fn();
+const mockAuthenticate = vi.fn();
 
 vi.mock("@/lib/forsety", () => ({
   getForsetyClient: () => ({
     datasets: { getById: mockGetById },
     policies: { checkAccess: mockCheckAccess },
     access: { logAccess: mockLogAccess },
+    agents: { authenticate: mockAuthenticate },
     getShelby: () => ({ downloadDataset: mockDownloadDataset }),
   }),
 }));
 
+const mockResolveAccessor = vi.fn();
+
 vi.mock("@/lib/auth", async () => {
   const { NextResponse } = await import("next/server");
   return {
-    validateJwtCookie: vi.fn().mockResolvedValue("0xuser-wallet"),
-    validateApiKey: vi.fn().mockReturnValue(false),
+    resolveAccessor: (...args: unknown[]) => mockResolveAccessor(...args),
     unauthorizedResponse: vi.fn().mockReturnValue(
       NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     ),
@@ -42,7 +45,6 @@ vi.mock("@sentry/nextjs", () => ({
 const { ForsetyAuthError } = await import("@forsety/sdk");
 
 import { GET, HEAD } from "../../src/app/api/datasets/[id]/download/route";
-import { validateJwtCookie, validateApiKey } from "@/lib/auth";
 
 function makeRequest(method: string = "GET") {
   return new NextRequest("http://localhost:3000/api/datasets/ds-1/download", { method });
@@ -64,14 +66,12 @@ const MOCK_DATASET = {
 describe("GET /api/datasets/[id]/download", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: JWT auth succeeds
-    vi.mocked(validateJwtCookie).mockResolvedValue("0xuser-wallet");
-    vi.mocked(validateApiKey).mockReturnValue(false);
+    // Default: JWT auth succeeds (trusted)
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xuser-wallet", trusted: true });
   });
 
   it("should return 401 when no auth is provided", async () => {
-    vi.mocked(validateJwtCookie).mockResolvedValue(null);
-    vi.mocked(validateApiKey).mockReturnValue(false);
+    mockResolveAccessor.mockResolvedValue(null);
 
     const res = await GET(makeRequest(), makeParams());
 
@@ -172,13 +172,48 @@ describe("GET /api/datasets/[id]/download", () => {
       operationType: "download",
     });
   });
+
+  it("should resolve accessor from agent API key (fsy_ prefix)", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xagent-owner", trusted: true });
+    mockGetById.mockResolvedValue(MOCK_DATASET);
+    mockCheckAccess.mockResolvedValue({ allowed: true, policy: { id: "p1" } });
+    mockDownloadDataset.mockImplementation((_blob: string, path: string) => {
+      const { writeFileSync } = require("node:fs");
+      writeFileSync(path, "agent-content");
+    });
+    mockLogAccess.mockResolvedValue({ id: "log-agent", operationType: "download" });
+
+    const res = await GET(makeRequest(), makeParams());
+
+    expect(res.status).toBe(200);
+    expect(mockLogAccess).toHaveBeenCalledWith(
+      expect.objectContaining({ accessorAddress: "0xagent-owner" })
+    );
+  });
+
+  it("should use untrusted accessor from global API key", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xparam-addr", trusted: false });
+    mockGetById.mockResolvedValue(MOCK_DATASET);
+    mockCheckAccess.mockResolvedValue({ allowed: true, policy: { id: "p1" } });
+    mockDownloadDataset.mockImplementation((_blob: string, path: string) => {
+      const { writeFileSync } = require("node:fs");
+      writeFileSync(path, "content");
+    });
+    mockLogAccess.mockResolvedValue({ id: "log-2", operationType: "download" });
+
+    const res = await GET(makeRequest(), makeParams());
+
+    expect(res.status).toBe(200);
+    expect(mockLogAccess).toHaveBeenCalledWith(
+      expect.objectContaining({ accessorAddress: "0xparam-addr" })
+    );
+  });
 });
 
 describe("HEAD /api/datasets/[id]/download", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(validateJwtCookie).mockResolvedValue("0xuser-wallet");
-    vi.mocked(validateApiKey).mockReturnValue(false);
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xuser-wallet", trusted: true });
   });
 
   it("should return 200 when auth + policy pass", async () => {

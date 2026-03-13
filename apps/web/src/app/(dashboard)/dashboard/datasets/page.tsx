@@ -43,7 +43,7 @@ import {
   Shield,
   Search,
   Download,
-  Trash2,
+  Archive,
   CheckSquare,
 } from "lucide-react";
 
@@ -55,6 +55,7 @@ interface DatasetRow {
   createdAt: string | null;
   blobHash: string | null;
   sizeBytes: number | null;
+  archivedAt: string | null;
 }
 
 function formatBytes(bytes: number): string {
@@ -73,9 +74,12 @@ export default function DatasetsPage() {
   const [licenseFilter, setLicenseFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Archive toggle
+  const [showArchived, setShowArchived] = useState(false);
+
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
 
   const loadData = () => {
@@ -101,12 +105,13 @@ export default function DatasetsPage() {
   // Filtered datasets
   const filtered = useMemo(() => {
     return datasets.filter((d) => {
+      if (!showArchived && d.archivedAt) return false;
       if (searchQuery && !d.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (licenseFilter !== "all" && d.license !== licenseFilter) return false;
       if (statusFilter !== "all" && d.status !== statusFilter) return false;
       return true;
     });
-  }, [datasets, searchQuery, licenseFilter, statusFilter]);
+  }, [datasets, searchQuery, licenseFilter, statusFilter, showArchived]);
 
   // Stats (over all datasets, not filtered)
   const totalSize = datasets.reduce((acc, d) => acc + (d.sizeBytes ?? 0), 0);
@@ -150,11 +155,11 @@ export default function DatasetsPage() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkArchive = async () => {
     setBulkLoading(true);
     await bulkDeleteDatasets(Array.from(selectedIds));
     setBulkLoading(false);
-    setDeleteConfirmOpen(false);
+    setArchiveConfirmOpen(false);
     loadData();
   };
 
@@ -297,6 +302,15 @@ export default function DatasetsPage() {
               <SelectItem value="no-policy">No Policy</SelectItem>
             </SelectContent>
           </Select>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-violet-500"
+            />
+            Show Archived
+          </label>
           <div className="ml-auto flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground">
             <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-gold-400 to-teal-400" />
             {filtered.length} of {datasets.length}
@@ -323,12 +337,12 @@ export default function DatasetsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setDeleteConfirmOpen(true)}
+              onClick={() => setArchiveConfirmOpen(true)}
               disabled={bulkLoading}
-              className="text-red-600 hover:border-red-500/30 hover:text-red-700 hover:bg-red-50"
+              className="text-amber-600 hover:border-amber-500/30 hover:text-amber-700 hover:bg-amber-50"
             >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-              Delete Selected
+              <Archive className="mr-1.5 h-3.5 w-3.5" />
+              Archive Selected
             </Button>
           </div>
         </div>
@@ -428,6 +442,11 @@ export default function DatasetsPage() {
                     <Link href={`/dashboard/${dataset.id}`}>
                       <span className="text-sm font-medium text-foreground transition-colors group-hover:text-gold-600">
                         {dataset.name}
+                        {dataset.archivedAt && (
+                          <Badge variant="outline" className="ml-2 border-amber-300 bg-amber-50 text-amber-700 text-[10px]">
+                            Archived
+                          </Badge>
+                        )}
                       </span>
                       {dataset.blobHash && (
                         <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
@@ -473,28 +492,28 @@ export default function DatasetsPage() {
         </Table>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      {/* Archive Confirmation Dialog */}
+      <Dialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-display">Confirm Delete</DialogTitle>
+            <DialogTitle className="font-display">Confirm Archive</DialogTitle>
           </DialogHeader>
-          <Alert variant="destructive" className="rounded-lg">
-            <AlertDescription>
-              Are you sure you want to delete {selectedIds.size} dataset{selectedIds.size !== 1 ? "s" : ""}?
-              This action cannot be undone.
+          <Alert className="rounded-lg border-amber-200 bg-amber-50">
+            <AlertDescription className="text-amber-800">
+              Are you sure you want to archive {selectedIds.size} dataset{selectedIds.size !== 1 ? "s" : ""}?
+              Archived datasets can be restored later.
             </AlertDescription>
           </Alert>
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => setArchiveConfirmOpen(false)}>
               Cancel
             </Button>
             <Button
-              variant="destructive"
-              onClick={handleBulkDelete}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+              onClick={handleBulkArchive}
               disabled={bulkLoading}
             >
-              {bulkLoading ? "Deleting..." : "Delete"}
+              {bulkLoading ? "Archiving..." : "Archive"}
             </Button>
           </div>
         </DialogContent>

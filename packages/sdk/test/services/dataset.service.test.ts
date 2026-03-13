@@ -77,11 +77,13 @@ describe("DatasetService", () => {
   });
 
   describe("list", () => {
-    it("should query all datasets", async () => {
+    it("should query active (non-archived) datasets", async () => {
       const mockDatasets = [{ id: "1", name: "A" }];
       mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
-          orderBy: vi.fn().mockResolvedValue(mockDatasets),
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockResolvedValue(mockDatasets),
+          }),
         }),
       });
 

@@ -396,12 +396,19 @@ export async function updatePolicy(
 export async function fetchDatasetsWithStatus() {
   try {
     const client = getForsetyClient();
-    const [datasetsWithLicenses, latestPolicies] = await Promise.all([
-      client.datasets.listWithLicenses(),
-      client.policies.getLatestPerDataset(),
-    ]);
+    // Use listAll to include archived datasets (UI filters them with toggle)
+    const allDatasets = await client.datasets.listAll();
+    if (allDatasets.length === 0) return [];
 
-    return datasetsWithLicenses.map((d) => {
+    const allLicenses = await client.licenses.listAll({ includeRevoked: false, limit: 10000 });
+    const licenseMap = new Map<string, string>();
+    for (const lic of allLicenses) {
+      licenseMap.set(lic.datasetId, lic.spdxType);
+    }
+
+    const latestPolicies = await client.policies.getLatestPerDataset();
+
+    return allDatasets.map((d) => {
       const policy = latestPolicies.get(d.id);
       let status: "active" | "warning" | "expired" | "no-policy" = "no-policy";
       if (policy) {
@@ -418,11 +425,12 @@ export async function fetchDatasetsWithStatus() {
       return {
         id: d.id,
         name: d.name,
-        license: d.licenseSpdx ?? "-",
+        license: licenseMap.get(d.id) ?? "-",
         status,
         createdAt: d.createdAt ? new Date(d.createdAt).toISOString() : null,
         blobHash: d.blobHash,
         sizeBytes: d.sizeBytes,
+        archivedAt: d.archivedAt ? new Date(d.archivedAt).toISOString() : null,
       };
     });
   } catch {
@@ -448,14 +456,14 @@ export async function bulkDeleteDatasets(ids: string[]) {
     const client = getForsetyClient();
     const results = [];
     for (const id of ids) {
-      const deleted = await client.datasets.delete(id);
-      results.push({ id, deleted: !!deleted });
+      const archived = await client.datasets.archive(id);
+      results.push({ id, archived: !!archived });
     }
     return { success: true, results };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Bulk delete failed",
+      error: error instanceof Error ? error.message : "Bulk archive failed",
     };
   }
 }
