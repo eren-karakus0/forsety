@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
+import type { VectorSearchService } from "./vector-search.service.js";
 import { ForsetyValidationError } from "../errors.js";
 
 export interface UploadDatasetInput {
@@ -20,7 +21,8 @@ export interface UploadDatasetInput {
 export class DatasetService {
   constructor(
     private db: Database,
-    private shelby: ShelbyWrapper
+    private shelby: ShelbyWrapper,
+    private vectorSearch?: VectorSearchService
   ) {}
 
   async upload(input: UploadDatasetInput) {
@@ -65,6 +67,9 @@ export class DatasetService {
         termsHash,
       })
       .returning();
+
+    // Fire-and-forget: auto-embed for vector search
+    this.vectorSearch?.embedDataset(dataset!.id).catch(() => {});
 
     return { dataset: dataset!, license: license! };
   }

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { agentMemories } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
+import type { VectorSearchService } from "./vector-search.service.js";
 import { ForsetyValidationError } from "../errors.js";
 
 export interface StoreMemoryInput {
@@ -32,7 +33,8 @@ function computeContentHash(content: Record<string, unknown>): string {
 export class RecallVaultService {
   constructor(
     private db: Database,
-    private shelby?: ShelbyWrapper
+    private shelby?: ShelbyWrapper,
+    private vectorSearch?: VectorSearchService
   ) {}
 
   async store(input: StoreMemoryInput) {
@@ -79,6 +81,9 @@ export class RecallVaultService {
         },
       })
       .returning();
+
+    // Fire-and-forget: auto-embed for vector search
+    this.vectorSearch?.embedMemory(memory!.id).catch(() => {});
 
     return memory!;
   }
