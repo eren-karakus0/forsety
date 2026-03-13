@@ -34,9 +34,14 @@ function setupSelectChain(results: any[]) {
   mockSelect.mockImplementation(() => ({
     from: vi.fn().mockImplementation(() => {
       const idx = callCount++;
+      const data = results[idx] ?? [];
       return {
         where: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue(results[idx] ?? []),
+          // Support both .where().limit() (dataset) and .where().orderBy().limit() (license)
+          limit: vi.fn().mockResolvedValue(data),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue(data),
+          }),
         }),
       };
     }),
