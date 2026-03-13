@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
-import { validateApiKey, validateJwtCookie, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 import { ForsetyAuthError } from "@forsety/sdk";
@@ -24,24 +24,9 @@ async function preflight(
   request: NextRequest,
   id: string
 ): Promise<PreflightResult | NextResponse> {
-  // Auth: dual mode (JWT cookie or API key)
-  let accessorAddress: string | null = null;
-
-  const wallet = await validateJwtCookie(request);
-  if (wallet) {
-    accessorAddress = wallet;
-  } else if (validateApiKey(request)) {
-    const url = new URL(request.url);
-    accessorAddress = url.searchParams.get("accessor");
-    if (!accessorAddress) {
-      return NextResponse.json(
-        { error: "Accessor address required" },
-        { status: 400 }
-      );
-    }
-  } else {
-    return unauthorizedResponse();
-  }
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
+  const accessorAddress = auth.accessor;
 
   const client = getForsetyClient();
 
