@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Button } from "@forsety/ui";
 import { ArrowRight, Loader2 } from "lucide-react";
@@ -29,15 +28,19 @@ export function LaunchAppButton({
   className,
   onClick,
 }: LaunchAppButtonProps) {
-  const router = useRouter();
   const { status } = useSession();
   const [activated, setActivated] = useState(false);
+
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN;
+  const dashboardUrl = appDomain
+    ? `https://${appDomain}/dashboard`
+    : "/dashboard";
 
   const handleClick = () => {
     onClick?.();
     // Fast-path: existing JWT session → skip wallet loading entirely
     if (status === "authenticated") {
-      router.push("/dashboard");
+      window.location.href = dashboardUrl;
       return;
     }
     // No session → activate wallet flow

@@ -69,7 +69,9 @@ export class DatasetService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.vectorSearch?.embedDataset(dataset!.id).catch(() => {});
+    this.vectorSearch?.embedDataset(dataset!.id).catch((err) => {
+      console.error(`[forsety] auto-embed dataset ${dataset!.id} failed:`, err);
+    });
 
     return { dataset: dataset!, license: license! };
   }

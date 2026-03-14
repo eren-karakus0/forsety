@@ -1,4 +1,4 @@
-import { eq, and, ilike, sql, desc } from "drizzle-orm";
+import { eq, and, ilike, sql, desc, isNotNull, lte } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { agentMemories } from "@forsety/db";
@@ -83,7 +83,9 @@ export class RecallVaultService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.vectorSearch?.embedMemory(memory!.id).catch(() => {});
+    this.vectorSearch?.embedMemory(memory!.id).catch((err) => {
+      console.error(`[forsety] auto-embed memory ${memory!.id} failed:`, err);
+    });
 
     return memory!;
   }
@@ -247,5 +249,19 @@ export class RecallVaultService {
       .returning();
 
     return { shelbyBlobId: updated!.shelbyBlobId! };
+  }
+
+  /** Remove all memories with expired TTL. Returns count of deleted records. */
+  async cleanupExpired(): Promise<number> {
+    const result = await this.db
+      .delete(agentMemories)
+      .where(
+        and(
+          isNotNull(agentMemories.expiresAt),
+          lte(agentMemories.expiresAt, new Date())
+        )
+      )
+      .returning({ id: agentMemories.id });
+    return result.length;
   }
 }

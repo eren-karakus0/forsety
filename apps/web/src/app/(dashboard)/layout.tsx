@@ -94,13 +94,13 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
       {/* Bottom section */}
       <div className="mt-auto border-t border-border/40 px-4 py-4">
         <NetworkSelector />
-        <Link
-          href="/"
+        <a
+          href={process.env.NEXT_PUBLIC_LANDING_DOMAIN ? `https://${process.env.NEXT_PUBLIC_LANDING_DOMAIN}` : "/"}
           className="mt-3 flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-3 w-3" />
           Back to Home
-        </Link>
+        </a>
       </div>
     </div>
   );

@@ -35,7 +35,10 @@ export async function POST(
       ttlHours,
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://forsety.vercel.app";
+    const landingDomain = process.env.NEXT_PUBLIC_LANDING_DOMAIN;
+    const baseUrl = landingDomain
+      ? `https://${landingDomain}`
+      : process.env.NEXT_PUBLIC_APP_URL || "https://forsety.xyz";
 
     return NextResponse.json(
       {

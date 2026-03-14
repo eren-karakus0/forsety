@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useForsetyAuth } from "@/lib/auth-client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -22,11 +21,15 @@ export function WalletAuthButton({
   className,
   autoOpen = false,
 }: WalletAuthButtonProps) {
-  const router = useRouter();
   const { connected } = useWallet();
   const { isAuthenticated, isLoading, error, signIn } = useForsetyAuth();
   const { refresh } = useSession();
   const pendingAuth = useRef(false);
+
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN;
+  const dashboardUrl = appDomain
+    ? `https://${appDomain}/dashboard`
+    : "/dashboard";
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const autoOpened = useRef(false);
   const [dismissedError, setDismissedError] = useState(false);
@@ -65,13 +68,13 @@ export function WalletAuthButton({
   useEffect(() => {
     if (isAuthenticated) {
       refresh();
-      router.push("/dashboard");
+      window.location.href = dashboardUrl;
     }
-  }, [isAuthenticated, router, refresh]);
+  }, [isAuthenticated, dashboardUrl, refresh]);
 
   const handleClick = () => {
     if (isAuthenticated) {
-      router.push("/dashboard");
+      window.location.href = dashboardUrl;
       return;
     }
     if (!connected) {
