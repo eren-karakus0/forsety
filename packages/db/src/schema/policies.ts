@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   unique,
+  index,
 } from "drizzle-orm/pg-core";
 import { datasets } from "./datasets";
 
