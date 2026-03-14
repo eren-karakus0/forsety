@@ -180,9 +180,11 @@ export async function fetchAgents() {
 
 export async function fetchAgentDetail(id: string) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return null;
     const client = getForsetyClient();
     const agent = await client.agents.getById(id);
-    if (!agent) return null;
+    if (!agent || agent.ownerAddress !== wallet) return null;
 
     const auditSummary = await client.agentAudit.getSummary(id);
 
@@ -210,7 +212,11 @@ export async function fetchAgentAuditLogs(
   filters?: { action?: string; status?: string; limit?: number }
 ) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
     const client = getForsetyClient();
+    const agent = await client.agents.getById(agentId);
+    if (!agent || agent.ownerAddress !== wallet) return [];
     const logs = await client.agentAudit.getByAgent(agentId, filters);
     return logs.map((l) => ({
       ...l,
@@ -294,6 +300,7 @@ export async function fetchEvidencePackById(id: string) {
     const wallet = await getWalletFromSession();
     if (!wallet) return null;
 
+
     const client = getForsetyClient();
     const pack = await client.evidence.getById(id);
     if (!pack) return null;
@@ -318,6 +325,7 @@ export async function fetchAccessLogs(datasetId: string) {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return [];
+<<<<<<< HEAD
 
     const client = getForsetyClient();
     const dataset = await client.datasets.getById(datasetId);
@@ -419,7 +427,11 @@ export async function createShareLink(input: {
 
 export async function fetchPolicies(datasetId: string) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return [];
     const client = getForsetyClient();
+    const dataset = await client.datasets.getWithLicense(datasetId);
+    if (!dataset || dataset.dataset.ownerAddress !== wallet) return [];
     return client.policies.getByDatasetId(datasetId);
   } catch {
     return [];

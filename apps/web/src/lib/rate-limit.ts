@@ -77,6 +77,7 @@ export function checkRateLimit(
 export function getRateLimitTier(pathname: string, method: string): keyof typeof RATE_LIMIT_TIERS {
   if (pathname.startsWith("/api/auth/")) return "auth";
   if (pathname.startsWith("/api/verify/")) return "public";
+  if (pathname.startsWith("/api/stats")) return "public";
   if (method === "GET" || method === "HEAD") return "read";
   return "write";
 }

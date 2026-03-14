@@ -15,6 +15,9 @@ import {
   Separator,
 } from "@forsety/ui";
 import { ChevronRight, Users } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { ConnectWalletCTA } from "../../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface AgentData {
   agent: {
@@ -58,6 +61,7 @@ const statusVariant: Record<string, "default" | "destructive" | "secondary"> = {
 };
 
 export default function AgentDetailPage() {
+  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<AgentData | null>(null);
@@ -65,6 +69,10 @@ export default function AgentDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     Promise.all([
       fetchAgentDetail(id),
       fetchAgentAuditLogs(id, { limit: 20 }),
@@ -74,7 +82,7 @@ export default function AgentDetailPage() {
         setAuditLogs(logs);
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   if (loading) {
     return (
@@ -88,6 +96,20 @@ export default function AgentDetailPage() {
           <Skeleton className="h-48 rounded-xl" />
         </div>
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <ConnectWalletCTA
+          title="Connect to view agent details"
+          description="Connect your wallet to access agent information, permissions, and audit history"
+          icon={Users}
+          variant="full-page"
+        />
+        <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
+      </>
     );
   }
 

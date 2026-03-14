@@ -33,6 +33,10 @@ import {
   ChevronRight,
   FileSpreadsheet,
 } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { GuestStatCard } from "../../components/guest-stat-card";
+import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface AuditLog {
   id: string;
@@ -85,6 +89,7 @@ export default function AuditPage() {
 }
 
 function AuditPageContent() {
+  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
   const searchParams = useSearchParams();
   const filterAgentId = searchParams.get("agentId");
 
@@ -227,7 +232,7 @@ function AuditPageContent() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={handleExportCsv}
+            onClick={() => { if (!guard()) return; handleExportCsv(); }}
             disabled={logs.length === 0}
             className="hover:border-gold-500/30 hover:text-gold-600"
           >
@@ -236,7 +241,7 @@ function AuditPageContent() {
           </Button>
           <Button
             variant="outline"
-            onClick={handleExportJson}
+            onClick={() => { if (!guard()) return; handleExportJson(); }}
             disabled={logs.length === 0}
             className="hover:border-gold-500/30 hover:text-gold-600"
           >
@@ -246,8 +251,27 @@ function AuditPageContent() {
         </div>
       </div>
 
+      {/* Guest Stats */}
+      {!isAuthenticated && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <GuestStatCard label="Success" icon={CheckCircle2} cardClass="stat-card-teal" iconColor="text-emerald-500" />
+          <GuestStatCard label="Denied" icon={ShieldAlert} cardClass="stat-card-gold" iconColor="text-red-500" />
+          <GuestStatCard label="Errors" icon={AlertCircle} cardClass="stat-card-violet" iconColor="text-orange-500" />
+          <GuestStatCard label="Avg Duration" icon={ClipboardList} cardClass="stat-card-navy" iconColor="text-navy-500" />
+        </div>
+      )}
+
+      {/* Guest CTA */}
+      {!isAuthenticated && (
+        <ConnectWalletCTA
+          title="Connect to view audit trail"
+          description="Connect your wallet to see the complete audit log of agent activities"
+          icon={ClipboardList}
+        />
+      )}
+
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      {isAuthenticated && <div className="flex flex-wrap items-center gap-3">
         <Select value={selectedAgent} onValueChange={setSelectedAgent}>
           <SelectTrigger className="w-[180px] rounded-lg">
             <SelectValue placeholder="All Agents" />
@@ -308,8 +332,9 @@ function AuditPageContent() {
           <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-gold-400 to-teal-400" />
           {totalCount} total
         </div>
-      </div>
+      </div>}
 
+      {isAuthenticated && <>
       {/* Status Breakdown */}
       {!loading && logs.length > 0 && (() => {
         const successCount = logs.filter((l) => l.status === "success").length;
@@ -516,6 +541,9 @@ function AuditPageContent() {
           </Button>
         </div>
       )}
+      </>}
+
+      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

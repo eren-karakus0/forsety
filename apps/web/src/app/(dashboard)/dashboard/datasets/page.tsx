@@ -46,6 +46,10 @@ import {
   Archive,
   CheckSquare,
 } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { GuestStatCard } from "../../components/guest-stat-card";
+import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface DatasetRow {
   id: string;
@@ -65,6 +69,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function DatasetsPage() {
+  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
   const [datasets, setDatasets] = useState<DatasetRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -94,7 +99,13 @@ export default function DatasetsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    loadData();
+  }, [isAuthenticated]);
 
   // Unique licenses for filter dropdown
   const uniqueLicenses = useMemo(
@@ -198,16 +209,36 @@ export default function DatasetsPage() {
             </div>
           </div>
         </div>
-        <Button asChild className="bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500">
-          <Link href="/dashboard/upload">
-            <Plus className="mr-2 h-4 w-4" />
-            Upload Dataset
-          </Link>
+        <Button
+          onClick={() => { if (!guard()) return; }}
+          asChild={isAuthenticated}
+          className="bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500"
+        >
+          {isAuthenticated ? (
+            <Link href="/dashboard/upload">
+              <Plus className="mr-2 h-4 w-4" />
+              Upload Dataset
+            </Link>
+          ) : (
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Upload Dataset
+            </>
+          )}
         </Button>
       </div>
 
+      {/* Guest Stats */}
+      {!isAuthenticated && (
+        <div className="grid grid-cols-3 gap-4">
+          <GuestStatCard label="Total Datasets" icon={FileText} cardClass="stat-card-gold" iconColor="text-gold-500" />
+          <GuestStatCard label="Total Size" icon={HardDrive} cardClass="stat-card-teal" iconColor="text-teal-500" />
+          <GuestStatCard label="Top License" icon={Shield} cardClass="stat-card-violet" iconColor="text-violet-500" />
+        </div>
+      )}
+
       {/* Storage Summary */}
-      {!error && datasets.length > 0 && (
+      {isAuthenticated && !error && datasets.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           <Card className="stat-card-gold rounded-xl">
             <CardContent className="flex items-center gap-3 p-4">
@@ -348,8 +379,17 @@ export default function DatasetsPage() {
         </div>
       )}
 
+      {/* Guest CTA */}
+      {!isAuthenticated && (
+        <ConnectWalletCTA
+          title="Connect to view datasets"
+          description="Connect your wallet to browse and manage your licensed datasets"
+          icon={Database}
+        />
+      )}
+
       {/* Table */}
-      <Card className="overflow-hidden rounded-xl">
+      {isAuthenticated && <Card className="overflow-hidden rounded-xl">
         <Table>
           <TableHeader>
             <TableRow className="table-header-row border-border/40 hover:bg-transparent">
@@ -490,7 +530,7 @@ export default function DatasetsPage() {
             )}
           </TableBody>
         </Table>
-      </Card>
+      </Card>}
 
       {/* Archive Confirmation Dialog */}
       <Dialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
@@ -518,6 +558,8 @@ export default function DatasetsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

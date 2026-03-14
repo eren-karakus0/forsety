@@ -25,6 +25,10 @@ import {
   SelectValue,
 } from "@forsety/ui";
 import { Shield, Plus, Clock, ShieldAlert, Pencil, ShieldX } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { GuestStatCard } from "../../components/guest-stat-card";
+import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface PolicyRow {
   id: string;
@@ -61,6 +65,7 @@ const statusConfig = {
 };
 
 export default function PoliciesPage() {
+  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
   const router = useRouter();
   const [policies, setPolicies] = useState<PolicyRow[]>([]);
   const [datasets, setDatasets] = useState<DatasetOption[]>([]);
@@ -81,7 +86,13 @@ export default function PoliciesPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    loadData();
+  }, [isAuthenticated]);
 
   const filtered = datasetFilter === "all"
     ? policies
@@ -125,7 +136,7 @@ export default function PoliciesPage() {
           </div>
         </div>
         <Button
-          onClick={() => setCreateOpen(true)}
+          onClick={() => { if (!guard()) return; setCreateOpen(true); }}
           className="bg-gradient-to-r from-violet-500 to-violet-600 text-white border-0 hover:from-violet-400 hover:to-violet-500"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -133,8 +144,18 @@ export default function PoliciesPage() {
         </Button>
       </div>
 
+      {/* Guest Stats */}
+      {!isAuthenticated && (
+        <div className="grid grid-cols-4 gap-4">
+          <GuestStatCard label="Total Policies" icon={Shield} cardClass="stat-card-violet" iconColor="text-violet-500" />
+          <GuestStatCard label="Expiring Soon" icon={Clock} cardClass="stat-card-gold" iconColor="text-orange-500" />
+          <GuestStatCard label="Expired" icon={ShieldAlert} cardClass="stat-card-navy" iconColor="text-red-500" />
+          <GuestStatCard label="Violations" icon={ShieldX} cardClass="stat-card-navy" iconColor="text-red-500" />
+        </div>
+      )}
+
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      {isAuthenticated && <div className="grid grid-cols-4 gap-4">
         <Card className="stat-card-violet rounded-xl">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
@@ -190,9 +211,19 @@ export default function PoliciesPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div>}
+
+      {/* Guest CTA */}
+      {!isAuthenticated && (
+        <ConnectWalletCTA
+          title="Connect to view policies"
+          description="Connect your wallet to manage access control policies for your datasets"
+          icon={Shield}
+        />
+      )}
 
       {/* Dataset Filter */}
+      {isAuthenticated && <>
       <div className="flex items-center gap-3">
         <Select value={datasetFilter} onValueChange={setDatasetFilter}>
           <SelectTrigger className="w-[220px] rounded-lg">
@@ -312,6 +343,9 @@ export default function PoliciesPage() {
           onUpdated={loadData}
         />
       )}
+      </>}
+
+      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

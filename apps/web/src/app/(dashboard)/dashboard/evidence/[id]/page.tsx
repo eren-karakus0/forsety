@@ -41,6 +41,9 @@ import {
   FileText,
 } from "lucide-react";
 import { generateEvidencePackPdf } from "@/lib/pdf-export";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { ConnectWalletCTA } from "../../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface EvidencePackDetail {
   id: string;
@@ -94,6 +97,7 @@ type PackData = {
 };
 
 export default function EvidenceDetailPage() {
+  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<EvidencePackDetail | null>(null);
@@ -108,10 +112,14 @@ export default function EvidenceDetailPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     fetchEvidencePackById(id)
       .then((d) => setData(d as EvidencePackDetail | null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const handleVerify = async () => {
     if (!data) return;
@@ -162,6 +170,20 @@ export default function EvidenceDetailPage() {
           <Skeleton className="h-48 rounded-xl" />
         </div>
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <ConnectWalletCTA
+          title="Connect to view evidence pack"
+          description="Connect your wallet to access cryptographic evidence details and verification"
+          icon={Layers}
+          variant="full-page"
+        />
+        <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
+      </>
     );
   }
 
@@ -447,6 +469,7 @@ export default function EvidenceDetailPage() {
               <Button
                 variant="outline"
                 onClick={downloadPdf}
+                data-umami-event="download-evidence"
                 className="w-full hover:border-violet-500/30 hover:text-violet-600"
               >
                 <FileText className="mr-2 h-4 w-4" />
@@ -455,6 +478,7 @@ export default function EvidenceDetailPage() {
               <Button
                 variant="outline"
                 onClick={() => { setShareOpen(true); setShareUrl(null); setCopied(false); }}
+                data-umami-event="share-evidence"
                 className="w-full hover:border-teal-500/30 hover:text-teal-600"
               >
                 <Share2 className="mr-2 h-4 w-4" />
