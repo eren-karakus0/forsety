@@ -231,13 +231,35 @@ export class AgentAuditService {
   async countByOwner(
     ownerAddress: string,
     filters?: {
+      agentId?: string | null;
       status?: string;
+      resourceId?: string;
+      dateFrom?: Date;
+      dateTo?: Date;
     }
   ): Promise<number> {
     const conditions = [eq(agents.ownerAddress, ownerAddress)];
 
+    if (filters?.agentId === null) {
+      conditions.push(isNull(agentAuditLogs.agentId));
+    } else if (filters?.agentId) {
+      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
+    }
+
     if (filters?.status) {
       conditions.push(eq(agentAuditLogs.status, filters.status));
+    }
+
+    if (filters?.resourceId) {
+      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
     }
 
     const [result] = await this.db

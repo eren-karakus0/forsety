@@ -24,15 +24,13 @@ export interface UploadResult {
 }
 
 export async function uploadDataset(formData: FormData): Promise<UploadResult> {
+  const wallet = await getWalletFromSession();
+  if (!wallet) return { success: false, error: "Not authenticated" };
+
   const file = formData.get("file") as File | null;
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const license = formData.get("license") as string;
-
-  const ownerAddress = await getWalletFromSession();
-  if (!ownerAddress) {
-    return { success: false, error: "Not authenticated" };
-  }
 
   if (!name || !license) {
     return { success: false, error: "Missing required fields" };
@@ -60,10 +58,10 @@ export async function uploadDataset(formData: FormData): Promise<UploadResult> {
       filePath: tempPath,
       name,
       description: description || undefined,
-      ownerAddress,
+      ownerAddress: wallet,
       license: {
         spdxType: license,
-        grantorAddress: ownerAddress,
+        grantorAddress: wallet,
       },
     });
 
@@ -273,6 +271,9 @@ export async function countAuditLogs(
     const client = getForsetyClient();
     return client.agentAudit.countByOwner(wallet, {
       status: filters?.status,
+      agentId: filters?.agentId,
+      dateFrom: filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
+      dateTo: filters?.dateTo ? new Date(filters.dateTo) : undefined,
     });
   } catch {
     return 0;
@@ -407,7 +408,19 @@ export async function createShareLink(input: {
   ttlHours: number;
 }) {
   try {
+    const wallet = await getWalletFromSession();
+    if (!wallet) return { success: false, error: "Not authenticated" };
+
     const client = getForsetyClient();
+
+    // Verify evidence pack ownership via dataset
+    const pack = await client.evidence.getById(input.evidencePackId);
+    if (!pack) return { success: false, error: "Evidence pack not found" };
+    const dataset = await client.datasets.getWithLicense(pack.datasetId);
+    if (!dataset || dataset.dataset.ownerAddress !== wallet) {
+      return { success: false, error: "Access denied" };
+    }
+
     const link = await client.share.createShareLink(input);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://forsety.vercel.app";
     return {
@@ -484,13 +497,10 @@ export async function fetchDatasetsWithStatus() {
     if (!wallet) return [];
 
     const client = getForsetyClient();
-    // Use owner-scoped query; list includes non-archived, listAll for including archived
-    const allDatasets = (await client.datasets.listAll()).filter(
-      (d) => d.ownerAddress === wallet
-    );
+    const allDatasets = await client.datasets.listByOwner(wallet, { includeArchived: true });
     if (allDatasets.length === 0) return [];
 
-    const allLicenses = await client.licenses.listAll({ includeRevoked: false, limit: 10000 });
+    const allLicenses = await client.licenses.listByOwner(wallet, { includeRevoked: false });
     const licenseMap = new Map<string, string>();
     for (const lic of allLicenses) {
       licenseMap.set(lic.datasetId, lic.spdxType);
@@ -615,7 +625,7 @@ export async function bulkExportDatasets(ids: string[]) {
       if (!dataset || dataset.ownerAddress !== wallet) continue;
 
       const result = await client.datasets.getWithLicense(id);
-      if (result) {
+      if (result && result.dataset.ownerAddress === wallet) {
         data.push({
           dataset: {
             ...result.dataset,

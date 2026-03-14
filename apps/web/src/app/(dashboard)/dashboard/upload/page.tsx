@@ -33,7 +33,6 @@ export default function UploadPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [license, setLicense] = useState("");
-  const [ownerAddress, setOwnerAddress] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -56,7 +55,6 @@ export default function UploadPage() {
       formData.set("name", name);
       formData.set("description", description);
       formData.set("license", license);
-      formData.set("ownerAddress", ownerAddress);
       if (file) formData.set("file", file);
 
       const result = await uploadDataset(formData);
@@ -74,7 +72,7 @@ export default function UploadPage() {
     }
   };
 
-  const isValid = name && license && ownerAddress && file;
+  const isValid = name && license && file;
 
   return (
     <div className="animate-fade-in">
@@ -217,19 +215,6 @@ export default function UploadPage() {
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Owner Address */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Owner Address
-            </Label>
-            <Input
-              value={ownerAddress}
-              onChange={(e) => setOwnerAddress(e.target.value)}
-              placeholder="0x..."
-              className="rounded-lg font-mono"
-            />
           </div>
 
           {/* Error */}

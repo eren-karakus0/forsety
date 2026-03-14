@@ -127,17 +127,19 @@ export class DatasetService {
     }));
   }
 
-  /** List active (non-archived) datasets owned by a specific address. */
-  async listByOwner(ownerAddress: string) {
+  /** List datasets owned by a specific address. Non-archived by default. */
+  async listByOwner(
+    ownerAddress: string,
+    options?: { includeArchived?: boolean }
+  ) {
+    const conditions = [eq(datasets.ownerAddress, ownerAddress)];
+    if (!options?.includeArchived) {
+      conditions.push(isNull(datasets.archivedAt));
+    }
     return this.db
       .select()
       .from(datasets)
-      .where(
-        and(
-          eq(datasets.ownerAddress, ownerAddress),
-          isNull(datasets.archivedAt)
-        )
-      )
+      .where(and(...conditions))
       .orderBy(datasets.createdAt);
   }
 
