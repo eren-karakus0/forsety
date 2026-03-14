@@ -135,12 +135,14 @@ export default function OverviewPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    let cancelled = false;
     setLoading(true);
     Promise.all([
       fetchDashboardStats(),
       fetchAllAuditLogs({ limit: 5 }),
     ])
       .then(([stats, logs]) => {
+        if (cancelled) return;
         setData({
           totalDatasets: stats.totalDatasets,
           registeredAgents: stats.registeredAgents,
@@ -150,6 +152,7 @@ export default function OverviewPage() {
         });
       })
       .catch(() => {
+        if (cancelled) return;
         setData({
           totalDatasets: 0,
           registeredAgents: 0,
@@ -158,7 +161,10 @@ export default function OverviewPage() {
           error: true,
         });
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [isAuthenticated, connected]);
 
   const healthItems = [

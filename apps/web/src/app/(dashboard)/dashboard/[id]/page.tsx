@@ -109,18 +109,25 @@ export default function DatasetDetailPage() {
       setLoading(false);
       return;
     }
+    let cancelled = false;
     Promise.all([
       fetchDatasetDetail(id),
       fetchAccessLogs(id),
       fetchPolicies(id),
     ])
       .then(([d, logs, pols]) => {
+        if (cancelled) return;
         setData(d);
         setAccessLogs(logs);
         setPolicies(pols);
       })
-      .catch(() => setError("Failed to load dataset"))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) setError("Failed to load dataset");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [id, isAuthenticated]);
 
   const handleDownloadDataset = async () => {

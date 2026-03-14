@@ -104,7 +104,22 @@ export default function DatasetsPage() {
       setLoading(false);
       return;
     }
-    loadData();
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    fetchDatasetsWithStatus()
+      .then((rows) => {
+        if (cancelled) return;
+        setDatasets(rows as DatasetRow[]);
+        setSelectedIds(new Set());
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [isAuthenticated]);
 
   // Unique licenses for filter dropdown
@@ -209,23 +224,22 @@ export default function DatasetsPage() {
             </div>
           </div>
         </div>
-        <Button
-          onClick={() => { if (!guard()) return; }}
-          asChild={isAuthenticated}
-          className="bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500"
-        >
-          {isAuthenticated ? (
+        {isAuthenticated ? (
+          <Button asChild className="bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500">
             <Link href="/dashboard/upload">
               <Plus className="mr-2 h-4 w-4" />
               Upload Dataset
             </Link>
-          ) : (
-            <>
-              <Plus className="mr-2 h-4 w-4" />
-              Upload Dataset
-            </>
-          )}
-        </Button>
+          </Button>
+        ) : (
+          <Button
+            onClick={() => guard()}
+            className="bg-gradient-to-r from-gold-500 to-gold-600 text-white border-0 hover:from-gold-400 hover:to-gold-500"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Upload Dataset
+          </Button>
+        )}
       </div>
 
       {/* Guest Stats */}
