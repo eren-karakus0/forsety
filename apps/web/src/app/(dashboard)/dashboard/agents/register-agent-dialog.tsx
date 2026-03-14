@@ -183,7 +183,7 @@ export function RegisterAgentDialog() {
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading || !name.trim()}>
+              <Button type="submit" disabled={loading || !name.trim()} data-umami-event="register-agent">
                 {loading ? "Registering..." : "Register"}
               </Button>
             </DialogFooter>

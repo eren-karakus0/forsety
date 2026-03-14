@@ -142,6 +142,8 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                   key={wallet.name}
                   onClick={() => handleConnect(wallet.name)}
                   disabled={connecting !== null}
+                  data-umami-event="connect-wallet"
+                  data-umami-event-wallet={wallet.name}
                   className="flex items-center gap-3 rounded-lg border border-navy-200 px-4 py-3 text-left transition-colors hover:border-gold-400 hover:bg-navy-50 disabled:opacity-50"
                 >
                   {wallet.icon ? (
