@@ -70,15 +70,21 @@ describe("PolicyService", () => {
   });
 
   describe("checkAccess", () => {
-    it("should deny when no policies exist", async () => {
+    // getLatest() uses: select().from().where().orderBy().limit(1)
+    function mockGetLatest(result: unknown[]) {
       mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([]),
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue(result),
+            }),
           }),
         }),
       });
+    }
 
+    it("should deny when no policies exist", async () => {
+      mockGetLatest([]);
       const result = await service.checkAccess("uuid-1", "0xabc");
       expect(result.allowed).toBe(false);
       expect(result.policy).toBeNull();
@@ -92,15 +98,7 @@ describe("PolicyService", () => {
         maxReads: null,
         readsConsumed: 0,
       };
-
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([policy]),
-          }),
-        }),
-      });
-
+      mockGetLatest([policy]);
       const result = await service.checkAccess("uuid-1", "0xabc");
       expect(result.allowed).toBe(true);
     });
@@ -113,15 +111,7 @@ describe("PolicyService", () => {
         maxReads: null,
         readsConsumed: 0,
       };
-
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([policy]),
-          }),
-        }),
-      });
-
+      mockGetLatest([policy]);
       const result = await service.checkAccess("uuid-1", "0xanyone");
       expect(result.allowed).toBe(true);
     });
@@ -134,15 +124,7 @@ describe("PolicyService", () => {
         maxReads: null,
         readsConsumed: 0,
       };
-
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([policy]),
-          }),
-        }),
-      });
-
+      mockGetLatest([policy]);
       const result = await service.checkAccess("uuid-1", "0xother");
       expect(result.allowed).toBe(false);
     });
@@ -155,15 +137,7 @@ describe("PolicyService", () => {
         maxReads: null,
         readsConsumed: 0,
       };
-
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([policy]),
-          }),
-        }),
-      });
-
+      mockGetLatest([policy]);
       const result = await service.checkAccess("uuid-1", "0xabc");
       expect(result.allowed).toBe(false);
     });
@@ -176,15 +150,7 @@ describe("PolicyService", () => {
         maxReads: 10,
         readsConsumed: 10,
       };
-
-      mockSelect.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([policy]),
-          }),
-        }),
-      });
-
+      mockGetLatest([policy]);
       const result = await service.checkAccess("uuid-1", "0xabc");
       expect(result.allowed).toBe(false);
     });

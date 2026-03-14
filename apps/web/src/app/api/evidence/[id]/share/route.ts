@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
@@ -7,7 +7,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateApiKey(request)) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth) return unauthorizedResponse();
 
   try {
     const { id } = await params;
@@ -29,6 +30,17 @@ export async function POST(
     }
 
     const client = getForsetyClient();
+
+    // Verify ownership: evidence → dataset → owner
+    const pack = await client.evidence.getById(id);
+    if (!pack) {
+      return NextResponse.json({ error: "Evidence pack not found" }, { status: 404 });
+    }
+    const dataset = await client.datasets.getById(pack.datasetId);
+    if (!dataset || dataset.ownerAddress !== auth.accessor) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const link = await client.share.createShareLink({
       evidencePackId: id,
       mode,

@@ -11,8 +11,10 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const agentId = url.searchParams.get("agentId") ?? undefined;
     const status = url.searchParams.get("status") ?? undefined;
-    const limit = parseInt(url.searchParams.get("limit") ?? "100", 10);
-    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+    const rawLimit = parseInt(url.searchParams.get("limit") ?? "100", 10);
+    const limit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 100, 1), 500);
+    const rawOffset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+    const offset = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0, 0);
 
     const client = getForsetyClient();
     const logs = await client.agentAudit.listByOwner(auth.accessor, {

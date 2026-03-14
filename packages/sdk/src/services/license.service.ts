@@ -1,8 +1,8 @@
 import { eq, and, isNull, desc } from "drizzle-orm";
-import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { licenses, datasets } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
+import { canonicalHash } from "../crypto/canonical-hash.js";
 
 export interface AttachLicenseInput {
   datasetId: string;
@@ -83,14 +83,11 @@ export class LicenseService {
     // Always recalculate termsHash from canonical payload when any field changes
     const finalSpdxType = input.spdxType ?? existing.spdxType;
     const finalTerms = input.terms !== undefined ? input.terms : existing.terms;
-    const termsPayload = JSON.stringify({
+    updates.termsHash = canonicalHash({
       spdxType: finalSpdxType,
       grantorAddress: existing.grantorAddress,
       terms: finalTerms,
     });
-    updates.termsHash = createHash("sha256")
-      .update(termsPayload)
-      .digest("hex");
 
     const [updated] = await this.db
       .update(licenses)

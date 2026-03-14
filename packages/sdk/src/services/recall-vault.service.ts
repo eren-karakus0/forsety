@@ -5,6 +5,7 @@ import { agentMemories } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
 import type { VectorSearchService } from "./vector-search.service.js";
 import { ForsetyValidationError } from "../errors.js";
+import { canonicalHash } from "../crypto/canonical-hash.js";
 
 export interface StoreMemoryInput {
   agentId: string;
@@ -25,9 +26,7 @@ export interface SearchMemoryQuery {
 }
 
 function computeContentHash(content: Record<string, unknown>): string {
-  return createHash("sha256")
-    .update(JSON.stringify(content))
-    .digest("hex");
+  return canonicalHash(content);
 }
 
 export class RecallVaultService {

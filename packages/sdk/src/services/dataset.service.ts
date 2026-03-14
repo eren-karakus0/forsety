@@ -1,10 +1,10 @@
 import { eq, and, isNull } from "drizzle-orm";
-import { createHash } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
 import type { VectorSearchService } from "./vector-search.service.js";
 import { ForsetyValidationError } from "../errors.js";
+import { canonicalHash } from "../crypto/canonical-hash.js";
 
 export interface UploadDatasetInput {
   filePath: string;
@@ -50,12 +50,11 @@ export class DatasetService {
       })
       .returning();
 
-    const termsPayload = JSON.stringify({
+    const termsHash = canonicalHash({
       spdxType: input.license.spdxType,
       grantorAddress: input.license.grantorAddress,
       terms: input.license.terms ?? {},
     });
-    const termsHash = createHash("sha256").update(termsPayload).digest("hex");
 
     const [license] = await this.db
       .insert(licenses)

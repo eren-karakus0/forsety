@@ -73,6 +73,8 @@ export type { CreateShareLinkInput } from "./services/share.service.js";
 export { encrypt, decrypt, isEncryptedPayload } from "./crypto/aes.js";
 export type { EncryptedPayload } from "./crypto/aes.js";
 
+export { canonicalHash } from "./crypto/canonical-hash.js";
+
 export {
   deriveKey,
   deriveKeyFromHex,
