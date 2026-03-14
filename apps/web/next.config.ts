@@ -3,11 +3,11 @@ import type { NextConfig } from "next";
 
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://cloud.umami.is",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  "connect-src 'self' https://api.shelbynet.shelby.xyz https://*.aptoslabs.com https://fullnode.shelbynet.shelby.xyz https://fullnode.mainnet.aptoslabs.com https://fullnode.testnet.aptoslabs.com https://api.mainnet.aptoslabs.com https://api.testnet.aptoslabs.com https://*.sentry.io",
+  "connect-src 'self' https://api.shelbynet.shelby.xyz https://*.aptoslabs.com https://fullnode.shelbynet.shelby.xyz https://fullnode.mainnet.aptoslabs.com https://fullnode.testnet.aptoslabs.com https://api.mainnet.aptoslabs.com https://api.testnet.aptoslabs.com https://*.sentry.io https://cloud.umami.is",
   "frame-src 'self' https://*.petra.app https://*.pontem.network https://accounts.google.com https://appleid.apple.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
