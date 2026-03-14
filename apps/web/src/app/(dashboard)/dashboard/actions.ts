@@ -325,7 +325,6 @@ export async function fetchAccessLogs(datasetId: string) {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return [];
-<<<<<<< HEAD
 
     const client = getForsetyClient();
     const dataset = await client.datasets.getById(datasetId);
