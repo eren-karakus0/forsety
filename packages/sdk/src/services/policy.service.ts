@@ -1,4 +1,4 @@
-import { eq, max, desc, sql, and } from "drizzle-orm";
+import { eq, max, desc, sql } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { policies, datasets } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
