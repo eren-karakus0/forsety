@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core";
 import { agents } from "./agents";
 
@@ -24,7 +25,9 @@ export const agentAuditLogs = pgTable("agent_audit_logs", {
   timestamp: timestamp("timestamp", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+}, (t) => [
+  index("idx_agent_audit_logs_agent_timestamp").on(t.agentId, t.timestamp),
+]);
 
 export type AgentAuditLog = typeof agentAuditLogs.$inferSelect;
 export type NewAgentAuditLog = typeof agentAuditLogs.$inferInsert;
