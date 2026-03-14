@@ -122,12 +122,14 @@ export async function POST(request: NextRequest) {
       address: result.address,
     });
 
+    const isProduction = process.env.NODE_ENV === "production";
     response.cookies.set("forsety-auth", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: isProduction,
+      sameSite: isProduction ? "lax" : "strict",
       maxAge: 3600,
       path: "/",
+      ...(isProduction && { domain: ".forsety.xyz" }),
     });
 
     return response;
