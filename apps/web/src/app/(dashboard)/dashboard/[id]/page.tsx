@@ -21,6 +21,9 @@ import {
 } from "@forsety/ui";
 import { Download, Layers, Check, ChevronRight, Eye, Loader2, Database } from "lucide-react";
 import { computeDatasetStatus, statusConfig } from "../datasets/dataset-status";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface DatasetDetail {
   dataset: {
@@ -88,6 +91,7 @@ function MetadataRow({ label, value, mono }: { label: string; value: string | nu
 }
 
 export default function DatasetDetailPage() {
+  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<DatasetDetail | null>(null);
@@ -101,19 +105,30 @@ export default function DatasetDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
     Promise.all([
       fetchDatasetDetail(id),
       fetchAccessLogs(id),
       fetchPolicies(id),
     ])
       .then(([d, logs, pols]) => {
+        if (cancelled) return;
         setData(d);
         setAccessLogs(logs);
         setPolicies(pols);
       })
-      .catch(() => setError("Failed to load dataset"))
-      .finally(() => setLoading(false));
-  }, [id]);
+      .catch(() => {
+        if (!cancelled) setError("Failed to load dataset");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [id, isAuthenticated]);
 
   const handleDownloadDataset = async () => {
     setDownloading(true);
@@ -193,6 +208,20 @@ export default function DatasetDetailPage() {
           <Skeleton className="h-48 rounded-xl" />
         </div>
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <ConnectWalletCTA
+          title="Connect to view dataset details"
+          description="Connect your wallet to access dataset information, evidence packs, and access logs"
+          icon={Database}
+          variant="full-page"
+        />
+        <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
+      </>
     );
   }
 

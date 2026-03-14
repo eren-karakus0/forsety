@@ -15,6 +15,9 @@ import {
   AlertDescription,
 } from "@forsety/ui";
 import { Upload, Check, Loader2, ArrowRight, FileUp } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 const LICENSE_OPTIONS = [
   { value: "CC-BY-4.0", label: "CC BY 4.0", desc: "Attribution" },
@@ -25,6 +28,7 @@ const LICENSE_OPTIONS = [
 ];
 
 export default function UploadPage() {
+  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -91,7 +95,16 @@ export default function UploadPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {!isAuthenticated ? (
+          <>
+            <ConnectWalletCTA
+              title="Connect your wallet to upload datasets"
+              description="You need to connect your wallet before uploading datasets to Shelby Protocol"
+              icon={Upload}
+            />
+            <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
+          </>
+        ) : <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Zone */}
           <Card
             className={`cursor-pointer rounded-xl border-2 border-dashed transition-all duration-300 ${
@@ -234,6 +247,7 @@ export default function UploadPage() {
             <Button
               type="submit"
               disabled={!isValid || submitting}
+              data-umami-event="upload-dataset"
               className="bg-gradient-to-r from-gold-500 to-teal-500 text-white border-0 hover:from-gold-400 hover:to-teal-400"
             >
               {submitting ? (
@@ -249,7 +263,7 @@ export default function UploadPage() {
               )}
             </Button>
           </div>
-        </form>
+        </form>}
       </div>
     </div>
   );

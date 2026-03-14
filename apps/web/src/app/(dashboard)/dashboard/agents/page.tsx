@@ -18,6 +18,10 @@ import {
 } from "@forsety/ui";
 import { Users, ArrowRight, Activity, UserX } from "lucide-react";
 import { RegisterAgentDialog } from "./register-agent-dialog";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { GuestStatCard } from "../../components/guest-stat-card";
+import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface AgentRow {
   id: string;
@@ -30,14 +34,19 @@ interface AgentRow {
 }
 
 export default function AgentsPage() {
+  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     fetchAgents()
       .then((a) => setAgents(a as AgentRow[]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -88,11 +97,40 @@ export default function AgentsPage() {
               </p>
             </div>
           </div>
-          <RegisterAgentDialog />
+          {isAuthenticated ? (
+            <RegisterAgentDialog />
+          ) : (
+            <Button
+              onClick={() => guard()}
+              className="bg-gradient-to-r from-teal-500 to-teal-600 text-white border-0 hover:from-teal-400 hover:to-teal-500"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Register Agent
+            </Button>
+          )}
         </div>
       </div>
 
+      {/* Guest Stats */}
+      {!isAuthenticated && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <GuestStatCard label="Total Agents" icon={Users} cardClass="stat-card-teal" iconColor="text-teal-500" />
+          <GuestStatCard label="Active" icon={Activity} cardClass="stat-card-gold" iconColor="text-gold-500" />
+          <GuestStatCard label="Inactive" icon={UserX} cardClass="stat-card-violet" iconColor="text-violet-500" />
+        </div>
+      )}
+
+      {/* Guest CTA */}
+      {!isAuthenticated && (
+        <ConnectWalletCTA
+          title="Connect to view agents"
+          description="Connect your wallet to see registered AI agents and their access patterns"
+          icon={Users}
+        />
+      )}
+
       {/* Stats + Distribution */}
+      {isAuthenticated && (<>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="stat-card-teal rounded-xl transition-all duration-300 hover:shadow-md">
           <CardContent className="pt-5">
@@ -282,6 +320,9 @@ export default function AgentsPage() {
           </TableBody>
         </Table>
       </Card>
+      </>)}
+
+      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

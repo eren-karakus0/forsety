@@ -88,21 +88,20 @@ export async function middleware(request: NextRequest) {
       return handleRateLimit(request, pathname);
     }
 
-    // Dashboard — JWT auth check
+    // Dashboard — allow guest access, validate existing tokens
     if (pathname.startsWith("/dashboard")) {
       const token = request.cookies.get("forsety-auth")?.value;
-      if (!token) {
-        return NextResponse.redirect(new URL(`https://${LANDING_DOMAIN}`));
+      if (token) {
+        try {
+          await jwtVerify(token, getJwtSecret());
+        } catch {
+          // Invalid token — clear it, continue as guest
+          const response = NextResponse.next();
+          response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", domain: `.${LANDING_DOMAIN}` });
+          return response;
+        }
       }
-
-      try {
-        await jwtVerify(token, getJwtSecret());
-        return NextResponse.next();
-      } catch {
-        const response = NextResponse.redirect(new URL(`https://${LANDING_DOMAIN}`));
-        response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", domain: `.${LANDING_DOMAIN}` });
-        return response;
-      }
+      return NextResponse.next();
     }
 
     return NextResponse.next();
@@ -115,25 +114,20 @@ export async function middleware(request: NextRequest) {
     return handleRateLimit(request, pathname);
   }
 
-  // Dashboard auth protection (development bypass)
+  // Dashboard — allow guest access, validate existing tokens
   if (pathname.startsWith("/dashboard")) {
-    if (process.env.NODE_ENV === "development") {
-      return NextResponse.next();
-    }
-
     const token = request.cookies.get("forsety-auth")?.value;
-    if (!token) {
-      return NextResponse.redirect(new URL("/", request.url));
+    if (token) {
+      try {
+        await jwtVerify(token, getJwtSecret());
+      } catch {
+        // Invalid token — clear it, continue as guest
+        const response = NextResponse.next();
+        response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
+        return response;
+      }
     }
-
-    try {
-      await jwtVerify(token, getJwtSecret());
-      return NextResponse.next();
-    } catch {
-      const response = NextResponse.redirect(new URL("/", request.url));
-      response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
-      return response;
-    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();

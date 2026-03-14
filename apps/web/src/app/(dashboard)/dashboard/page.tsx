@@ -1,11 +1,16 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getForsetyClient } from "@/lib/forsety";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { fetchDashboardStats, fetchAllAuditLogs } from "./actions";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   Badge,
+  Skeleton,
 } from "@forsety/ui";
 import {
   Database,
@@ -26,8 +31,9 @@ import {
   StaggerItemWrapper,
   CounterWrapper,
 } from "./overview-animations";
-
-export const dynamic = "force-dynamic";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { GuestStatCard } from "../components/guest-stat-card";
+import { WalletSelector } from "@/components/wallet-selector";
 
 interface RecentLog {
   id: string;
@@ -42,46 +48,8 @@ interface OverviewData {
   totalDatasets: number;
   registeredAgents: number;
   activeAgents: number;
-  auditEvents: number;
   recentLogs: RecentLog[];
   error: boolean;
-}
-
-async function getOverviewData(): Promise<OverviewData> {
-  try {
-    const client = getForsetyClient();
-    const [datasets, agents, auditCount, recentLogs] = await Promise.all([
-      client.datasets.list(),
-      client.agents.list(),
-      client.agentAudit.countAll(),
-      client.agentAudit.listAll({ limit: 5 }),
-    ]);
-
-    return {
-      totalDatasets: datasets.length,
-      registeredAgents: agents.length,
-      activeAgents: agents.filter((a) => a.isActive).length,
-      auditEvents: auditCount,
-      recentLogs: recentLogs.map((l) => ({
-        id: l.id,
-        agentId: l.agentId,
-        action: l.action,
-        toolName: l.toolName,
-        status: l.status,
-        timestamp: l.timestamp.toISOString(),
-      })),
-      error: false,
-    };
-  } catch {
-    return {
-      totalDatasets: 0,
-      registeredAgents: 0,
-      activeAgents: 0,
-      auditEvents: 0,
-      recentLogs: [],
-      error: true,
-    };
-  }
 }
 
 const statusColor: Record<string, string> = {
@@ -101,107 +69,108 @@ function formatRelativeTime(iso: string): string {
   return `${days}d ago`;
 }
 
-export default async function OverviewPage() {
-  const data = await getOverviewData();
+const quickActions = [
+  {
+    href: "/dashboard/datasets",
+    icon: Database,
+    title: "Datasets",
+    description: "Browse and manage your licensed datasets",
+    iconColor: "text-gold-500",
+    iconBg: "bg-gold-50",
+  },
+  {
+    href: "/dashboard/evidence",
+    icon: Layers,
+    title: "Evidence",
+    description: "View cryptographic evidence packs",
+    iconColor: "text-gold-600",
+    iconBg: "bg-gold-50",
+  },
+  {
+    href: "/dashboard/policies",
+    icon: Shield,
+    title: "Policies",
+    description: "Manage access control policies",
+    iconColor: "text-violet-500",
+    iconBg: "bg-violet-50",
+  },
+  {
+    href: "/dashboard/agents",
+    icon: Users,
+    title: "Agents",
+    description: "View registered AI agents and their status",
+    iconColor: "text-teal-500",
+    iconBg: "bg-teal-50",
+  },
+  {
+    href: "/dashboard/audit",
+    icon: ClipboardList,
+    title: "Audit Trail",
+    description: "Review the global activity trail",
+    iconColor: "text-violet-600",
+    iconBg: "bg-violet-50",
+  },
+  {
+    href: "/dashboard/upload",
+    icon: Upload,
+    title: "Upload",
+    description: "Add a new dataset with license",
+    iconColor: "text-navy-600",
+    iconBg: "bg-navy-50",
+  },
+];
 
-  const stats = [
-    {
-      label: "Total Datasets",
-      value: data.totalDatasets.toString(),
-      icon: Database,
-      cardClass: "stat-card-gold",
-      iconColor: "text-gold-500",
-    },
-    {
-      label: "Registered Agents",
-      value: data.registeredAgents.toString(),
-      icon: Users,
-      cardClass: "stat-card-teal",
-      iconColor: "text-teal-500",
-    },
-    {
-      label: "Active Agents",
-      value: data.activeAgents.toString(),
-      icon: Activity,
-      cardClass: "stat-card-violet",
-      iconColor: "text-violet-500",
-    },
-    {
-      label: "Audit Events",
-      value: data.auditEvents.toString(),
-      icon: ClipboardList,
-      cardClass: "stat-card-navy",
-      iconColor: "text-navy-500",
-    },
-  ];
+const guestStats = [
+  { label: "Total Datasets", icon: Database, cardClass: "stat-card-gold", iconColor: "text-gold-500" },
+  { label: "Registered Agents", icon: Users, cardClass: "stat-card-teal", iconColor: "text-teal-500" },
+  { label: "Active Agents", icon: Activity, cardClass: "stat-card-violet", iconColor: "text-violet-500" },
+  { label: "Audit Events", icon: ClipboardList, cardClass: "stat-card-navy", iconColor: "text-navy-500" },
+];
 
-  const quickActions = [
-    {
-      href: "/dashboard/datasets",
-      icon: Database,
-      title: "Datasets",
-      description: "Browse and manage your licensed datasets",
-      iconColor: "text-gold-500",
-      iconBg: "bg-gold-50",
-    },
-    {
-      href: "/dashboard/evidence",
-      icon: Layers,
-      title: "Evidence",
-      description: "View cryptographic evidence packs",
-      iconColor: "text-gold-600",
-      iconBg: "bg-gold-50",
-    },
-    {
-      href: "/dashboard/policies",
-      icon: Shield,
-      title: "Policies",
-      description: "Manage access control policies",
-      iconColor: "text-violet-500",
-      iconBg: "bg-violet-50",
-    },
-    {
-      href: "/dashboard/agents",
-      icon: Users,
-      title: "Agents",
-      description: "View registered AI agents and their status",
-      iconColor: "text-teal-500",
-      iconBg: "bg-teal-50",
-    },
-    {
-      href: "/dashboard/audit",
-      icon: ClipboardList,
-      title: "Audit Trail",
-      description: "Review the global activity trail",
-      iconColor: "text-violet-600",
-      iconBg: "bg-violet-50",
-    },
-    {
-      href: "/dashboard/upload",
-      icon: Upload,
-      title: "Upload",
-      description: "Add a new dataset with license",
-      iconColor: "text-navy-600",
-      iconBg: "bg-navy-50",
-    },
-  ];
+export default function OverviewPage() {
+  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { connected } = useWallet();
+  const [data, setData] = useState<OverviewData | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([
+      fetchDashboardStats(),
+      fetchAllAuditLogs({ limit: 5 }),
+    ])
+      .then(([stats, logs]) => {
+        if (cancelled) return;
+        setData({
+          totalDatasets: stats.totalDatasets,
+          registeredAgents: stats.registeredAgents,
+          activeAgents: stats.activeAgents,
+          recentLogs: logs as RecentLog[],
+          error: false,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setData({
+          totalDatasets: 0,
+          registeredAgents: 0,
+          activeAgents: 0,
+          recentLogs: [],
+          error: true,
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [isAuthenticated, connected]);
 
   const healthItems = [
-    {
-      label: "Shelby Protocol",
-      status: !data.error,
-      icon: Wifi,
-    },
-    {
-      label: "Evidence Engine",
-      status: !data.error,
-      icon: Shield,
-    },
-    {
-      label: "Audit System",
-      status: !data.error,
-      icon: CheckCircle2,
-    },
+    { label: "Shelby Protocol", status: !data?.error, icon: Wifi },
+    { label: "Evidence Engine", status: !data?.error, icon: Shield },
+    { label: "Audit System", status: !data?.error, icon: CheckCircle2 },
   ];
 
   return (
@@ -209,7 +178,6 @@ export default async function OverviewPage() {
       {/* Welcome Banner */}
       <FadeInWrapper delay={0}>
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 px-6 py-8 sm:px-8">
-          {/* Decorative SVG */}
           <svg
             className="pointer-events-none absolute -right-8 -top-8 h-[280px] w-[280px] text-white/[0.03]"
             viewBox="0 0 400 800"
@@ -221,8 +189,6 @@ export default async function OverviewPage() {
             <line x1="200" y1="400" x2="60" y2="600" stroke="currentColor" strokeWidth="1" />
             <line x1="200" y1="400" x2="340" y2="600" stroke="currentColor" strokeWidth="1" />
           </svg>
-
-          {/* Gradient orbs */}
           <div className="pointer-events-none absolute -left-20 top-0 h-40 w-40 rounded-full bg-gold-500/10 blur-[80px]" />
           <div className="pointer-events-none absolute -bottom-10 right-20 h-32 w-32 rounded-full bg-teal-500/10 blur-[60px]" />
 
@@ -243,33 +209,34 @@ export default async function OverviewPage() {
               </div>
             </div>
 
-            {/* Health Indicators */}
-            <div className="flex items-center gap-4">
-              {healthItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 backdrop-blur-sm"
-                >
+            {isAuthenticated && (
+              <div className="flex items-center gap-4">
+                {healthItems.map((item) => (
                   <div
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      item.status
-                        ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"
-                        : "bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.5)]"
-                    }`}
-                  />
-                  <item.icon className="h-3.5 w-3.5 text-navy-400" />
-                  <span className="hidden text-xs font-medium text-navy-300 sm:inline">
-                    {item.label}
-                  </span>
-                </div>
-              ))}
-            </div>
+                    key={item.label}
+                    className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 backdrop-blur-sm"
+                  >
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        item.status
+                          ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"
+                          : "bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.5)]"
+                      }`}
+                    />
+                    <item.icon className="h-3.5 w-3.5 text-navy-400" />
+                    <span className="hidden text-xs font-medium text-navy-300 sm:inline">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </FadeInWrapper>
 
-      {/* Error Banner */}
-      {data.error && (
+      {/* Error Banner (authenticated only) */}
+      {isAuthenticated && data?.error && (
         <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 backdrop-blur-sm">
           <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
           <p className="text-sm text-destructive">
@@ -279,34 +246,55 @@ export default async function OverviewPage() {
       )}
 
       {/* Stats Grid */}
-      <StaggerWrapper className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <StaggerItemWrapper key={stat.label}>
-            <Card
-              className={`${stat.cardClass} rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]`}
-            >
-              <CardContent className="pt-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {stat.label}
-                  </p>
-                  <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
-                </div>
-                <div className="mt-2 font-display text-2xl font-bold text-foreground">
-                  <CounterWrapper
-                    value={stat.value}
-                    className="font-display text-2xl font-bold"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </StaggerItemWrapper>
-        ))}
-      </StaggerWrapper>
+      {loading ? (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
+          ))}
+        </div>
+      ) : !isAuthenticated ? (
+        <StaggerWrapper className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {guestStats.map((stat) => (
+            <StaggerItemWrapper key={stat.label}>
+              <GuestStatCard
+                label={stat.label}
+                icon={stat.icon}
+                cardClass={stat.cardClass}
+                iconColor={stat.iconColor}
+              />
+            </StaggerItemWrapper>
+          ))}
+        </StaggerWrapper>
+      ) : data ? (
+        <StaggerWrapper className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[
+            { label: "Total Datasets", value: data.totalDatasets.toString(), icon: Database, cardClass: "stat-card-gold", iconColor: "text-gold-500" },
+            { label: "Registered Agents", value: data.registeredAgents.toString(), icon: Users, cardClass: "stat-card-teal", iconColor: "text-teal-500" },
+            { label: "Active Agents", value: data.activeAgents.toString(), icon: Activity, cardClass: "stat-card-violet", iconColor: "text-violet-500" },
+            { label: "Audit Events", value: data.recentLogs.length.toString(), icon: ClipboardList, cardClass: "stat-card-navy", iconColor: "text-navy-500" },
+          ].map((stat) => (
+            <StaggerItemWrapper key={stat.label}>
+              <Card className={`${stat.cardClass} rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]`}>
+                <CardContent className="pt-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {stat.label}
+                    </p>
+                    <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                  </div>
+                  <div className="mt-2 font-display text-2xl font-bold text-foreground">
+                    <CounterWrapper value={stat.value} className="font-display text-2xl font-bold" />
+                  </div>
+                </CardContent>
+              </Card>
+            </StaggerItemWrapper>
+          ))}
+        </StaggerWrapper>
+      ) : null}
 
       {/* Two-column: Quick Actions + Recent Activity */}
       <div className="grid gap-6 lg:grid-cols-5">
-        {/* Quick Actions - left column */}
+        {/* Quick Actions */}
         <div className="lg:col-span-2">
           <FadeInWrapper delay={0.15}>
             <h2 className="mb-4 font-display text-base font-semibold text-foreground">
@@ -320,9 +308,7 @@ export default async function OverviewPage() {
                 <Link href={action.href} className="group block">
                   <Card className="glass-card-premium rounded-xl transition-all duration-300 hover:shadow-md">
                     <CardContent className="flex items-center gap-3 p-4">
-                      <div
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${action.iconBg}`}
-                      >
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${action.iconBg}`}>
                         <action.icon className={`h-4 w-4 ${action.iconColor}`} />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -342,7 +328,7 @@ export default async function OverviewPage() {
           </StaggerWrapper>
         </div>
 
-        {/* Recent Activity - right column */}
+        {/* Recent Activity */}
         <div className="lg:col-span-3">
           <FadeInWrapper delay={0.2}>
             <Card className="overflow-hidden rounded-xl">
@@ -359,7 +345,20 @@ export default async function OverviewPage() {
                 </Link>
               </CardHeader>
               <CardContent className="p-0">
-                {data.recentLogs.length === 0 ? (
+                {!isAuthenticated ? (
+                  <div className="flex flex-col items-center gap-3 py-12">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/60">
+                      <Activity className="h-5 w-5 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Connect wallet to see activity</p>
+                  </div>
+                ) : loading ? (
+                  <div className="space-y-3 p-6">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : !data || data.recentLogs.length === 0 ? (
                   <div className="flex flex-col items-center gap-3 py-12">
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/60">
                       <Activity className="h-5 w-5 text-muted-foreground/50" />
@@ -394,8 +393,7 @@ export default async function OverviewPage() {
                         <div className="flex items-center gap-3">
                           <Badge
                             variant={
-                              (statusColor[log.status] as "default" | "destructive") ??
-                              "secondary"
+                              (statusColor[log.status] as "default" | "destructive") ?? "secondary"
                             }
                           >
                             {log.status}
@@ -413,6 +411,8 @@ export default async function OverviewPage() {
           </FadeInWrapper>
         </div>
       </div>
+
+      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }
