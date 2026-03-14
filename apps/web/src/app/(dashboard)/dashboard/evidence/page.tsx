@@ -39,12 +39,20 @@ export default function EvidencePage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    let cancelled = false;
     setLoading(true);
     setError(false);
     fetchAllEvidencePacks({ limit: 100 })
-      .then((rows) => setPacks(rows as EvidenceRow[]))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+      .then((rows) => {
+        if (!cancelled) setPacks(rows as EvidenceRow[]);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [isAuthenticated, connected]);
 
   const uniqueDatasets = new Set(packs.map((p) => p.datasetId)).size;
