@@ -95,7 +95,10 @@ function normalizeDomain(value: string): string {
   let d = value.trim().toLowerCase();
   d = d.replace(/^https?:\/\//, "");
   d = d.replace(/:(443|80)$/, "");
-  d = d.replace(/\/+$/, "");
+  // Strip trailing slashes without regex (avoids ReDoS on repeated '/')
+  let end = d.length;
+  while (end > 0 && d[end - 1] === "/") end--;
+  d = d.slice(0, end);
   return d;
 }
 
