@@ -10,8 +10,12 @@ type Consent = "granted" | "denied" | null;
 
 function getStoredConsent(): Consent {
   if (typeof window === "undefined") return null;
-  const v = localStorage.getItem(STORAGE_KEY);
-  if (v === "granted" || v === "denied") return v;
+  try {
+    const v = localStorage.getItem(STORAGE_KEY);
+    if (v === "granted" || v === "denied") return v;
+  } catch {
+    // localStorage unavailable (Safari private mode, storage quota, etc.)
+  }
   return null;
 }
 
@@ -29,12 +33,12 @@ export function CookieConsent() {
   }, []);
 
   function accept() {
-    localStorage.setItem(STORAGE_KEY, "granted");
+    try { localStorage.setItem(STORAGE_KEY, "granted"); } catch { /* noop */ }
     setConsent("granted");
   }
 
   function decline() {
-    localStorage.setItem(STORAGE_KEY, "denied");
+    try { localStorage.setItem(STORAGE_KEY, "denied"); } catch { /* noop */ }
     setConsent("denied");
   }
 
@@ -59,6 +63,8 @@ export function CookieConsent() {
       <AnimatePresence>
         {consent === null && (
           <motion.div
+            role="region"
+            aria-label="Cookie consent preferences"
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
