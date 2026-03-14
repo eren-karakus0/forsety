@@ -67,19 +67,22 @@ export function CookieConsent() {
           >
             <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 sm:flex-row sm:justify-between">
               <p className="text-center text-sm text-gray-300 sm:text-left">
-                We use privacy-friendly analytics to improve our service. No
-                cookies are stored.
+                We use cookieless, privacy-friendly analytics to understand how
+                you use our service. No personally identifiable information is
+                collected.
               </p>
               <div className="flex shrink-0 items-center gap-3">
                 <button
                   onClick={decline}
-                  className="text-sm text-gray-400 transition-colors hover:text-gray-200"
+                  aria-label="Decline analytics tracking"
+                  className="rounded text-sm text-gray-400 transition-colors hover:text-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500"
                 >
                   Decline
                 </button>
                 <button
                   onClick={accept}
-                  className="rounded-lg bg-gold-500 px-4 py-1.5 text-sm font-medium text-navy-950 transition-colors hover:bg-gold-400"
+                  aria-label="Accept analytics tracking"
+                  className="rounded-lg bg-gold-500 px-4 py-1.5 text-sm font-medium text-navy-950 transition-colors hover:bg-gold-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   Accept
                 </button>
