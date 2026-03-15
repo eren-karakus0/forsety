@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create Release PR or Tag
+      - name: Create Release PR
         id: changesets
         uses: changesets/action@v1
         with:
@@ -39,19 +39,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Tags and GitHub Releases
+      - name: Create Tag and GitHub Release
         if: steps.changesets.outputs.hasChangesets == 'false' && steps.changesets.outputs.pullRequestNumber == ''
         run: |
-          pnpm changeset tag
-          NEW_TAGS=$(git tag --points-at HEAD)
-          if [ -n "$NEW_TAGS" ]; then
-            git push origin --tags
-            for tag in $NEW_TAGS; do
-              gh release create "$tag" \
-                --title "$tag" \
-                --generate-notes \
-                --latest
-            done
+          VERSION=$(node -p "require('./packages/sdk/package.json').version")
+          TAG="v${VERSION}"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping."
+            exit 0
           fi
+
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --latest
+          echo "Created release $TAG"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
