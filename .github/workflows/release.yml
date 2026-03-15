@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   release:
-    name: Version Packages
+    name: Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,11 +27,25 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create Release Pull Request
+      - name: Create Release PR or Tag
+        id: changesets
         uses: changesets/action@v1
         with:
           title: "chore: version packages"
           commit: "chore: version packages"
-          publish: echo "no-op"
+          version: pnpm changeset version
+          publish: pnpm changeset tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          for tag in $(git tag --points-at HEAD); do
+            gh release create "$tag" \
+              --title "$tag" \
+              --generate-notes \
+              --latest
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
