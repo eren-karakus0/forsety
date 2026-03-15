@@ -15,6 +15,7 @@
     "seed:local": "tsx tooling/scripts/seed-demo.ts --local-only",
     "check:shelby": "tsx tooling/scripts/check-shelby.ts",
     "changeset": "changeset",
+    "version": "changeset version",
     "backfill:canonical": "tsx tooling/scripts/backfill-canonical.ts"
   },
   "pnpm": {
