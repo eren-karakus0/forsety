@@ -5,7 +5,6 @@
 "@forsety/ui": major
 "@forsety/mcp": major
 "@forsety/auth": major
-"forsety": major
 ---
 
 v1.0.0 — Production Ready Release
