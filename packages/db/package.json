@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "^0.38.0",
+    "drizzle-orm": "^0.45.1",
     "@neondatabase/serverless": "^0.10.0"
   },
   "devDependencies": {
