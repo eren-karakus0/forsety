@@ -31,7 +31,7 @@
     "@forsety/db": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
     "canonicalize": "^2.1.0",
-    "drizzle-orm": "^0.38.0",
+    "drizzle-orm": "^0.45.1",
     "tsx": "^4.19.0",
     "turbo": "^2.5.0",
     "typescript": "^5.7.0"
