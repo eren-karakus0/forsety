@@ -14,4 +14,5 @@ We will acknowledge receipt within 48 hours and provide a timeline for resolutio
 
 | Version | Supported |
 |---------|-----------|
-| 0.x.x   | Yes       |
+| 1.x.x   | Yes       |
+| 0.x.x   | No        |

@@ -123,7 +123,7 @@ export default async function Image() {
               display: "flex",
             }}
           >
-            forsety.vercel.app
+            forsety.xyz
           </div>
         </div>
       </div>
