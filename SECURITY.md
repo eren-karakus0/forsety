@@ -5,7 +5,7 @@
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do NOT** open a public issue
-2. Email: security@forsety.dev (or open a private security advisory on GitHub)
+2. Email: erenkar950@gmail.com (or open a private security advisory on GitHub)
 3. Include a detailed description and steps to reproduce
 
 We will acknowledge receipt within 48 hours and provide a timeline for resolution.
