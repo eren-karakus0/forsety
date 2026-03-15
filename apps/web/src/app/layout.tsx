@@ -42,7 +42,7 @@ export const metadata: Metadata = {
       { url: "/icon", type: "image/png", sizes: "32x32" },
     ],
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://forsety.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://forsety.xyz"),
   openGraph: {
     title: "Forsety | Evidence Layer for Licensed AI Data Access",
     description:

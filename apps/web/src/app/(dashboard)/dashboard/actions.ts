@@ -422,7 +422,7 @@ export async function createShareLink(input: {
     }
 
     const link = await client.share.createShareLink(input);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://forsety.vercel.app";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://forsety.xyz";
     return {
       success: true,
       token: link.token,

@@ -416,7 +416,7 @@ describe("Aptos Auth", () => {
       const { privateKey, publicKey, address } = createTestKeypair();
       const nonce = generateNonce();
       const rawMessage = createAuthMessage({
-        domain: "forsety.vercel.app",
+        domain: "forsety.xyz",
         address,
         nonce,
       });
@@ -424,7 +424,7 @@ describe("Aptos Auth", () => {
       const fullMessage = buildAptosEnvelope({
         address,
         chainId: 110,
-        application: "https://forsety.vercel.app",
+        application: "https://forsety.xyz",
         nonce,
         message: rawMessage,
       });
@@ -436,7 +436,7 @@ describe("Aptos Auth", () => {
         fullMessage,
         signature: signature.toString(),
         publicKey: publicKey.toString(),
-        expectedDomain: "forsety.vercel.app",
+        expectedDomain: "forsety.xyz",
       });
 
       expect(result.success).toBe(true);
