@@ -9,12 +9,23 @@ import { getForsetyClient } from "@/lib/forsety";
 import { getEnv } from "@/lib/env";
 import { sanitizeAgent } from "@forsety/sdk";
 
-async function getWalletFromSession(): Promise<string | null> {
+interface SessionInfo {
+  wallet: string;
+  network: string;
+}
+
+async function getWalletFromSession(): Promise<string | null>;
+async function getWalletFromSession(opts: { full: true }): Promise<SessionInfo | null>;
+async function getWalletFromSession(opts?: { full: true }): Promise<string | SessionInfo | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("forsety-auth")?.value;
   if (!token) return null;
   const payload = await verifyJwt(token, getEnv().JWT_SECRET);
-  return payload?.sub ?? null;
+  if (!payload?.sub) return null;
+  if (opts?.full) {
+    return { wallet: payload.sub, network: payload.network ?? "shelbynet" };
+  }
+  return payload.sub;
 }
 
 export interface UploadResult {

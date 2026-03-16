@@ -62,7 +62,7 @@ export async function POST(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("inactive")) {
-      return NextResponse.json({ error: message }, { status: 400 });
+      return NextResponse.json({ error: "Cannot rotate key for inactive agent" }, { status: 400 });
     }
     return apiError("Failed to rotate agent key", error);
   }

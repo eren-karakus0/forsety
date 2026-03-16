@@ -97,7 +97,7 @@ export async function middleware(request: NextRequest) {
         } catch {
           // Invalid token — clear it, continue as guest
           const response = NextResponse.next();
-          response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", domain: `.${LANDING_DOMAIN}` });
+          response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
           return response;
         }
       }

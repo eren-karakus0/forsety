@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Verify Aptos signature with domain + chain ID binding
     const host = request.headers.get("host") ?? "localhost:3000";
-    const strictChainId = process.env.AUTH_STRICT_CHAIN_ID === "true";
+    const strictChainId = process.env.AUTH_STRICT_CHAIN_ID !== "false";
     const result = verifyAuthMessage({
       fullMessage,
       signature,
@@ -110,10 +110,11 @@ export async function POST(request: NextRequest) {
         set: { lastLoginAt: new Date() },
       });
 
-    // Sign JWT
+    // Sign JWT with network binding
     const token = await signJwt(result.address, env.JWT_SECRET, {
       expiresIn: "1h",
       nonce: result.nonce,
+      network: requestedNetwork,
     });
 
     // Set httpOnly cookie
@@ -129,7 +130,6 @@ export async function POST(request: NextRequest) {
       sameSite: isProduction ? "lax" : "strict",
       maxAge: 3600,
       path: "/",
-      ...(isProduction && { domain: ".forsety.xyz" }),
     });
 
     return response;

@@ -10,7 +10,6 @@ export async function POST() {
     sameSite: isProduction ? "lax" : "strict",
     maxAge: 0,
     path: "/",
-    ...(isProduction && { domain: ".forsety.xyz" }),
   });
 
   return response;

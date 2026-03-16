@@ -41,11 +41,17 @@ vi.mock("@/lib/auth", async () => {
   };
 });
 
-vi.mock("@/lib/api-error", () => ({
-  apiError: vi.fn().mockImplementation((msg: string, _err: unknown, status = 500) =>
-    new Response(JSON.stringify({ error: msg }), { status })
-  ),
-}));
+vi.mock("@/lib/api-error", async () => {
+  const { NextResponse } = await import("next/server");
+  return {
+    apiError: vi.fn().mockImplementation((msg: string, _err: unknown, status = 500) =>
+      new Response(JSON.stringify({ error: msg }), { status })
+    ),
+    validationError: vi.fn().mockImplementation(() =>
+      NextResponse.json({ error: "Invalid request parameters" }, { status: 400 })
+    ),
+  };
+});
 
 vi.mock("@sentry/nextjs", () => ({ captureException: vi.fn() }));
 
