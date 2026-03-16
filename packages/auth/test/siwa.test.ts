@@ -43,9 +43,9 @@ function buildAptosEnvelope(params: {
 
 describe("Aptos Auth", () => {
   describe("generateNonce", () => {
-    it("should generate a 32-character hex nonce", () => {
+    it("should generate a 64-character hex nonce (256-bit)", () => {
       const nonce = generateNonce();
-      expect(nonce).toHaveLength(32);
+      expect(nonce).toHaveLength(64);
       expect(/^[0-9a-f]+$/.test(nonce)).toBe(true);
     });
 

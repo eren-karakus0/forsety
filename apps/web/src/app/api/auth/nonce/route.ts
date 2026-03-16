@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthMessage, generateNonce } from "@forsety/auth";
+import { lt } from "drizzle-orm";
 import { createDb, sessions } from "@forsety/db";
 import { getEnv } from "@/lib/env";
 import * as Sentry from "@sentry/nextjs";
@@ -71,6 +72,14 @@ export async function GET(request: NextRequest) {
       nonce,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
+
+    // Probabilistic cleanup: ~10% of requests purge expired sessions
+    if (Math.random() < 0.1) {
+      db.delete(sessions)
+        .where(lt(sessions.expiresAt, new Date()))
+        .execute()
+        .catch(() => {});
+    }
 
     return NextResponse.json({ nonce, message });
   } catch (error) {

@@ -14,11 +14,14 @@ function getSecret(secret: string): Uint8Array {
 export async function signJwt(
   walletAddress: string,
   secret: string,
-  options?: { expiresIn?: string; nonce?: string }
+  options?: { expiresIn?: string; nonce?: string; network?: string }
 ): Promise<string> {
   const payload: Record<string, unknown> = {};
   if (options?.nonce) {
     payload.nonce = options.nonce;
+  }
+  if (options?.network) {
+    payload.network = options.network;
   }
 
   return new jose.SignJWT(payload)
@@ -44,6 +47,7 @@ export async function verifyJwt(
       iat: payload.iat ?? 0,
       exp: payload.exp ?? 0,
       nonce: payload.nonce as string | undefined,
+      network: payload.network as string | undefined,
     };
   } catch {
     return null;

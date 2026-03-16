@@ -18,6 +18,20 @@ describe("JWT", () => {
       const payload = await verifyJwt(token, TEST_SECRET);
       expect(payload?.nonce).toBe("test-nonce-123");
     });
+
+    it("should include network when provided", async () => {
+      const token = await signJwt("0x1234abcd", TEST_SECRET, {
+        network: "shelbynet",
+      });
+      const payload = await verifyJwt(token, TEST_SECRET);
+      expect(payload?.network).toBe("shelbynet");
+    });
+
+    it("should not include network when omitted", async () => {
+      const token = await signJwt("0x1234abcd", TEST_SECRET);
+      const payload = await verifyJwt(token, TEST_SECRET);
+      expect(payload?.network).toBeUndefined();
+    });
   });
 
   describe("verifyJwt", () => {

@@ -27,11 +27,17 @@ vi.mock("@/lib/auth", async () => {
   };
 });
 
-vi.mock("@/lib/api-error", () => ({
-  apiError: vi.fn().mockImplementation((msg: string, _err: unknown, status = 500) =>
-    new Response(JSON.stringify({ error: msg }), { status })
-  ),
-}));
+vi.mock("@/lib/api-error", async () => {
+  const { NextResponse } = await import("next/server");
+  return {
+    apiError: vi.fn().mockImplementation((msg: string, _err: unknown, status = 500) =>
+      new Response(JSON.stringify({ error: msg }), { status })
+    ),
+    validationError: vi.fn().mockImplementation(() =>
+      NextResponse.json({ error: "Invalid request parameters" }, { status: 400 })
+    ),
+  };
+});
 
 vi.mock("@sentry/nextjs", () => ({ captureException: vi.fn() }));
 
@@ -90,7 +96,7 @@ describe("GET /api/access", () => {
     const res = await GET(req);
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toContain("Invalid query parameters");
+    expect(body.error).toContain("Invalid request parameters");
   });
 
   it("should return 400 for negative offset", async () => {

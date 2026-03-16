@@ -108,7 +108,7 @@ export async function PATCH(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("revoked")) {
-      return NextResponse.json({ error: message }, { status: 400 });
+      return NextResponse.json({ error: "Cannot update a revoked license" }, { status: 400 });
     }
     return apiError("Failed to update license", error);
   }

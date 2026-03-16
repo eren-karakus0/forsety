@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
+import type { ZodError } from "zod";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 /**
  * Standardized API error response.
@@ -16,9 +19,27 @@ export function apiError(
 
   const body: Record<string, string> = { error: message };
 
-  if (process.env.NODE_ENV === "development") {
+  if (!isProduction) {
     body.details = error instanceof Error ? error.message : String(error);
   }
 
   return NextResponse.json(body, { status });
+}
+
+/**
+ * Standardized validation error response.
+ * - Production: returns generic "Invalid request parameters" (no field details leaked)
+ * - Development: includes Zod field errors for debugging
+ */
+export function validationError(zodError: ZodError) {
+  if (isProduction) {
+    return NextResponse.json(
+      { error: "Invalid request parameters" },
+      { status: 400 }
+    );
+  }
+  return NextResponse.json(
+    { error: "Validation failed", details: zodError.flatten().fieldErrors },
+    { status: 400 }
+  );
 }

@@ -37,6 +37,7 @@ export interface JwtPayload {
   iat: number;
   exp: number;
   nonce?: string;
+  network?: string;
 }
 
 export interface AuthSession {

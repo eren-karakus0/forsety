@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
-import { apiError } from "@/lib/api-error";
+import { apiError, validationError } from "@/lib/api-error";
 import { z } from "zod";
 
 const listQuerySchema = z.object({
@@ -33,10 +33,7 @@ export async function GET(request: NextRequest) {
 
     const parsed = listQuerySchema.safeParse(raw);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid query parameters", details: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
+      return validationError(parsed.error);
     }
 
     const client = getForsetyClient();
