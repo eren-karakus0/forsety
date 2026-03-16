@@ -13,17 +13,31 @@ export function useAuthGuard() {
   const signInAttempted = useRef(false);
   const freshHandled = useRef(false);
 
-  // Fast-path: if redirected from auth with ?fresh=1, skip session check
+  // Fast-path: if redirected from auth with ?fresh=1, optimistically mark valid
+  // and verify in background (non-blocking). This eliminates the skeleton flash
+  // while still validating the session server-side.
   useEffect(() => {
     if (freshHandled.current) return;
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("fresh") === "1" && connected && account) {
       freshHandled.current = true;
+      // Optimistically show dashboard immediately
       setSessionValid(true);
       setSessionChecking(false);
       // Clean URL without triggering navigation
       window.history.replaceState({}, "", window.location.pathname);
+      // Background validation — revoke if JWT is actually invalid
+      fetch("/api/auth/session", { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.authenticated !== true) {
+            setSessionValid(false);
+          }
+        })
+        .catch(() => {
+          setSessionValid(false);
+        });
     }
   }, [connected, account]);
 
@@ -80,6 +94,7 @@ export function useAuthGuard() {
     if (!connected) {
       setSessionValid(false);
       signInAttempted.current = false;
+      freshHandled.current = false;
     }
   }, [connected]);
 
