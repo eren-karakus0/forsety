@@ -48,7 +48,17 @@ export async function POST(request: NextRequest) {
 
     // Verify Aptos signature with domain + chain ID binding
     const host = request.headers.get("host") ?? "localhost:3000";
-    const strictChainId = process.env.AUTH_STRICT_CHAIN_ID !== "false";
+
+    // strictChainId: env override > network-aware default
+    // Shelbynet is a custom chain — most wallets omit chain_id from the
+    // APTOS envelope for non-standard networks, so we default to lenient.
+    // Mainnet/testnet wallets reliably include chain_id → strict by default.
+    const envStrict = process.env.AUTH_STRICT_CHAIN_ID;
+    const strictChainId =
+      envStrict !== undefined
+        ? envStrict !== "false"
+        : requestedNetwork !== "shelbynet";
+
     const result = verifyAuthMessage({
       fullMessage,
       signature,
