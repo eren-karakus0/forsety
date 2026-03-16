@@ -3,6 +3,7 @@
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useForsetyAuth } from "@/lib/auth-client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@forsety/ui";
 import { ArrowRight, Loader2, AlertTriangle, X } from "lucide-react";
 import { WalletSelector } from "@/components/wallet-selector";
@@ -24,9 +25,11 @@ export function WalletAuthButton({
   const { connected } = useWallet();
   const { isAuthenticated, isLoading, error, signIn } = useForsetyAuth();
   const { refresh } = useSession();
+  const router = useRouter();
   const pendingAuth = useRef(false);
 
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN;
+  const isSameDomain = !appDomain;
   const dashboardUrl = appDomain
     ? `https://${appDomain}/dashboard`
     : "/dashboard";
@@ -68,13 +71,21 @@ export function WalletAuthButton({
   useEffect(() => {
     if (isAuthenticated) {
       refresh();
-      window.location.href = dashboardUrl;
+      if (isSameDomain) {
+        router.push("/dashboard?fresh=1");
+      } else {
+        window.location.href = dashboardUrl;
+      }
     }
-  }, [isAuthenticated, dashboardUrl, refresh]);
+  }, [isAuthenticated, dashboardUrl, isSameDomain, refresh, router]);
 
   const handleClick = () => {
     if (isAuthenticated) {
-      window.location.href = dashboardUrl;
+      if (isSameDomain) {
+        router.push("/dashboard?fresh=1");
+      } else {
+        window.location.href = dashboardUrl;
+      }
       return;
     }
     if (!connected) {

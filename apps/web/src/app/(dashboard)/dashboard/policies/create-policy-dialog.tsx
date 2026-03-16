@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createPolicy } from "../actions";
+import { useSignedAction } from "@/hooks/use-signed-action";
 import {
   Button,
   Dialog,
@@ -34,6 +35,7 @@ export function CreatePolicyDialog({
   datasets,
   onCreated,
 }: CreatePolicyDialogProps) {
+  const { executeWithSignature } = useSignedAction();
   const [datasetId, setDatasetId] = useState("");
   const [accessors, setAccessors] = useState("");
   const [maxReads, setMaxReads] = useState("");
@@ -56,24 +58,32 @@ export function CreatePolicyDialog({
       .map((a) => a.trim())
       .filter(Boolean);
 
-    const result = await createPolicy({
-      datasetId,
-      allowedAccessors,
-      maxReads: maxReads ? parseInt(maxReads, 10) : undefined,
-      expiresAt: expiresAt || undefined,
-    });
+    try {
+      const result = await executeWithSignature(
+        "Create policy",
+        (sig) => createPolicy({
+          datasetId,
+          allowedAccessors,
+          maxReads: maxReads ? parseInt(maxReads, 10) : undefined,
+          expiresAt: expiresAt || undefined,
+        }, sig)
+      );
 
-    setSubmitting(false);
+      setSubmitting(false);
 
-    if (result.success) {
-      setDatasetId("");
-      setAccessors("");
-      setMaxReads("");
-      setExpiresAt("");
-      onOpenChange(false);
-      onCreated();
-    } else {
-      setError(result.error ?? "Failed to create policy");
+      if (result.success) {
+        setDatasetId("");
+        setAccessors("");
+        setMaxReads("");
+        setExpiresAt("");
+        onOpenChange(false);
+        onCreated();
+      } else {
+        setError(result.error ?? "Failed to create policy");
+      }
+    } catch (err) {
+      setSubmitting(false);
+      setError(err instanceof Error ? err.message : "Failed to create policy");
     }
   };
 

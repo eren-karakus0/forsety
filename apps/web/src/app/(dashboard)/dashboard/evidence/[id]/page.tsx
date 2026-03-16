@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { generateEvidencePackPdf } from "@/lib/pdf-export";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useSignedAction } from "@/hooks/use-signed-action";
 import { ConnectWalletCTA } from "../../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
 
@@ -98,6 +99,7 @@ type PackData = {
 
 export default function EvidenceDetailPage() {
   const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { executeWithSignature } = useSignedAction();
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<EvidencePackDetail | null>(null);
@@ -521,14 +523,22 @@ export default function EvidenceDetailPage() {
                   <Button
                     onClick={async () => {
                       setShareLoading(true);
-                      const result = await createShareLink({
-                        evidencePackId: data.id,
-                        mode: shareMode,
-                        ttlHours: parseInt(shareTtl, 10) || 24,
-                      });
-                      setShareLoading(false);
-                      if (result.success && result.url) {
-                        setShareUrl(result.url);
+                      try {
+                        const result = await executeWithSignature(
+                          "Create share link",
+                          (sig) => createShareLink({
+                            evidencePackId: data.id,
+                            mode: shareMode,
+                            ttlHours: parseInt(shareTtl, 10) || 24,
+                          }, sig)
+                        );
+                        if (result.success && result.url) {
+                          setShareUrl(result.url);
+                        }
+                      } catch {
+                        // User rejected wallet signature or error
+                      } finally {
+                        setShareLoading(false);
                       }
                     }}
                     disabled={shareLoading}

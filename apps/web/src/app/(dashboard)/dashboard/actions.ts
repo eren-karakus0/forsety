@@ -8,6 +8,8 @@ import { verifyJwt } from "@forsety/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { getEnv } from "@/lib/env";
 import { sanitizeAgent } from "@forsety/sdk";
+import { verifyMutationSignature } from "@/lib/verify-mutation-signature";
+import type { SignaturePayload } from "@/lib/types";
 
 interface SessionInfo {
   wallet: string;
@@ -34,9 +36,12 @@ export interface UploadResult {
   datasetId?: string;
 }
 
-export async function uploadDataset(formData: FormData): Promise<UploadResult> {
+export async function uploadDataset(formData: FormData, sig: SignaturePayload): Promise<UploadResult> {
   const wallet = await getWalletFromSession();
   if (!wallet) return { success: false, error: "Not authenticated" };
+
+  const sigCheck = await verifyMutationSignature(sig, wallet);
+  if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
   const file = formData.get("file") as File | null;
   const name = formData.get("name") as string;
@@ -120,10 +125,13 @@ export async function fetchDatasetDetail(id: string) {
   }
 }
 
-export async function generateEvidencePack(datasetId: string): Promise<EvidenceResult> {
+export async function generateEvidencePack(datasetId: string, sig: SignaturePayload): Promise<EvidenceResult> {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return { success: false, error: "Not authenticated" };
+
+    const sigCheck = await verifyMutationSignature(sig, wallet);
+    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
     const client = getForsetyClient();
     const dataset = await client.datasets.getById(datasetId);
@@ -387,10 +395,13 @@ export async function createPolicy(input: {
   allowedAccessors: string[];
   maxReads?: number;
   expiresAt?: string;
-}) {
+}, sig: SignaturePayload) {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return { success: false, error: "Not authenticated" };
+
+    const sigCheck = await verifyMutationSignature(sig, wallet);
+    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
     const client = getForsetyClient();
     const dataset = await client.datasets.getById(input.datasetId);
@@ -417,10 +428,13 @@ export async function createShareLink(input: {
   evidencePackId: string;
   mode: "full" | "redacted";
   ttlHours: number;
-}) {
+}, sig: SignaturePayload) {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return { success: false, error: "Not authenticated" };
+
+    const sigCheck = await verifyMutationSignature(sig, wallet);
+    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
     const client = getForsetyClient();
 
@@ -469,11 +483,15 @@ export async function updatePolicy(
     allowedAccessors: string[];
     maxReads?: number;
     expiresAt?: string;
-  }
+  },
+  sig: SignaturePayload,
 ) {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return { success: false, error: "Not authenticated" };
+
+    const sigCheck = await verifyMutationSignature(sig, wallet);
+    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
     const client = getForsetyClient();
     const existing = await client.policies.getById(policyId);
@@ -570,10 +588,13 @@ export async function registerAgent(input: {
   description?: string;
   permissions?: string[];
   allowedDatasets?: string[];
-}) {
+}, sig: SignaturePayload) {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return { success: false, error: "Not authenticated" };
+
+    const sigCheck = await verifyMutationSignature(sig, wallet);
+    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
     const client = getForsetyClient();
     const result = await client.agents.register({
@@ -599,10 +620,13 @@ export async function registerAgent(input: {
 
 // --- Item 6: Bulk Dataset Operations ---
 
-export async function bulkDeleteDatasets(ids: string[]) {
+export async function bulkDeleteDatasets(ids: string[], sig: SignaturePayload) {
   try {
     const wallet = await getWalletFromSession();
     if (!wallet) return { success: false, error: "Not authenticated" };
+
+    const sigCheck = await verifyMutationSignature(sig, wallet);
+    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
     const client = getForsetyClient();
     const results = [];

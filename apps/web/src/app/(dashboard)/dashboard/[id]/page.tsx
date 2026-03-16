@@ -22,6 +22,7 @@ import {
 import { Download, Layers, Check, ChevronRight, Eye, Loader2, Database } from "lucide-react";
 import { computeDatasetStatus, statusConfig } from "../datasets/dataset-status";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useSignedAction } from "@/hooks/use-signed-action";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
 
@@ -92,6 +93,7 @@ function MetadataRow({ label, value, mono }: { label: string; value: string | nu
 
 export default function DatasetDetailPage() {
   const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { executeWithSignature } = useSignedAction();
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<DatasetDetail | null>(null);
@@ -173,7 +175,10 @@ export default function DatasetDetailPage() {
     setGenerating(true);
     setError(null);
     try {
-      const result = await generateEvidencePack(id);
+      const result = await executeWithSignature(
+        `Generate evidence pack for dataset ${id.slice(0, 8)}`,
+        (sig) => generateEvidencePack(id, sig)
+      );
       if (!result.success) throw new Error(result.error ?? "Generation failed");
       setEvidence({ json: result.json!, hash: result.hash! });
     } catch (err) {

@@ -11,9 +11,27 @@ export function useAuthGuard() {
   const [sessionValid, setSessionValid] = useState(false);
   const [sessionChecking, setSessionChecking] = useState(true);
   const signInAttempted = useRef(false);
+  const freshHandled = useRef(false);
+
+  // Fast-path: if redirected from auth with ?fresh=1, skip session check
+  useEffect(() => {
+    if (freshHandled.current) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("fresh") === "1" && connected && account) {
+      freshHandled.current = true;
+      setSessionValid(true);
+      setSessionChecking(false);
+      // Clean URL without triggering navigation
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [connected, account]);
 
   // Check server-side JWT session validity
   useEffect(() => {
+    // Skip if fresh auth already handled
+    if (freshHandled.current) return;
+
     if (!connected || !account) {
       setSessionValid(false);
       setSessionChecking(false);
