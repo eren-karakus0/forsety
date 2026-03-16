@@ -16,6 +16,7 @@ import {
 } from "@forsety/ui";
 import { Upload, Check, Loader2, ArrowRight, FileUp } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useSignedAction } from "@/hooks/use-signed-action";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
 
@@ -29,6 +30,7 @@ const LICENSE_OPTIONS = [
 
 export default function UploadPage() {
   const { isAuthenticated, isLoading, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { executeWithSignature } = useSignedAction();
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -57,7 +59,10 @@ export default function UploadPage() {
       formData.set("license", license);
       if (file) formData.set("file", file);
 
-      const result = await uploadDataset(formData);
+      const result = await executeWithSignature(
+        `Upload dataset: ${name}`,
+        (sig) => uploadDataset(formData, sig)
+      );
 
       if (!result.success) {
         throw new Error(result.error ?? "Upload failed");

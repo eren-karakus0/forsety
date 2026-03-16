@@ -15,6 +15,7 @@ import {
 } from "@forsety/ui";
 import { UserPlus, Copy, Check } from "lucide-react";
 import { registerAgent } from "../actions";
+import { useSignedAction } from "@/hooks/use-signed-action";
 
 const AVAILABLE_PERMISSIONS = [
   "memory.read",
@@ -26,6 +27,7 @@ const AVAILABLE_PERMISSIONS = [
 ] as const;
 
 export function RegisterAgentDialog() {
+  const { executeWithSignature } = useSignedAction();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -56,20 +58,28 @@ export function RegisterAgentDialog() {
     setLoading(true);
     setError(null);
 
-    const res = await registerAgent({
-      name: name.trim(),
-      description: description.trim() || undefined,
-      permissions: selectedPermissions,
-    });
+    try {
+      const res = await executeWithSignature(
+        `Register agent: ${name.trim()}`,
+        (sig) => registerAgent({
+          name: name.trim(),
+          description: description.trim() || undefined,
+          permissions: selectedPermissions,
+        }, sig)
+      );
 
-    setLoading(false);
+      setLoading(false);
 
-    if (!res.success) {
-      setError(res.error ?? "Registration failed");
-      return;
+      if (!res.success) {
+        setError(res.error ?? "Registration failed");
+        return;
+      }
+
+      setResult({ apiKey: res.apiKey!, agentId: res.agentId! });
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : "Registration failed");
     }
-
-    setResult({ apiKey: res.apiKey!, agentId: res.agentId! });
   }
 
   async function copyKey() {

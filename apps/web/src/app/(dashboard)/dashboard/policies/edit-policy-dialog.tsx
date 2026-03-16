@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { updatePolicy } from "../actions";
+import { useSignedAction } from "@/hooks/use-signed-action";
 import {
   Button,
   Dialog,
@@ -39,6 +40,7 @@ export function EditPolicyDialog({
   policy,
   onUpdated,
 }: EditPolicyDialogProps) {
+  const { executeWithSignature } = useSignedAction();
   const [accessors, setAccessors] = useState("");
   const [maxReads, setMaxReads] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
@@ -69,19 +71,27 @@ export function EditPolicyDialog({
       .map((a) => a.trim())
       .filter(Boolean);
 
-    const result = await updatePolicy(policy.id, {
-      allowedAccessors,
-      maxReads: maxReads ? parseInt(maxReads, 10) : undefined,
-      expiresAt: expiresAt || undefined,
-    });
+    try {
+      const result = await executeWithSignature(
+        "Update policy",
+        (sig) => updatePolicy(policy.id, {
+          allowedAccessors,
+          maxReads: maxReads ? parseInt(maxReads, 10) : undefined,
+          expiresAt: expiresAt || undefined,
+        }, sig)
+      );
 
-    setSubmitting(false);
+      setSubmitting(false);
 
-    if (result.success) {
-      onOpenChange(false);
-      onUpdated();
-    } else {
-      setError(result.error ?? "Failed to update policy");
+      if (result.success) {
+        onOpenChange(false);
+        onUpdated();
+      } else {
+        setError(result.error ?? "Failed to update policy");
+      }
+    } catch (err) {
+      setSubmitting(false);
+      setError(err instanceof Error ? err.message : "Failed to update policy");
     }
   };
 

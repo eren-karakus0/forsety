@@ -47,6 +47,7 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useSignedAction } from "@/hooks/use-signed-action";
 import { GuestStatCard } from "../../components/guest-stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
@@ -70,6 +71,7 @@ function formatBytes(bytes: number): string {
 
 export default function DatasetsPage() {
   const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { executeWithSignature } = useSignedAction();
   const [datasets, setDatasets] = useState<DatasetRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -183,10 +185,18 @@ export default function DatasetsPage() {
 
   const handleBulkArchive = async () => {
     setBulkLoading(true);
-    await bulkDeleteDatasets(Array.from(selectedIds));
-    setBulkLoading(false);
-    setArchiveConfirmOpen(false);
-    loadData();
+    try {
+      await executeWithSignature(
+        `Archive ${selectedIds.size} dataset(s)`,
+        (sig) => bulkDeleteDatasets(Array.from(selectedIds), sig)
+      );
+      setArchiveConfirmOpen(false);
+      loadData();
+    } catch {
+      // User rejected wallet signature
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
   if (loading) {
