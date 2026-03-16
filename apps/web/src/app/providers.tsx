@@ -1,9 +1,25 @@
 "use client";
 
-import { type ReactNode } from "react";
-import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
-import { getWalletAdapterProps } from "@/lib/aptos-config";
+import { type ReactNode, useEffect } from "react";
+import { AptosWalletAdapterProvider, useWallet } from "@aptos-labs/wallet-adapter-react";
+import { getWalletAdapterProps, getAptosNetwork } from "@/lib/aptos-config";
 import { useNetwork } from "@/lib/network-context";
+
+/** Syncs wallet extension network with app-selected network */
+function NetworkWalletSync() {
+  const { activeNetwork } = useNetwork();
+  const { connected, changeNetwork } = useWallet();
+
+  useEffect(() => {
+    if (!connected || !changeNetwork) return;
+    const target = getAptosNetwork(activeNetwork);
+    changeNetwork(target).catch((err) => {
+      console.warn("[NetworkSync] Wallet network change failed:", err);
+    });
+  }, [connected, activeNetwork, changeNetwork]);
+
+  return null;
+}
 
 export function Providers({ children }: { children: ReactNode }) {
   const { activeNetwork } = useNetwork();
@@ -11,6 +27,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <AptosWalletAdapterProvider key={activeNetwork} {...walletProps}>
+      <NetworkWalletSync />
       {children}
     </AptosWalletAdapterProvider>
   );

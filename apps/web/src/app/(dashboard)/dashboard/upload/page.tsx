@@ -28,7 +28,7 @@ const LICENSE_OPTIONS = [
 ];
 
 export default function UploadPage() {
-  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated, isLoading, selectorOpen, setSelectorOpen } = useAuthGuard();
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -93,7 +93,14 @@ export default function UploadPage() {
           </div>
         </div>
 
-        {!isAuthenticated ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+            <p className="mt-4 text-sm text-muted-foreground">
+              Verifying session...
+            </p>
+          </div>
+        ) : !isAuthenticated ? (
           <>
             <ConnectWalletCTA
               title="Connect your wallet to upload datasets"
