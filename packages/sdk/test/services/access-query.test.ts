@@ -32,6 +32,7 @@ mockValues.mockReturnValue({ returning: mockReturning });
 
 const mockPolicyService = {
   checkAccess: vi.fn(),
+  checkAndIncrementReads: vi.fn(),
   incrementReads: vi.fn(),
 };
 

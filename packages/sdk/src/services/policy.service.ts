@@ -211,4 +211,64 @@ export class PolicyService {
 
     return updated ?? null;
   }
+
+  /**
+   * Atomic check + increment: prevents race condition where concurrent
+   * requests both pass the maxReads check before either increments.
+   * Uses conditional UPDATE (reads_consumed < max_reads) as a single query.
+   */
+  async checkAndIncrementReads(
+    datasetId: string,
+    accessorAddress: string
+  ): Promise<{
+    allowed: boolean;
+    policy: typeof policies.$inferSelect | null;
+  }> {
+    const latestPolicy = await this.getLatest(datasetId);
+
+    if (!latestPolicy) {
+      return { allowed: false, policy: null };
+    }
+
+    const isAllowed =
+      latestPolicy.allowedAccessors.includes(accessorAddress) ||
+      latestPolicy.allowedAccessors.includes("*");
+
+    if (!isAllowed) {
+      return { allowed: false, policy: latestPolicy };
+    }
+
+    if (latestPolicy.expiresAt && new Date() > latestPolicy.expiresAt) {
+      return { allowed: false, policy: latestPolicy };
+    }
+
+    // If maxReads is set, atomically check + increment in a single UPDATE
+    if (latestPolicy.maxReads) {
+      const [updated] = await this.db
+        .update(policies)
+        .set({ readsConsumed: sql`${policies.readsConsumed} + 1` })
+        .where(
+          and(
+            eq(policies.id, latestPolicy.id),
+            sql`${policies.readsConsumed} < ${latestPolicy.maxReads}`
+          )
+        )
+        .returning();
+
+      if (!updated) {
+        return { allowed: false, policy: latestPolicy };
+      }
+
+      return { allowed: true, policy: updated };
+    }
+
+    // No maxReads limit — increment without condition
+    const [updated] = await this.db
+      .update(policies)
+      .set({ readsConsumed: sql`${policies.readsConsumed} + 1` })
+      .where(eq(policies.id, latestPolicy.id))
+      .returning();
+
+    return { allowed: true, policy: updated ?? latestPolicy };
+  }
 }

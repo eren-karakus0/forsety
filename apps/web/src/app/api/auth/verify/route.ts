@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, gt } from "drizzle-orm";
 import { verifyAuthMessage, signJwt } from "@forsety/auth";
-import { createDb, sessions, users } from "@forsety/db";
+import { sessions, users } from "@forsety/db";
 import { getEnv } from "@/lib/env";
+import { getDb } from "@/lib/db";
 import { CHAIN_ID_MAP, APTOS_NETWORK } from "@/lib/aptos-config";
 import type { SupportedNetwork } from "@/lib/aptos-config";
 import * as Sentry from "@sentry/nextjs";
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     const env = getEnv();
-    const db = createDb(env.DATABASE_URL);
+    const db = getDb();
     const walletAddress = result.address.toLowerCase();
 
     // Atomic nonce consumption: delete + return in single query (prevents race condition)

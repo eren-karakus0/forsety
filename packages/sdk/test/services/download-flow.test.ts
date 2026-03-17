@@ -26,6 +26,7 @@ const mockDb = {
 
 const mockPolicyService = {
   checkAccess: vi.fn(),
+  checkAndIncrementReads: vi.fn(),
   incrementReads: vi.fn(),
 } as any;
 
@@ -82,13 +83,9 @@ describe("Download flow ordering", () => {
 
   it("logAccess should increment reads (quota consumed)", async () => {
     const mockPolicy = { id: "p1", version: 1, hash: "hash1" };
-    mockPolicyService.checkAccess.mockResolvedValue({
+    mockPolicyService.checkAndIncrementReads.mockResolvedValue({
       allowed: true,
-      policy: mockPolicy,
-    });
-    mockPolicyService.incrementReads.mockResolvedValue({
-      ...mockPolicy,
-      readsConsumed: 1,
+      policy: { ...mockPolicy, readsConsumed: 1 },
     });
 
     setupSelectChain([
@@ -110,7 +107,7 @@ describe("Download flow ordering", () => {
     });
 
     expect(log.operationType).toBe("download");
-    expect(mockPolicyService.incrementReads).toHaveBeenCalledWith("p1");
+    expect(mockPolicyService.checkAndIncrementReads).toHaveBeenCalledWith("ds-1", "0xuser");
   });
 
   it("checkAccess should deny when quota is exhausted", async () => {
@@ -183,7 +180,10 @@ describe("Download flow: Shelby fail => no quota", () => {
       allowed: true,
       policy: { id: "p1", version: 1, hash: "h1" },
     });
-    mockPolicyService.incrementReads.mockResolvedValue({ readsConsumed: 1 });
+    mockPolicyService.checkAndIncrementReads.mockResolvedValue({
+      allowed: true,
+      policy: { id: "p1", version: 1, hash: "h1", readsConsumed: 1 },
+    });
 
     setupSelectChain([
       [{ blobHash: "sha256:abc" }],
@@ -206,7 +206,7 @@ describe("Download flow: Shelby fail => no quota", () => {
     await shelby.downloadDataset("blob-x", tempPath);
     expect(existsSync(tempPath)).toBe(true);
 
-    // Phase 3: now log access
+    // Phase 3: now log access (checkAndIncrementReads is called atomically inside)
     const log = await accessService.logAccess({
       datasetId: "ds-1",
       accessorAddress: "0xuser",
@@ -214,7 +214,7 @@ describe("Download flow: Shelby fail => no quota", () => {
     });
 
     expect(log.operationType).toBe("download");
-    expect(mockPolicyService.incrementReads).toHaveBeenCalledWith("p1");
+    expect(mockPolicyService.checkAndIncrementReads).toHaveBeenCalledWith("ds-1", "0xuser");
 
     // Cleanup
     try { unlinkSync(tempPath); } catch { /* ignore */ }

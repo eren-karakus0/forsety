@@ -38,7 +38,7 @@ export class AccessService {
       );
     }
 
-    const { allowed, policy } = await this.policyService.checkAccess(
+    const { allowed, policy } = await this.policyService.checkAndIncrementReads(
       input.datasetId,
       input.accessorAddress
     );
@@ -47,10 +47,6 @@ export class AccessService {
       throw new ForsetyAuthError(
         `Access denied for ${input.accessorAddress} on dataset ${input.datasetId}`
       );
-    }
-
-    if (policy) {
-      await this.policyService.incrementReads(policy.id);
     }
 
     // Resolve blob hash at read time from DB (current dataset state)

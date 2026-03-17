@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthMessage, generateNonce } from "@forsety/auth";
 import { lt } from "drizzle-orm";
-import { createDb, sessions } from "@forsety/db";
-import { getEnv } from "@/lib/env";
+import { sessions } from "@forsety/db";
+import { getDb } from "@/lib/db";
 import * as Sentry from "@sentry/nextjs";
 
 // Address-based rate limiter: prevents nonce flooding for a single wallet.
@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const env = getEnv();
     const nonce = generateNonce();
     const host = request.headers.get("host") ?? "localhost:3000";
 
@@ -66,7 +65,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Persist nonce in sessions table (5 min expiry)
-    const db = createDb(env.DATABASE_URL);
+    const db = getDb();
     await db.insert(sessions).values({
       walletAddress: addrLower,
       nonce,
