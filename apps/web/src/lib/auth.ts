@@ -92,3 +92,37 @@ export async function resolveAccessor(
 
   return null;
 }
+
+/**
+ * Strict accessor resolution for mutation routes.
+ * Rejects untrusted (global API key) access to prevent accessor spoofing.
+ */
+export async function resolveAccessorStrict(
+  request: NextRequest
+): Promise<{ accessor: string; trusted: boolean } | null> {
+  const auth = await resolveAccessor(request);
+  if (!auth) return null;
+  if (!auth.trusted) return null;
+  return auth;
+}
+
+/**
+ * DRY helper: fetch dataset + verify ownership. Returns dataset or error response.
+ */
+export async function requireDatasetOwner(
+  client: { datasets: { getById(id: string): Promise<{ ownerAddress: string } | null> } },
+  datasetId: string,
+  accessor: string
+): Promise<
+  | { dataset: { ownerAddress: string }; error?: never }
+  | { error: NextResponse; dataset?: never }
+> {
+  const dataset = await client.datasets.getById(datasetId);
+  if (!dataset) {
+    return { error: NextResponse.json({ error: "Dataset not found" }, { status: 404 }) };
+  }
+  if (dataset.ownerAddress !== accessor) {
+    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+  return { dataset };
+}

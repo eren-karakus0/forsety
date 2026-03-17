@@ -141,6 +141,37 @@ export class PolicyService {
     return map;
   }
 
+  /** Get latest policy per dataset, scoped to datasets owned by ownerAddress. */
+  async getLatestPerDatasetByOwner(ownerAddress: string) {
+    const maxVersions = this.db
+      .select({
+        datasetId: policies.datasetId,
+        maxVersion: max(policies.version).as("max_version"),
+      })
+      .from(policies)
+      .groupBy(policies.datasetId)
+      .as("mv");
+
+    const results = await this.db
+      .select()
+      .from(policies)
+      .innerJoin(
+        maxVersions,
+        and(
+          eq(policies.datasetId, maxVersions.datasetId),
+          eq(policies.version, maxVersions.maxVersion)
+        )
+      )
+      .innerJoin(datasets, eq(policies.datasetId, datasets.id))
+      .where(eq(datasets.ownerAddress, ownerAddress));
+
+    const map = new Map<string, typeof policies.$inferSelect>();
+    for (const r of results) {
+      map.set(r.policies.datasetId, r.policies);
+    }
+    return map;
+  }
+
   async getByDatasetId(datasetId: string) {
     return this.db
       .select()

@@ -85,6 +85,15 @@ export class DatasetService {
     return result[0] ?? null;
   }
 
+  /** Batch fetch datasets by IDs (single SQL query). */
+  async listByIds(ids: string[]) {
+    if (ids.length === 0) return [];
+    return this.db
+      .select()
+      .from(datasets)
+      .where(inArray(datasets.id, ids));
+  }
+
   /** List active (non-archived) datasets. */
   async list() {
     return this.db

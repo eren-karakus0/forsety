@@ -28,8 +28,50 @@ export interface AuditSummary {
   }>;
 }
 
+interface AuditFilterOptions {
+  agentId?: string | null;
+  status?: string;
+  resourceType?: string;
+  resourceId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+}
+
 export class AgentAuditService {
   constructor(private db: Database) {}
+
+  /** Build shared filter conditions from audit filter options. */
+  private buildAuditConditions(filters?: AuditFilterOptions) {
+    const conditions = [];
+
+    if (filters?.agentId === null) {
+      conditions.push(isNull(agentAuditLogs.agentId));
+    } else if (filters?.agentId) {
+      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
+    }
+
+    if (filters?.status) {
+      conditions.push(eq(agentAuditLogs.status, filters.status));
+    }
+
+    if (filters?.resourceType) {
+      conditions.push(eq(agentAuditLogs.resourceType, filters.resourceType));
+    }
+
+    if (filters?.resourceId) {
+      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
+    }
+
+    if (filters?.dateFrom) {
+      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
+    }
+
+    if (filters?.dateTo) {
+      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
+    }
+
+    return conditions;
+  }
 
   async log(input: LogAuditInput) {
     if (!input.action) {
@@ -64,44 +106,8 @@ export class AgentAuditService {
   }
 
   /** Global audit feed — includes anonymous (null agentId) records */
-  async listAll(filters?: {
-    agentId?: string | null;
-    status?: string;
-    resourceType?: string;
-    resourceId?: string;
-    dateFrom?: Date;
-    dateTo?: Date;
-    limit?: number;
-    offset?: number;
-  }) {
-    const conditions = [];
-
-    if (filters?.agentId === null) {
-      conditions.push(isNull(agentAuditLogs.agentId));
-    } else if (filters?.agentId) {
-      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
-    }
-
-    if (filters?.status) {
-      conditions.push(eq(agentAuditLogs.status, filters.status));
-    }
-
-    if (filters?.resourceType) {
-      conditions.push(eq(agentAuditLogs.resourceType, filters.resourceType));
-    }
-
-    if (filters?.resourceId) {
-      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
-    }
-
-    if (filters?.dateFrom) {
-      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
-    }
-
-    if (filters?.dateTo) {
-      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
-    }
-
+  async listAll(filters?: AuditFilterOptions & { limit?: number; offset?: number }) {
+    const conditions = this.buildAuditConditions(filters);
     const limit = filters?.limit ?? 100;
     const offset = filters?.offset ?? 0;
 
@@ -115,41 +121,8 @@ export class AgentAuditService {
   }
 
   /** Count filtered audit logs for pagination */
-  async countFiltered(filters?: {
-    agentId?: string | null;
-    status?: string;
-    resourceType?: string;
-    resourceId?: string;
-    dateFrom?: Date;
-    dateTo?: Date;
-  }): Promise<number> {
-    const conditions = [];
-
-    if (filters?.agentId === null) {
-      conditions.push(isNull(agentAuditLogs.agentId));
-    } else if (filters?.agentId) {
-      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
-    }
-
-    if (filters?.status) {
-      conditions.push(eq(agentAuditLogs.status, filters.status));
-    }
-
-    if (filters?.resourceType) {
-      conditions.push(eq(agentAuditLogs.resourceType, filters.resourceType));
-    }
-
-    if (filters?.resourceId) {
-      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
-    }
-
-    if (filters?.dateFrom) {
-      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
-    }
-
-    if (filters?.dateTo) {
-      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
-    }
+  async countFiltered(filters?: AuditFilterOptions): Promise<number> {
+    const conditions = this.buildAuditConditions(filters);
 
     const [result] = await this.db
       .select({ total: count() })
@@ -162,45 +135,12 @@ export class AgentAuditService {
   /** List audit logs scoped to agents owned by ownerAddress. */
   async listByOwner(
     ownerAddress: string,
-    filters?: {
-      agentId?: string | null;
-      status?: string;
-      resourceType?: string;
-      resourceId?: string;
-      dateFrom?: Date;
-      dateTo?: Date;
-      limit?: number;
-      offset?: number;
-    }
+    filters?: AuditFilterOptions & { limit?: number; offset?: number }
   ) {
-    const conditions = [eq(agents.ownerAddress, ownerAddress)];
-
-    if (filters?.agentId === null) {
-      conditions.push(isNull(agentAuditLogs.agentId));
-    } else if (filters?.agentId) {
-      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
-    }
-
-    if (filters?.status) {
-      conditions.push(eq(agentAuditLogs.status, filters.status));
-    }
-
-    if (filters?.resourceType) {
-      conditions.push(eq(agentAuditLogs.resourceType, filters.resourceType));
-    }
-
-    if (filters?.resourceId) {
-      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
-    }
-
-    if (filters?.dateFrom) {
-      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
-    }
-
-    if (filters?.dateTo) {
-      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
-    }
-
+    const conditions = [
+      eq(agents.ownerAddress, ownerAddress),
+      ...this.buildAuditConditions(filters),
+    ];
     const limit = filters?.limit ?? 100;
     const offset = filters?.offset ?? 0;
 
@@ -230,37 +170,12 @@ export class AgentAuditService {
   /** Count audit logs scoped to agents owned by ownerAddress. */
   async countByOwner(
     ownerAddress: string,
-    filters?: {
-      agentId?: string | null;
-      status?: string;
-      resourceId?: string;
-      dateFrom?: Date;
-      dateTo?: Date;
-    }
+    filters?: AuditFilterOptions
   ): Promise<number> {
-    const conditions = [eq(agents.ownerAddress, ownerAddress)];
-
-    if (filters?.agentId === null) {
-      conditions.push(isNull(agentAuditLogs.agentId));
-    } else if (filters?.agentId) {
-      conditions.push(eq(agentAuditLogs.agentId, filters.agentId));
-    }
-
-    if (filters?.status) {
-      conditions.push(eq(agentAuditLogs.status, filters.status));
-    }
-
-    if (filters?.resourceId) {
-      conditions.push(eq(agentAuditLogs.resourceId, filters.resourceId));
-    }
-
-    if (filters?.dateFrom) {
-      conditions.push(gte(agentAuditLogs.timestamp, filters.dateFrom));
-    }
-
-    if (filters?.dateTo) {
-      conditions.push(lte(agentAuditLogs.timestamp, filters.dateTo));
-    }
+    const conditions = [
+      eq(agents.ownerAddress, ownerAddress),
+      ...this.buildAuditConditions(filters),
+    ];
 
     const [result] = await this.db
       .select({ total: count() })
