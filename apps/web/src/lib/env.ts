@@ -7,6 +7,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
   FORSETY_HMAC_SECRET: z.string().min(32, "FORSETY_HMAC_SECRET must be at least 32 characters"),
+  COOKIE_DOMAIN: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;

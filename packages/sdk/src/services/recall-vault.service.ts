@@ -33,8 +33,13 @@ export class RecallVaultService {
   constructor(
     private db: Database,
     private shelby?: ShelbyWrapper,
-    private vectorSearch?: VectorSearchService
+    private vectorSearch?: VectorSearchService | (() => VectorSearchService)
   ) {}
+
+  private resolveVectorSearch(): VectorSearchService | undefined {
+    if (typeof this.vectorSearch === "function") return this.vectorSearch();
+    return this.vectorSearch;
+  }
 
   async store(input: StoreMemoryInput) {
     if (!input.agentId || !input.key) {
@@ -82,7 +87,7 @@ export class RecallVaultService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.vectorSearch?.embedMemory(memory!.id).catch((err) => {
+    this.resolveVectorSearch()?.embedMemory(memory!.id).catch((err) => {
       console.error(`[forsety] auto-embed memory ${memory!.id} failed:`, err);
     });
 

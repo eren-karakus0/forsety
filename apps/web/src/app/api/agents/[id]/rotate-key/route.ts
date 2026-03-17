@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessorStrict, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 
@@ -12,7 +12,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await resolveAccessor(request);
+  const auth = await resolveAccessorStrict(request);
   if (!auth) return unauthorizedResponse();
 
   try {

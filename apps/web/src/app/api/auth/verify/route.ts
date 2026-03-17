@@ -6,6 +6,7 @@ import { getEnv } from "@/lib/env";
 import { getDb } from "@/lib/db";
 import { CHAIN_ID_MAP, APTOS_NETWORK } from "@/lib/aptos-config";
 import type { SupportedNetwork } from "@/lib/aptos-config";
+import { getAuthCookieOptions } from "@/lib/cookie-options";
 import * as Sentry from "@sentry/nextjs";
 
 const VALID_NETWORKS = ["shelbynet", "testnet", "mainnet"] as const;
@@ -134,14 +135,7 @@ export async function POST(request: NextRequest) {
       address: result.address,
     });
 
-    const isProduction = process.env.NODE_ENV === "production";
-    response.cookies.set("forsety-auth", token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "lax" : "strict",
-      maxAge: 3600,
-      path: "/",
-    });
+    response.cookies.set("forsety-auth", token, getAuthCookieOptions(3600));
 
     return response;
   } catch (error) {

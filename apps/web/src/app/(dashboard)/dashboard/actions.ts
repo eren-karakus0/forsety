@@ -297,6 +297,7 @@ export async function countAuditLogs(
     return client.agentAudit.countByOwner(wallet, {
       status: filters?.status,
       agentId: filters?.agentId,
+      resourceId: filters?.resourceId,
       dateFrom: filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
       dateTo: filters?.dateTo ? new Date(filters.dateTo) : undefined,
     });

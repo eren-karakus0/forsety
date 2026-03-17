@@ -22,8 +22,13 @@ export class DatasetService {
   constructor(
     private db: Database,
     private shelby: ShelbyWrapper,
-    private vectorSearch?: VectorSearchService
+    private vectorSearch?: VectorSearchService | (() => VectorSearchService)
   ) {}
+
+  private resolveVectorSearch(): VectorSearchService | undefined {
+    if (typeof this.vectorSearch === "function") return this.vectorSearch();
+    return this.vectorSearch;
+  }
 
   async upload(input: UploadDatasetInput) {
     if (!input.name || !input.ownerAddress) {
@@ -68,7 +73,7 @@ export class DatasetService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.vectorSearch?.embedDataset(dataset!.id).catch((err) => {
+    this.resolveVectorSearch()?.embedDataset(dataset!.id).catch((err) => {
       console.error(`[forsety] auto-embed dataset ${dataset!.id} failed:`, err);
     });
 

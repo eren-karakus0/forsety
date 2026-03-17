@@ -67,10 +67,11 @@ export class ForsetyClient {
         ? new ShelbyMockWrapper(shelbyConfig)
         : new ShelbyWrapper(shelbyConfig);
 
+    const lazyVectorSearch = () => this.vectorSearch;
     this.datasets = new DatasetService(
       this.db,
       this.shelby as ShelbyWrapper,
-      this.vectorSearch
+      lazyVectorSearch
     );
     this.licenses = new LicenseService(this.db);
     this.policies = new PolicyService(this.db);
@@ -81,7 +82,7 @@ export class ForsetyClient {
     );
     this.evidence = new EvidenceService(this.db);
     this.agents = new AgentService(this.db);
-    this.recallVault = new RecallVaultService(this.db, undefined, this.vectorSearch);
+    this.recallVault = new RecallVaultService(this.db, undefined, lazyVectorSearch);
     this.agentAudit = new AgentAuditService(this.db);
     this.shieldStore = new ShieldStoreService(this.db, this.recallVault);
     if (!config.hmacSecret) {

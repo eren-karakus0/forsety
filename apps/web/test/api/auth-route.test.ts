@@ -49,6 +49,12 @@ vi.mock("@sentry/nextjs", () => ({
 describe("Auth Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock for db.delete chain (deterministic cleanup may fire)
+    mockDelete.mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        execute: vi.fn().mockResolvedValue(undefined),
+      }),
+    });
   });
 
   describe("GET /api/auth/nonce", () => {

@@ -5,6 +5,10 @@ import { sessions } from "@forsety/db";
 import { getDb } from "@/lib/db";
 import * as Sentry from "@sentry/nextjs";
 
+// Deterministic session cleanup interval (60 seconds)
+const SESSION_CLEANUP_INTERVAL_MS = 60_000;
+let lastSessionCleanup = 0;
+
 // Address-based rate limiter: prevents nonce flooding for a single wallet.
 // IP-based rate limiting is handled by the middleware.
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -72,12 +76,12 @@ export async function GET(request: NextRequest) {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    // Probabilistic cleanup: ~10% of requests purge expired sessions
-    if (Math.random() < 0.1) {
-      db.delete(sessions)
+    // Deterministic cleanup: purge expired sessions at most once per 60s
+    if (Date.now() - lastSessionCleanup > SESSION_CLEANUP_INTERVAL_MS) {
+      lastSessionCleanup = Date.now();
+      await db.delete(sessions)
         .where(lt(sessions.expiresAt, new Date()))
-        .execute()
-        .catch(() => {});
+        .execute();
     }
 
     return NextResponse.json({ nonce, message });

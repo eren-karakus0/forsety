@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyJwt, generateNonce } from "@forsety/auth";
-import { createDb, sessions } from "@forsety/db";
+import { sessions } from "@forsety/db";
 import { eq, and, gt, lt, sql } from "drizzle-orm";
 import { getEnv } from "@/lib/env";
+import { getDb } from "@/lib/db";
 
 /** Maximum active (non-expired) mutation nonces per wallet */
 const MAX_ACTIVE_NONCES = 3;
 
 /** Mutation nonce TTL: 90 seconds */
 const NONCE_TTL_MS = 90 * 1000;
+
+/** Deterministic session cleanup interval (60 seconds) */
+const CLEANUP_INTERVAL_MS = 60_000;
+let lastCleanup = 0;
 
 export async function GET() {
   try {
@@ -26,7 +31,7 @@ export async function GET() {
     }
 
     const walletAddress = payload.sub.toLowerCase();
-    const db = createDb(env.DATABASE_URL);
+    const db = getDb();
 
     // Enforce per-wallet nonce limit to prevent flooding
     const [{ count }] = await db
@@ -55,17 +60,17 @@ export async function GET() {
       expiresAt: new Date(Date.now() + NONCE_TTL_MS),
     });
 
-    // Probabilistic cleanup: ~10% of requests purge expired sessions for this wallet
-    if (Math.random() < 0.1) {
-      db.delete(sessions)
+    // Deterministic cleanup: purge expired sessions at most once per 60s
+    if (Date.now() - lastCleanup > CLEANUP_INTERVAL_MS) {
+      lastCleanup = Date.now();
+      await db.delete(sessions)
         .where(
           and(
             eq(sessions.walletAddress, walletAddress),
             lt(sessions.expiresAt, new Date())
           )
         )
-        .execute()
-        .catch(() => {});
+        .execute();
     }
 
     return NextResponse.json({ nonce });

@@ -15,16 +15,19 @@ const mockDbSelect = vi.fn();
 const mockDbDelete = vi.fn();
 
 vi.mock("@forsety/db", () => ({
-  createDb: () => ({
-    insert: mockDbInsert,
-    select: mockDbSelect,
-    delete: mockDbDelete,
-  }),
   sessions: {
     walletAddress: "walletAddress",
     nonce: "nonce",
     expiresAt: "expiresAt",
   },
+}));
+
+vi.mock("@/lib/db", () => ({
+  getDb: () => ({
+    insert: mockDbInsert,
+    select: mockDbSelect,
+    delete: mockDbDelete,
+  }),
 }));
 
 vi.mock("@/lib/env", () => ({
@@ -55,6 +58,12 @@ describe("GET /api/auth/mutation-nonce", () => {
     vi.clearAllMocks();
     mockGenerateNonce.mockReturnValue("nonce-mutation-123");
     mockCookiesGet.mockReturnValue(undefined);
+    // Default mock for db.delete chain (deterministic cleanup may fire)
+    mockDbDelete.mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        execute: vi.fn().mockResolvedValue(undefined),
+      }),
+    });
   });
 
   it("should return 401 when no cookie present", async () => {
@@ -179,8 +188,9 @@ describe("GET /api/auth/mutation-nonce", () => {
     expect(json.nonce.length).toBeGreaterThan(0);
   });
 
-  it("should trigger probabilistic cleanup approximately 10% of the time", async () => {
+  it("should trigger deterministic cleanup based on time interval", async () => {
     // Arrange
+    vi.useFakeTimers();
     mockCookiesGet.mockReturnValue({ value: "valid-token" });
     mockVerifyJwt.mockResolvedValue({ sub: "0xuser123" });
 
@@ -196,8 +206,9 @@ describe("GET /api/auth/mutation-nonce", () => {
       values: vi.fn().mockResolvedValue(undefined),
     });
 
+    const mockExecute = vi.fn().mockResolvedValue(undefined);
     const mockWhere = vi.fn().mockReturnValue({
-      execute: vi.fn().mockResolvedValue(undefined),
+      execute: mockExecute,
     });
 
     mockDbDelete.mockReturnValue({
@@ -206,25 +217,18 @@ describe("GET /api/auth/mutation-nonce", () => {
 
     const { GET } = await import("../../src/app/api/auth/mutation-nonce/route");
 
-    // Act - Run 100 times with controlled random
-    let cleanupTriggered = 0;
-    const originalRandom = Math.random;
+    // Advance time well past the 60s interval so cleanup fires regardless of previous state
+    vi.advanceTimersByTime(120_000);
+    mockDbDelete.mockClear();
+    await GET();
+    expect(mockDbDelete).toHaveBeenCalledTimes(1);
 
-    for (let i = 0; i < 100; i++) {
-      Math.random = () => i / 100; // 0.00, 0.01, ... 0.99
+    // Calling again immediately should NOT trigger cleanup (within 60s)
+    mockDbDelete.mockClear();
+    await GET();
+    expect(mockDbDelete).not.toHaveBeenCalled();
 
-      await GET();
-
-      // Check if cleanup was called (only for random < 0.1)
-      if (i < 10) {
-        cleanupTriggered++;
-      }
-    }
-
-    Math.random = originalRandom;
-
-    // Assert - Cleanup should be called approximately 10 times
-    expect(mockDbDelete).toHaveBeenCalledTimes(cleanupTriggered);
+    vi.useRealTimers();
   });
 
   it("should normalize wallet address to lowercase", async () => {

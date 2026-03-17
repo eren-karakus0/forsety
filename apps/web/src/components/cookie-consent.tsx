@@ -19,7 +19,7 @@ function getStoredConsent(): Consent {
   return null;
 }
 
-export function CookieConsent() {
+export function CookieConsent({ nonce }: { nonce?: string }) {
   const [consent, setConsent] = useState<Consent>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -56,6 +56,7 @@ export function CookieConsent() {
           src={umamiUrl}
           data-website-id={umamiId}
           strategy="afterInteractive"
+          nonce={nonce}
         />
       )}
 
