@@ -1,4 +1,4 @@
-import { eq, and, isNull, inArray } from "drizzle-orm";
+import { eq, and, isNull, inArray, count } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
@@ -134,6 +134,15 @@ export class DatasetService {
       ...d,
       licenseSpdx: licenseMap.get(d.id) ?? null,
     }));
+  }
+
+  /** Efficient COUNT of datasets owned by address (avoids fetching all rows). */
+  async countByOwner(ownerAddress: string): Promise<number> {
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(datasets)
+      .where(and(eq(datasets.ownerAddress, ownerAddress), isNull(datasets.archivedAt)));
+    return result?.total ?? 0;
   }
 
   /** List datasets owned by a specific address. Non-archived by default. */

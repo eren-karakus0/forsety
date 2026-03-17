@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { createHash, randomBytes } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { agents } from "@forsety/db";
@@ -77,6 +77,15 @@ export class AgentService {
     return agent;
   }
 
+  /** Efficient COUNT of agents owned by address. */
+  async countByOwner(ownerAddress: string): Promise<number> {
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(agents)
+      .where(eq(agents.ownerAddress, ownerAddress));
+    return result?.total ?? 0;
+  }
+
   async listByOwner(ownerAddress: string) {
     return this.db
       .select()
@@ -94,6 +103,7 @@ export class AgentService {
     return result[0] ?? null;
   }
 
+  /** @internal — unscoped, use listByOwner() for tenant-isolated access. */
   async list() {
     return this.db.select().from(agents);
   }
