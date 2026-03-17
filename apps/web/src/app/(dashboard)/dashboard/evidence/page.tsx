@@ -34,7 +34,7 @@ export default function EvidencePage() {
   const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
   const { connected } = useWallet();
   const [packs, setPacks] = useState<EvidenceRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState(false);
 
   useEffect(() => {
