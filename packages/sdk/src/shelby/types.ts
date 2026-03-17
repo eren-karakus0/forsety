@@ -21,3 +21,9 @@ export interface ShelbyWrapperConfig {
   network: string;
   walletAddress?: string;
 }
+
+/** Common interface for ShelbyWrapper and ShelbyMockWrapper. */
+export interface IShelbyClient {
+  uploadDataset(filePath: string, blobName: string): Promise<UploadResult>;
+  downloadDataset(blobName: string, outputPath: string): Promise<void>;
+}

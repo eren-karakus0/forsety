@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, gt } from "drizzle-orm";
 import { verifyAuthMessage, signJwt } from "@forsety/auth";
-import { createDb, sessions, users } from "@forsety/db";
+import { sessions, users } from "@forsety/db";
 import { getEnv } from "@/lib/env";
+import { getDb } from "@/lib/db";
 import { CHAIN_ID_MAP, APTOS_NETWORK } from "@/lib/aptos-config";
 import type { SupportedNetwork } from "@/lib/aptos-config";
+import { getAuthCookieOptions } from "@/lib/cookie-options";
 import * as Sentry from "@sentry/nextjs";
 
 const VALID_NETWORKS = ["shelbynet", "testnet", "mainnet"] as const;
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     const env = getEnv();
-    const db = createDb(env.DATABASE_URL);
+    const db = getDb();
     const walletAddress = result.address.toLowerCase();
 
     // Atomic nonce consumption: delete + return in single query (prevents race condition)
@@ -133,14 +135,7 @@ export async function POST(request: NextRequest) {
       address: result.address,
     });
 
-    const isProduction = process.env.NODE_ENV === "production";
-    response.cookies.set("forsety-auth", token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "lax" : "strict",
-      maxAge: 3600,
-      path: "/",
-    });
+    response.cookies.set("forsety-auth", token, getAuthCookieOptions(3600));
 
     return response;
   } catch (error) {

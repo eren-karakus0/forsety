@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useNetwork } from "@/lib/network-context";
+import { normalizeSignature } from "@/lib/wallet-utils";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -60,18 +61,7 @@ export function useForsetyAuth() {
       });
 
       // 3. Normalize signature to hex string
-      let signatureHex: string;
-      if (typeof signResult.signature === "string") {
-        signatureHex = signResult.signature;
-      } else if (signResult.signature instanceof Uint8Array) {
-        signatureHex = Array.from(signResult.signature, (b) =>
-          b.toString(16).padStart(2, "0")
-        ).join("");
-      } else if (Array.isArray(signResult.signature)) {
-        signatureHex = signResult.signature[0] as string;
-      } else {
-        signatureHex = signResult.signature.toString();
-      }
+      const signatureHex = normalizeSignature(signResult.signature);
 
       // 4. Verify on server - send fullMessage, signature, publicKey, and network
       const verifyRes = await fetch("/api/auth/verify", {

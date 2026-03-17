@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import type { SignaturePayload } from "@/lib/types";
+import { normalizeSignature } from "@/lib/wallet-utils";
 
 /**
  * Hook that wraps any mutation with wallet signature approval.
@@ -47,18 +48,7 @@ export function useSignedAction() {
       });
 
       // 3. Normalize signature to hex string
-      let signatureHex: string;
-      if (typeof signResult.signature === "string") {
-        signatureHex = signResult.signature;
-      } else if (signResult.signature instanceof Uint8Array) {
-        signatureHex = Array.from(signResult.signature, (b) =>
-          b.toString(16).padStart(2, "0")
-        ).join("");
-      } else if (Array.isArray(signResult.signature)) {
-        signatureHex = signResult.signature[0] as string;
-      } else {
-        signatureHex = signResult.signature.toString();
-      }
+      const signatureHex = normalizeSignature(signResult.signature);
 
       // 4. Call the server action with the signature payload
       return serverAction({

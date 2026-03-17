@@ -1,7 +1,7 @@
 import { eq, and, gt } from "drizzle-orm";
 import { verifyAuthMessage } from "@forsety/auth";
-import { createDb, sessions } from "@forsety/db";
-import { getEnv } from "@/lib/env";
+import { sessions } from "@forsety/db";
+import { getDb } from "@/lib/db";
 import type { SignaturePayload } from "./types";
 
 const GENERIC_ERROR = "Mutation authentication failed";
@@ -65,8 +65,7 @@ export async function verifyMutationSignature(
   // Consume nonce atomically within a transaction to prevent race conditions.
   // SELECT FOR UPDATE acquires a row-level lock, preventing concurrent requests
   // from consuming the same nonce.
-  const env = getEnv();
-  const db = createDb(env.DATABASE_URL);
+  const db = getDb();
 
   const consumed = await db.transaction(async (tx) => {
     const [row] = await tx

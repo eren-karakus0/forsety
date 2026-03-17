@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthMessage, generateNonce } from "@forsety/auth";
 import { lt } from "drizzle-orm";
-import { createDb, sessions } from "@forsety/db";
-import { getEnv } from "@/lib/env";
+import { sessions } from "@forsety/db";
+import { getDb } from "@/lib/db";
 import * as Sentry from "@sentry/nextjs";
+
+// Deterministic session cleanup interval (60 seconds)
+const SESSION_CLEANUP_INTERVAL_MS = 60_000;
+let lastSessionCleanup = 0;
 
 // Address-based rate limiter: prevents nonce flooding for a single wallet.
 // IP-based rate limiting is handled by the middleware.
@@ -54,7 +58,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const env = getEnv();
     const nonce = generateNonce();
     const host = request.headers.get("host") ?? "localhost:3000";
 
@@ -66,19 +69,19 @@ export async function GET(request: NextRequest) {
     });
 
     // Persist nonce in sessions table (5 min expiry)
-    const db = createDb(env.DATABASE_URL);
+    const db = getDb();
     await db.insert(sessions).values({
       walletAddress: addrLower,
       nonce,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    // Probabilistic cleanup: ~10% of requests purge expired sessions
-    if (Math.random() < 0.1) {
-      db.delete(sessions)
+    // Deterministic cleanup: purge expired sessions at most once per 60s
+    if (Date.now() - lastSessionCleanup > SESSION_CLEANUP_INTERVAL_MS) {
+      lastSessionCleanup = Date.now();
+      await db.delete(sessions)
         .where(lt(sessions.expiresAt, new Date()))
-        .execute()
-        .catch(() => {});
+        .execute();
     }
 
     return NextResponse.json({ nonce, message });

@@ -11,5 +11,20 @@ export default defineConfig({
   },
   test: {
     include: ["test/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      exclude: [
+        "src/**/*.d.ts",
+        "src/**/types.ts",
+        "src/app/layout.tsx",
+        "src/app/page.tsx",
+        "src/app/**/page.tsx",
+      ],
+      thresholds: {
+        statements: 80,
+        branches: 75,
+      },
+    },
   },
 });

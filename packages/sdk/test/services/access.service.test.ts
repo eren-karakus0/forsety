@@ -11,6 +11,7 @@ const mockDb = {
 
 const mockPolicyService = {
   checkAccess: vi.fn(),
+  checkAndIncrementReads: vi.fn(),
   incrementReads: vi.fn(),
 } as any;
 
@@ -53,7 +54,7 @@ describe("AccessService", () => {
     });
 
     it("should throw auth error when access is denied", async () => {
-      mockPolicyService.checkAccess.mockResolvedValue({
+      mockPolicyService.checkAndIncrementReads.mockResolvedValue({
         allowed: false,
         policy: null,
       });
@@ -69,7 +70,7 @@ describe("AccessService", () => {
 
     it("should log access and increment reads when allowed", async () => {
       const mockPolicy = { id: "p1", version: 1, hash: "hash1" };
-      mockPolicyService.checkAccess.mockResolvedValue({
+      mockPolicyService.checkAndIncrementReads.mockResolvedValue({
         allowed: true,
         policy: mockPolicy,
       });
@@ -98,12 +99,11 @@ describe("AccessService", () => {
       });
 
       expect(result).toEqual(mockLog);
-      expect(mockPolicyService.incrementReads).toHaveBeenCalledWith("p1");
     });
 
     it("should handle missing blobHash and licenseHash gracefully", async () => {
       const mockPolicy = { id: "p1", version: 1, hash: "hash1" };
-      mockPolicyService.checkAccess.mockResolvedValue({
+      mockPolicyService.checkAndIncrementReads.mockResolvedValue({
         allowed: true,
         policy: mockPolicy,
       });
@@ -133,7 +133,7 @@ describe("AccessService", () => {
 
     it("should use provided blobHashAtRead when supplied", async () => {
       const mockPolicy = { id: "p1", version: 1, hash: "hash1" };
-      mockPolicyService.checkAccess.mockResolvedValue({
+      mockPolicyService.checkAndIncrementReads.mockResolvedValue({
         allowed: true,
         policy: mockPolicy,
       });

@@ -120,7 +120,8 @@ export async function fetchDatasetDetail(id: string) {
         createdAt: l.createdAt.toISOString(),
       })),
     };
-  } catch {
+  } catch (err) {
+    console.error("[fetchDatasetDetail]", err);
     return null;
   }
 }
@@ -173,7 +174,8 @@ export async function fetchDashboardStats() {
       registeredAgents: agents.length,
       activeAgents,
     };
-  } catch {
+  } catch (err) {
+    console.error("[fetchDashboardStats]", err);
     return { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 };
   }
 }
@@ -190,7 +192,8 @@ export async function fetchAgents() {
       createdAt: a.createdAt.toISOString(),
       lastSeenAt: a.lastSeenAt?.toISOString() ?? null,
     }));
-  } catch {
+  } catch (err) {
+    console.error("[fetchAgents]", err);
     return [];
   }
 }
@@ -219,7 +222,8 @@ export async function fetchAgentDetail(id: string) {
         })),
       },
     };
-  } catch {
+  } catch (err) {
+    console.error("[fetchAgentDetail]", err);
     return null;
   }
 }
@@ -239,7 +243,8 @@ export async function fetchAgentAuditLogs(
       ...l,
       timestamp: l.timestamp.toISOString(),
     }));
-  } catch {
+  } catch (err) {
+    console.error("[fetchAgentAuditLogs]", err);
     return [];
   }
 }
@@ -269,7 +274,8 @@ export async function fetchAllAuditLogs(
       ...l,
       timestamp: l.timestamp.toISOString(),
     }));
-  } catch {
+  } catch (err) {
+    console.error("[fetchAllAuditLogs]", err);
     return [];
   }
 }
@@ -291,10 +297,12 @@ export async function countAuditLogs(
     return client.agentAudit.countByOwner(wallet, {
       status: filters?.status,
       agentId: filters?.agentId,
+      resourceId: filters?.resourceId,
       dateFrom: filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
       dateTo: filters?.dateTo ? new Date(filters.dateTo) : undefined,
     });
-  } catch {
+  } catch (err) {
+    console.error("[countAuditLogs]", err);
     return 0;
   }
 }
@@ -310,7 +318,8 @@ export async function fetchAllEvidencePacks(filters?: { limit?: number; offset?:
       ...p,
       generatedAt: p.generatedAt.toISOString(),
     }));
-  } catch {
+  } catch (err) {
+    console.error("[fetchAllEvidencePacks]", err);
     return [];
   }
 }
@@ -325,18 +334,17 @@ export async function fetchEvidencePackById(id: string) {
     const pack = await client.evidence.getById(id);
     if (!pack) return null;
 
-    // Verify ownership via dataset
-    const dataset = await client.datasets.getById(pack.datasetId);
-    if (!dataset || dataset.ownerAddress !== wallet) return null;
-
+    // Single query: fetch dataset with license (includes name + ownership info)
     const datasetWithLicense = await client.datasets.getWithLicense(pack.datasetId);
+    if (!datasetWithLicense || datasetWithLicense.dataset.ownerAddress !== wallet) return null;
 
     return {
       ...pack,
       generatedAt: pack.generatedAt.toISOString(),
-      datasetName: datasetWithLicense?.dataset.name ?? "Unknown",
+      datasetName: datasetWithLicense.dataset.name ?? "Unknown",
     };
-  } catch {
+  } catch (err) {
+    console.error("[fetchEvidencePackById]", err);
     return null;
   }
 }
@@ -355,7 +363,8 @@ export async function fetchAccessLogs(datasetId: string) {
       ...l,
       timestamp: l.timestamp?.toISOString() ?? null,
     }));
-  } catch {
+  } catch (err) {
+    console.error("[fetchAccessLogs]", err);
     return [];
   }
 }
@@ -372,7 +381,8 @@ export async function fetchAllPolicies() {
       expiresAt: p.expiresAt?.toISOString() ?? null,
       createdAt: p.createdAt.toISOString(),
     }));
-  } catch {
+  } catch (err) {
+    console.error("[fetchAllPolicies]", err);
     return [];
   }
 }
@@ -385,7 +395,8 @@ export async function fetchDatasetsList() {
     const client = getForsetyClient();
     const list = await client.datasets.listByOwner(wallet);
     return list.map((d) => ({ id: d.id, name: d.name }));
-  } catch {
+  } catch (err) {
+    console.error("[fetchDatasetsList]", err);
     return [];
   }
 }
@@ -470,7 +481,8 @@ export async function fetchPolicies(datasetId: string) {
     const dataset = await client.datasets.getWithLicense(datasetId);
     if (!dataset || dataset.dataset.ownerAddress !== wallet) return [];
     return client.policies.getByDatasetId(datasetId);
-  } catch {
+  } catch (err) {
+    console.error("[fetchPolicies]", err);
     return [];
   }
 }
@@ -526,16 +538,18 @@ export async function fetchDatasetsWithStatus() {
     if (!wallet) return [];
 
     const client = getForsetyClient();
-    const allDatasets = await client.datasets.listByOwner(wallet, { includeArchived: true });
+    const [allDatasets, allLicenses, latestPolicies] = await Promise.all([
+      client.datasets.listByOwner(wallet, { includeArchived: true }),
+      client.licenses.listByOwner(wallet, { includeRevoked: false }),
+      client.policies.getLatestPerDatasetByOwner(wallet),
+    ]);
+
     if (allDatasets.length === 0) return [];
 
-    const allLicenses = await client.licenses.listByOwner(wallet, { includeRevoked: false });
     const licenseMap = new Map<string, string>();
     for (const lic of allLicenses) {
       licenseMap.set(lic.datasetId, lic.spdxType);
     }
-
-    const latestPolicies = await client.policies.getLatestPerDataset();
 
     return allDatasets.map((d) => {
       const policy = latestPolicies.get(d.id);
@@ -562,7 +576,8 @@ export async function fetchDatasetsWithStatus() {
         archivedAt: d.archivedAt ? new Date(d.archivedAt).toISOString() : null,
       };
     });
-  } catch {
+  } catch (err) {
+    console.error("[fetchDatasetsWithStatus]", err);
     return [];
   }
 }
@@ -576,7 +591,8 @@ export async function fetchViolationCount() {
 
     const client = getForsetyClient();
     return client.agentAudit.countByOwner(wallet, { status: "denied" });
-  } catch {
+  } catch (err) {
+    console.error("[fetchViolationCount]", err);
     return 0;
   }
 }
@@ -629,9 +645,12 @@ export async function bulkDeleteDatasets(ids: string[], sig: SignaturePayload) {
     if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
 
     const client = getForsetyClient();
+    const allDatasets = await client.datasets.listByIds(ids);
+    const datasetMap = new Map(allDatasets.map((d) => [d.id, d]));
+
     const results = [];
     for (const id of ids) {
-      const dataset = await client.datasets.getById(id);
+      const dataset = datasetMap.get(id);
       if (!dataset || dataset.ownerAddress !== wallet) {
         results.push({ id, archived: false, error: "Forbidden" });
         continue;
@@ -654,13 +673,15 @@ export async function bulkExportDatasets(ids: string[]) {
     if (!wallet) return { success: false, error: "Not authenticated" };
 
     const client = getForsetyClient();
-    const data = [];
-    for (const id of ids) {
-      const dataset = await client.datasets.getById(id);
-      if (!dataset || dataset.ownerAddress !== wallet) continue;
+    const allDatasets = await client.datasets.listByIds(ids);
+    const ownedIds = allDatasets
+      .filter((d) => d.ownerAddress === wallet)
+      .map((d) => d.id);
 
+    const data = [];
+    for (const id of ownedIds) {
       const result = await client.datasets.getWithLicense(id);
-      if (result && result.dataset.ownerAddress === wallet) {
+      if (result) {
         data.push({
           dataset: {
             ...result.dataset,

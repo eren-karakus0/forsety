@@ -4,8 +4,8 @@ export interface RateLimitConfig {
 }
 
 export const RATE_LIMIT_TIERS = {
-  auth: { maxRequests: 5, windowMs: 60_000 },
-  write: { maxRequests: 30, windowMs: 60_000 },
+  auth: { maxRequests: 3, windowMs: 60_000 },
+  write: { maxRequests: 10, windowMs: 60_000 },
   read: { maxRequests: 60, windowMs: 60_000 },
   public: { maxRequests: 20, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
@@ -14,6 +14,9 @@ interface RateLimitEntry {
   count: number;
   resetAt: number;
 }
+
+const MAX_STORE_SIZE = 10_000;
+const CLEANUP_INTERVAL_MS = 30_000;
 
 const stores = new Map<string, Map<string, RateLimitEntry>>();
 let lastCleanup = Date.now();
@@ -29,12 +32,21 @@ function getStore(storeKey: string): Map<string, RateLimitEntry> {
 
 function cleanup() {
   const now = Date.now();
-  if (now - lastCleanup < 5 * 60_000) return;
+  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
   lastCleanup = now;
 
   for (const store of stores.values()) {
     for (const [key, entry] of store) {
       if (now > entry.resetAt) store.delete(key);
+    }
+    // Hard cap: evict oldest entries if store exceeds max size
+    if (store.size > MAX_STORE_SIZE) {
+      const excess = store.size - MAX_STORE_SIZE;
+      const keys = store.keys();
+      for (let i = 0; i < excess; i++) {
+        const { value } = keys.next();
+        if (value) store.delete(value);
+      }
     }
   }
 }

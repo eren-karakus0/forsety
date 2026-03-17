@@ -1,4 +1,4 @@
-import { eq, and, isNull, inArray } from "drizzle-orm";
+import { eq, and, isNull, inArray, count } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
@@ -22,8 +22,13 @@ export class DatasetService {
   constructor(
     private db: Database,
     private shelby: ShelbyWrapper,
-    private vectorSearch?: VectorSearchService
+    private vectorSearch?: VectorSearchService | (() => VectorSearchService)
   ) {}
+
+  private resolveVectorSearch(): VectorSearchService | undefined {
+    if (typeof this.vectorSearch === "function") return this.vectorSearch();
+    return this.vectorSearch;
+  }
 
   async upload(input: UploadDatasetInput) {
     if (!input.name || !input.ownerAddress) {
@@ -68,7 +73,7 @@ export class DatasetService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.vectorSearch?.embedDataset(dataset!.id).catch((err) => {
+    this.resolveVectorSearch()?.embedDataset(dataset!.id).catch((err) => {
       console.error(`[forsety] auto-embed dataset ${dataset!.id} failed:`, err);
     });
 
@@ -83,6 +88,15 @@ export class DatasetService {
       .limit(1);
 
     return result[0] ?? null;
+  }
+
+  /** Batch fetch datasets by IDs (single SQL query). */
+  async listByIds(ids: string[]) {
+    if (ids.length === 0) return [];
+    return this.db
+      .select()
+      .from(datasets)
+      .where(inArray(datasets.id, ids));
   }
 
   /** List active (non-archived) datasets. */
@@ -125,6 +139,15 @@ export class DatasetService {
       ...d,
       licenseSpdx: licenseMap.get(d.id) ?? null,
     }));
+  }
+
+  /** Efficient COUNT of datasets owned by address (avoids fetching all rows). */
+  async countByOwner(ownerAddress: string): Promise<number> {
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(datasets)
+      .where(and(eq(datasets.ownerAddress, ownerAddress), isNull(datasets.archivedAt)));
+    return result?.total ?? 0;
   }
 
   /** List datasets owned by a specific address. Non-archived by default. */

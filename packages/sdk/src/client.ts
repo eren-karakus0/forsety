@@ -30,16 +30,25 @@ export class ForsetyClient {
   public readonly agents: AgentService;
   public readonly recallVault: RecallVaultService;
   public readonly agentAudit: AgentAuditService;
-  public readonly vectorSearch: VectorSearchService;
+  private _vectorSearch: VectorSearchService | null = null;
   public readonly shieldStore: ShieldStoreService;
   public readonly share: ShareService;
 
+  /** Lazy-initialized VectorSearch — avoids loading LocalEmbedder until first use. */
+  get vectorSearch(): VectorSearchService {
+    if (!this._vectorSearch) {
+      const embedder: Embedder = new LocalEmbedder();
+      this._vectorSearch = new VectorSearchService(this.db, embedder);
+    }
+    return this._vectorSearch;
+  }
+
   constructor(config: ForsetyConfig) {
     this.config = {
+      ...config,
       shelbyNetwork: config.shelbyNetwork ?? "shelbynet",
       apiBaseUrl: config.apiBaseUrl ?? "http://localhost:3000/api",
       shelbyMode: config.shelbyMode ?? "live",
-      ...config,
     };
 
     if (!config.databaseUrl) {
@@ -58,14 +67,11 @@ export class ForsetyClient {
         ? new ShelbyMockWrapper(shelbyConfig)
         : new ShelbyWrapper(shelbyConfig);
 
-    // VectorSearch must be initialized before services that use auto-embed
-    const embedder: Embedder = new LocalEmbedder();
-    this.vectorSearch = new VectorSearchService(this.db, embedder);
-
+    const lazyVectorSearch = () => this.vectorSearch;
     this.datasets = new DatasetService(
       this.db,
       this.shelby as ShelbyWrapper,
-      this.vectorSearch
+      lazyVectorSearch
     );
     this.licenses = new LicenseService(this.db);
     this.policies = new PolicyService(this.db);
@@ -76,7 +82,7 @@ export class ForsetyClient {
     );
     this.evidence = new EvidenceService(this.db);
     this.agents = new AgentService(this.db);
-    this.recallVault = new RecallVaultService(this.db, undefined, this.vectorSearch);
+    this.recallVault = new RecallVaultService(this.db, undefined, lazyVectorSearch);
     this.agentAudit = new AgentAuditService(this.db);
     this.shieldStore = new ShieldStoreService(this.db, this.recallVault);
     if (!config.hmacSecret) {

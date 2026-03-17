@@ -6,6 +6,53 @@ const LANDING_DOMAIN = "forsety.xyz";
 const APP_DOMAIN = "app.forsety.xyz";
 const WWW_DOMAIN = "www.forsety.xyz";
 
+function generateNonce(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  // Edge-safe: use btoa instead of Buffer.from
+  return btoa(String.fromCharCode(...array));
+}
+
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' https://cloud.umami.is`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob:",
+    "connect-src 'self' https://api.shelbynet.shelby.xyz https://*.aptoslabs.com https://fullnode.shelbynet.shelby.xyz https://fullnode.mainnet.aptoslabs.com https://fullnode.testnet.aptoslabs.com https://api.mainnet.aptoslabs.com https://api.testnet.aptoslabs.com https://*.sentry.io https://cloud.umami.is",
+    "frame-src 'self' https://*.petra.app https://*.pontem.network https://accounts.google.com https://appleid.apple.com",
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
+/**
+ * Apply CSP + nonce to response headers (for browser enforcement)
+ * and propagate nonce via request headers (for server components via headers()).
+ */
+function withSecurityHeaders(request: NextRequest): NextResponse {
+  const nonce = generateNonce();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("x-nonce", nonce);
+  response.headers.set("Content-Security-Policy", buildCsp(nonce));
+  return response;
+}
+
+/**
+ * Apply CSP headers to JSON error responses (429, etc.)
+ */
+function applyCspToJsonResponse(response: NextResponse): NextResponse {
+  const nonce = generateNonce();
+  response.headers.set("Content-Security-Policy", buildCsp(nonce));
+  return response;
+}
+
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.length < 32) {
@@ -31,7 +78,7 @@ function handleRateLimit(request: NextRequest, pathname: string): NextResponse {
 
   if (!result.allowed) {
     const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: "Too many requests" },
       {
         status: 429,
@@ -41,9 +88,10 @@ function handleRateLimit(request: NextRequest, pathname: string): NextResponse {
         },
       }
     );
+    return applyCspToJsonResponse(response);
   }
 
-  const response = NextResponse.next();
+  const response = withSecurityHeaders(request);
   response.headers.set("X-RateLimit-Remaining", String(result.remaining));
   return response;
 }
@@ -73,7 +121,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Everything else (landing pages, /verify/[token], etc.) → pass through
-    return NextResponse.next();
+    return withSecurityHeaders(request);
   }
 
   // ── 3. app.forsety.xyz (app domain) ──
@@ -96,15 +144,16 @@ export async function middleware(request: NextRequest) {
           await jwtVerify(token, getJwtSecret());
         } catch {
           // Invalid token — clear it, continue as guest
-          const response = NextResponse.next();
-          response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
+          const response = withSecurityHeaders(request);
+          const cookieDomain = process.env.COOKIE_DOMAIN;
+          response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
           return response;
         }
       }
-      return NextResponse.next();
+      return withSecurityHeaders(request);
     }
 
-    return NextResponse.next();
+    return withSecurityHeaders(request);
   }
 
   // ── 4. Other hosts (localhost, Vercel preview) → existing behavior ──
@@ -122,15 +171,16 @@ export async function middleware(request: NextRequest) {
         await jwtVerify(token, getJwtSecret());
       } catch {
         // Invalid token — clear it, continue as guest
-        const response = NextResponse.next();
-        response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/" });
+        const response = withSecurityHeaders(request);
+        const cookieDomain = process.env.COOKIE_DOMAIN;
+        response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
         return response;
       }
     }
-    return NextResponse.next();
+    return withSecurityHeaders(request);
   }
 
-  return NextResponse.next();
+  return withSecurityHeaders(request);
 }
 
 export const config = {

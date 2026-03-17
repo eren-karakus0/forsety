@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, resolveAccessorStrict, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError, validationError } from "@/lib/api-error";
 import { z } from "zod";
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
  * termsHash is always server-computed (never client-supplied).
  */
 export async function POST(request: NextRequest) {
-  const auth = await resolveAccessor(request);
+  const auth = await resolveAccessorStrict(request);
   if (!auth) return unauthorizedResponse();
 
   try {

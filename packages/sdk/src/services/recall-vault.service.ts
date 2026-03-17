@@ -33,8 +33,13 @@ export class RecallVaultService {
   constructor(
     private db: Database,
     private shelby?: ShelbyWrapper,
-    private vectorSearch?: VectorSearchService
+    private vectorSearch?: VectorSearchService | (() => VectorSearchService)
   ) {}
+
+  private resolveVectorSearch(): VectorSearchService | undefined {
+    if (typeof this.vectorSearch === "function") return this.vectorSearch();
+    return this.vectorSearch;
+  }
 
   async store(input: StoreMemoryInput) {
     if (!input.agentId || !input.key) {
@@ -82,7 +87,7 @@ export class RecallVaultService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.vectorSearch?.embedMemory(memory!.id).catch((err) => {
+    this.resolveVectorSearch()?.embedMemory(memory!.id).catch((err) => {
       console.error(`[forsety] auto-embed memory ${memory!.id} failed:`, err);
     });
 
@@ -139,6 +144,11 @@ export class RecallVaultService {
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
 
+    // Filter expired memories at DB level
+    conditions.push(
+      sql`(${agentMemories.expiresAt} IS NULL OR ${agentMemories.expiresAt} > NOW())`
+    );
+
     const items = await this.db
       .select()
       .from(agentMemories)
@@ -147,13 +157,7 @@ export class RecallVaultService {
       .limit(limit)
       .offset(offset);
 
-    // Filter expired memories
-    const now = new Date();
-    const valid = items.filter(
-      (m) => !m.expiresAt || m.expiresAt > now
-    );
-
-    return { items: valid, total: valid.length };
+    return { items, total: items.length };
   }
 
   async delete(agentId: string, memoryId: string) {
