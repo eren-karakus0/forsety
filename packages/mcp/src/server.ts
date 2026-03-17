@@ -20,6 +20,11 @@ export interface ForsetyMcpServerConfig {
   hmacSecret: string;
 }
 
+/** Extract API key from MCP tool extra metadata. */
+function extractApiKey(extra: unknown): string {
+  return ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+}
+
 export function createForsetyMcpServer(
   config: ForsetyMcpServerConfig,
   existingClient?: ForsetyClient
@@ -136,7 +141,7 @@ export function createForsetyMcpServer(
     "Store a memory in RecallVault. Upserts by namespace+key.",
     memoryStoreSchema.shape,
     async (args, extra) => {
-      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      const apiKey = extractApiKey(extra);
       return executeWithPipeline(
         "forsety_memory_store",
         args as Record<string, unknown>,
@@ -152,7 +157,7 @@ export function createForsetyMcpServer(
     "Retrieve a specific memory by namespace and key.",
     memoryRetrieveSchema.shape,
     async (args, extra) => {
-      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      const apiKey = extractApiKey(extra);
       return executeWithPipeline(
         "forsety_memory_retrieve",
         args as Record<string, unknown>,
@@ -168,7 +173,7 @@ export function createForsetyMcpServer(
     "Search memories by namespace, tags, or key pattern.",
     memorySearchSchema.shape,
     async (args, extra) => {
-      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      const apiKey = extractApiKey(extra);
       return executeWithPipeline(
         "forsety_memory_search",
         args as Record<string, unknown>,
@@ -184,7 +189,7 @@ export function createForsetyMcpServer(
     "Delete a memory by namespace and key.",
     memoryDeleteSchema.shape,
     async (args, extra) => {
-      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      const apiKey = extractApiKey(extra);
       return executeWithPipeline(
         "forsety_memory_delete",
         args as Record<string, unknown>,
@@ -201,7 +206,7 @@ export function createForsetyMcpServer(
     datasetAccessSchema.shape,
     async (args, extra) => {
       const scopeCheckStart = Date.now();
-      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      const apiKey = extractApiKey(extra);
       // Dataset scope check
       const agent = await authMiddleware.authenticate(apiKey);
       if (agent) {
@@ -243,7 +248,7 @@ export function createForsetyMcpServer(
     policyCheckSchema.shape,
     async (args, extra) => {
       const scopeCheckStart = Date.now();
-      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      const apiKey = extractApiKey(extra);
 
       // Dataset scope check (same as forsety_dataset_access)
       const agent = await authMiddleware.authenticate(apiKey);
@@ -285,7 +290,7 @@ export function createForsetyMcpServer(
     "Search datasets or agent memories using natural language semantic similarity.",
     semanticSearchSchema.shape,
     async (args, extra) => {
-      const apiKey = ((extra as Record<string, unknown>)?._meta as Record<string, unknown>)?.apiKey as string ?? "";
+      const apiKey = extractApiKey(extra);
       return executeWithPipeline(
         "forsety_semantic_search",
         args as Record<string, unknown>,

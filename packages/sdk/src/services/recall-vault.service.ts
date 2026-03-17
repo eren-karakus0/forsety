@@ -139,6 +139,11 @@ export class RecallVaultService {
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
 
+    // Filter expired memories at DB level
+    conditions.push(
+      sql`(${agentMemories.expiresAt} IS NULL OR ${agentMemories.expiresAt} > NOW())`
+    );
+
     const items = await this.db
       .select()
       .from(agentMemories)
@@ -147,13 +152,7 @@ export class RecallVaultService {
       .limit(limit)
       .offset(offset);
 
-    // Filter expired memories
-    const now = new Date();
-    const valid = items.filter(
-      (m) => !m.expiresAt || m.expiresAt > now
-    );
-
-    return { items: valid, total: valid.length };
+    return { items, total: items.length };
   }
 
   async delete(agentId: string, memoryId: string) {
