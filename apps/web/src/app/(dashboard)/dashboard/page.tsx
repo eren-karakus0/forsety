@@ -131,7 +131,7 @@ export default function OverviewPage() {
   const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
   const { connected } = useWallet();
   const [data, setData] = useState<OverviewData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isAuthenticated);
 
   useEffect(() => {
     if (!isAuthenticated) return;
