@@ -26,7 +26,7 @@
   "devDependencies": {
     "@forsety/config-eslint": "workspace:*",
     "@forsety/config-typescript": "workspace:*",
-    "drizzle-kit": "^0.30.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.18.0",
     "typescript": "^5.7.0"
   }
