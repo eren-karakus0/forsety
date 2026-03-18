@@ -54,7 +54,7 @@ export default withSentryConfig(nextConfig, {
   project: "javascript-nextjs",
   silent: !process.env.CI,
   sourcemaps: {
-    disable: true,
+    deleteSourcemapsAfterUpload: true,
   },
   tunnelRoute: "/monitoring",
 });
