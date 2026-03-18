@@ -75,7 +75,7 @@ export function Navbar() {
               asChild
             >
               <Link
-                href="https://github.com/eren-karakus0/forsety"
+                href="https://github.com/Forsetyxyz/forsety"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -135,7 +135,7 @@ export function Navbar() {
                     asChild
                   >
                     <Link
-                      href="https://github.com/eren-karakus0/forsety"
+                      href="https://github.com/Forsetyxyz/forsety"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
