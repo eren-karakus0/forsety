@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     "MCP",
     "dataset verification",
   ],
-  authors: [{ name: "eren-karakus0" }],
+  authors: [{ name: "Forsety", url: "https://github.com/Forsetyxyz" }],
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

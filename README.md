@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/eren-karakus0/forsety/actions/workflows/ci.yml"><img src="https://github.com/eren-karakus0/forsety/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/Forsetyxyz/forsety/actions/workflows/ci.yml"><img src="https://github.com/Forsetyxyz/forsety/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
   <a href="https://shelby.xyz"><img src="https://img.shields.io/badge/Shelby-Protocol-D4AF37" alt="Shelby Protocol" /></a>
   <a href="https://forsety.xyz"><img src="https://img.shields.io/badge/Web-forsety.xyz-273C6B" alt="Website" /></a>
@@ -136,7 +136,7 @@ forsety/
 
 ```bash
 # Clone
-git clone https://github.com/eren-karakus0/forsety.git
+git clone https://github.com/Forsetyxyz/forsety.git
 cd forsety
 
 # Install dependencies
@@ -204,4 +204,4 @@ The dashboard will be available at `http://localhost:3000`.
 
 ## License
 
-[MIT](LICENSE) — Created by [@eren-karakus0](https://github.com/eren-karakus0)
+[MIT](LICENSE) — Created by [@Forsetyxyz](https://github.com/Forsetyxyz)

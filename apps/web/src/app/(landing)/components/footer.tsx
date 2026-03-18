@@ -9,14 +9,14 @@ const footerLinks = {
     { label: "Dashboard", href: "/dashboard" },
   ],
   Developers: [
-    { label: "Documentation", href: "https://github.com/eren-karakus0/forsety" },
-    { label: "SDK Reference", href: "https://github.com/eren-karakus0/forsety" },
-    { label: "MCP Tools", href: "https://github.com/eren-karakus0/forsety" },
+    { label: "Documentation", href: "https://github.com/Forsetyxyz/forsety" },
+    { label: "SDK Reference", href: "https://github.com/Forsetyxyz/forsety" },
+    { label: "MCP Tools", href: "https://github.com/Forsetyxyz/forsety" },
   ],
   Community: [
-    { label: "GitHub", href: "https://github.com/eren-karakus0/forsety" },
+    { label: "GitHub", href: "https://github.com/Forsetyxyz/forsety" },
     { label: "Shelby Protocol", href: "https://shelby.xyz" },
-    { label: "Feedback", href: "https://github.com/eren-karakus0/forsety/issues" },
+    { label: "Feedback", href: "https://github.com/Forsetyxyz/forsety/issues" },
   ],
 };
 
@@ -91,12 +91,12 @@ export function Footer() {
           <p className="text-center text-xs text-navy-300">
             &copy; {new Date().getFullYear()} Forsety. Built by{" "}
             <Link
-              href="https://github.com/eren-karakus0"
+              href="https://github.com/Forsetyxyz"
               target="_blank"
               rel="noopener noreferrer"
               className="text-navy-400 hover:text-gold-500"
             >
-              eren-karakus0
+              Forsetyxyz
             </Link>
             . Open source under MIT license.
           </p>

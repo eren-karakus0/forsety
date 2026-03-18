@@ -64,4 +64,4 @@ Changesets are consumed during release — `pnpm version` applies them and bumps
 1. Ensure CI passes
 2. Update documentation if needed
 3. Include a changeset for user-facing changes
-4. Request review from @eren-karakus0
+4. Request review from @Forsetyxyz
