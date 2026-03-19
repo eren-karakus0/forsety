@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useWallet,
   groupAndSortWallets,
@@ -34,6 +34,13 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
   const [connecting, setConnecting] = useState<string | null>(null);
   const { isAptosConnectSupported, networkDisplayName } = useNetwork();
 
+  // Reset connecting state when dialog closes (handles stuck connections)
+  useEffect(() => {
+    if (!open) {
+      setConnecting(null);
+    }
+  }, [open]);
+
   const {
     aptosConnectWallets,
     petraWebWallets,
@@ -44,10 +51,14 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
   const handleConnect = async (walletName: string) => {
     try {
       setConnecting(walletName);
-      await connect(walletName);
+      // Race: connect vs 30s timeout (some wallets never resolve/reject)
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Connection timeout")), 30_000)
+      );
+      await Promise.race([connect(walletName), timeout]);
       onOpenChange(false);
     } catch {
-      // User rejected or error
+      // User rejected, timeout, or error
     } finally {
       setConnecting(null);
     }
