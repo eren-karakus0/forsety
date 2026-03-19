@@ -9,6 +9,34 @@ import { ArrowRight, Loader2, AlertTriangle, X } from "lucide-react";
 import { WalletSelector } from "@/components/wallet-selector";
 import { useSession } from "./session-context";
 
+function formatAuthError(error: string): { message: string; hint?: string } {
+  if (error.includes("Chain ID mismatch") || error.includes("Chain ID binding expected")) {
+    return {
+      message: "Wrong network detected",
+      hint: "Please switch your wallet to Aptos Testnet and try again.",
+    };
+  }
+  if (error.includes("Domain mismatch")) {
+    return {
+      message: "Domain verification failed",
+      hint: "Please refresh the page and try again.",
+    };
+  }
+  if (error.includes("Non-Ed25519")) {
+    return {
+      message: "Wallet type not supported",
+      hint: "Please use a standard wallet like Petra or Nightly.",
+    };
+  }
+  if (error.includes("public key")) {
+    return {
+      message: "Wallet connection incomplete",
+      hint: "Please disconnect and reconnect your wallet.",
+    };
+  }
+  return { message: error };
+}
+
 interface WalletAuthButtonProps {
   size?: "sm" | "lg" | "default";
   children?: ReactNode;
@@ -121,7 +149,17 @@ export function WalletAuthButton({
         <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div className="flex-1">
-            <p>{error}</p>
+            {(() => {
+              const { message, hint } = formatAuthError(error!);
+              return (
+                <>
+                  <p className="font-medium">{message}</p>
+                  {hint && (
+                    <p className="mt-0.5 text-xs text-red-400/80">{hint}</p>
+                  )}
+                </>
+              );
+            })()}
             <button
               onClick={() => {
                 setDismissedError(true);

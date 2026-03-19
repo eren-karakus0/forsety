@@ -3,14 +3,15 @@
 import { useCallback } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import type { SignaturePayload } from "@/lib/types";
-import { normalizeSignature } from "@/lib/wallet-utils";
+import { normalizeSignature, ensureCorrectNetwork } from "@/lib/wallet-utils";
 
 /**
  * Hook that wraps any mutation with wallet signature approval.
  * Requests a mutation nonce, signs a message, and passes the signature to the server action.
  */
 export function useSignedAction() {
-  const { signMessage, account } = useWallet();
+  const { signMessage, account, changeNetwork, network } = useWallet();
+  const chainId = network?.chainId;
 
   const executeWithSignature = useCallback(
     async <T>(
@@ -37,7 +38,10 @@ export function useSignedAction() {
       const { nonce } = await nonceRes.json();
       if (!nonce) throw new Error("Invalid nonce response");
 
-      // 2. Sign approval message with wallet
+      // 2. Ensure wallet is on correct network before signing
+      await ensureCorrectNetwork(changeNetwork, { chainId });
+
+      // 3. Sign approval message with wallet
       const message = `Approve action: ${actionDescription}`;
       const signResult = await signMessage({
         message,
@@ -47,17 +51,17 @@ export function useSignedAction() {
         chainId: true,
       });
 
-      // 3. Normalize signature to hex string
+      // 4. Normalize signature to hex string
       const signatureHex = normalizeSignature(signResult.signature);
 
-      // 4. Call the server action with the signature payload
+      // 5. Call the server action with the signature payload
       return serverAction({
         fullMessage: signResult.fullMessage,
         signature: signatureHex,
         publicKey: pubKeyStr,
       });
     },
-    [signMessage, account]
+    [signMessage, account, changeNetwork, chainId]
   );
 
   return { executeWithSignature };

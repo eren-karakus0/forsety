@@ -2,23 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock wallet adapter ─────────────────────────────────────
 const mockSignMessage = vi.fn();
+const mockChangeNetwork = vi.fn().mockResolvedValue(undefined);
 const mockUseWallet = vi.fn().mockReturnValue({
   account: null,
   connected: false,
   signMessage: mockSignMessage,
+  changeNetwork: mockChangeNetwork,
+  network: { chainId: 2 },
 });
 
 vi.mock("@aptos-labs/wallet-adapter-react", () => ({
   useWallet: () => mockUseWallet(),
-}));
-
-// ─── Mock network context ─────────────────────────────────────
-const mockUseNetwork = vi.fn().mockReturnValue({
-  activeNetwork: "testnet",
-});
-
-vi.mock("@/lib/network-context", () => ({
-  useNetwork: () => mockUseNetwork(),
 }));
 
 // ─── Mock React hooks ─────────────────────────────────────
@@ -48,7 +42,7 @@ vi.mock("react", async () => {
   };
 });
 
-// ─── Mock normalizeSignature ─────────────────────────────────────
+// ─── Mock wallet-utils ─────────────────────────────────────
 vi.mock("@/lib/wallet-utils", () => ({
   normalizeSignature: (sig: any) => {
     if (typeof sig === "string") return sig;
@@ -58,6 +52,7 @@ vi.mock("@/lib/wallet-utils", () => ({
     if (Array.isArray(sig)) return sig[0];
     return sig.toString();
   },
+  ensureCorrectNetwork: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ─── Mock fetch globally ─────────────────────────────────────
@@ -77,9 +72,8 @@ describe("useForsetyAuth", () => {
       account: null,
       connected: false,
       signMessage: mockSignMessage,
-    });
-    mockUseNetwork.mockReturnValue({
-      activeNetwork: "testnet",
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
   });
 
@@ -103,6 +97,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: true,
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     mockFetch
@@ -148,7 +144,6 @@ describe("useForsetyAuth", () => {
         signature: "a".repeat(128),
         publicKey: "b".repeat(64),
         address: "0xabc123def456",
-        network: "testnet",
       }),
     });
     expect(currentState.isAuthenticated).toBe(true);
@@ -166,6 +161,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: true,
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     mockFetch.mockResolvedValueOnce({
@@ -196,6 +193,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: true,
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     mockFetch
@@ -237,6 +236,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: true,
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     mockFetch
@@ -277,6 +278,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: false, // Not connected
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     const { useForsetyAuth } = await import("@/lib/auth-client");
@@ -300,6 +303,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: true,
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     const { useForsetyAuth } = await import("@/lib/auth-client");
@@ -324,6 +329,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: true,
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     mockFetch.mockResolvedValue({
@@ -357,6 +364,8 @@ describe("useForsetyAuth", () => {
       account: mockAccount,
       connected: true,
       signMessage: mockSignMessage,
+      changeNetwork: mockChangeNetwork,
+      network: { chainId: 2 },
     });
 
     let capturedLoadingState = false;
