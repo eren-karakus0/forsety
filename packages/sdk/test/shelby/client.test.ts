@@ -36,7 +36,7 @@ describe("ShelbyWrapper", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     wrapper = new ShelbyWrapper({
-      network: "shelbynet",
+      network: "testnet",
       walletAddress: "0xtest",
     });
   });
@@ -45,12 +45,12 @@ describe("ShelbyWrapper", () => {
     it("should return health status when CLI is available", async () => {
       mockExecFileSync
         .mockReturnValueOnce("shelby-cli 0.0.26" as never)
-        .mockReturnValueOnce("shelbynet (active)\ntestnet" as never);
+        .mockReturnValueOnce("testnet (active)\nmainnet" as never);
 
       const health = await wrapper.checkHealth();
 
       expect(health.cliVersion).toBe("shelby-cli 0.0.26");
-      expect(health.context).toBe("shelbynet");
+      expect(health.context).toBe("testnet");
       expect(health.connected).toBe(true);
     });
 

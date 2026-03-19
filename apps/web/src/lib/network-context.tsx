@@ -18,7 +18,7 @@ import {
 const STORAGE_KEY = "forsety-network";
 
 function isValidNetwork(value: string): value is SupportedNetwork {
-  return value === "shelbynet" || value === "testnet" || value === "mainnet";
+  return value === "testnet" || value === "mainnet";
 }
 
 interface NetworkContextValue {
@@ -68,7 +68,7 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     activeNetwork,
     setNetwork,
     chainId: CHAIN_ID_MAP[activeNetwork],
-    isAptosConnectSupported: activeNetwork !== "shelbynet",
+    isAptosConnectSupported: true,
     networkDisplayName: NETWORK_DISPLAY_NAMES[activeNetwork],
   };
 

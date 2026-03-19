@@ -9,7 +9,7 @@ import type { SupportedNetwork } from "@/lib/aptos-config";
 import { getAuthCookieOptions } from "@/lib/cookie-options";
 import * as Sentry from "@sentry/nextjs";
 
-const VALID_NETWORKS = ["shelbynet", "testnet", "mainnet"] as const;
+const VALID_NETWORKS = ["testnet", "mainnet"] as const;
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,15 +51,9 @@ export async function POST(request: NextRequest) {
     // Verify Aptos signature with domain + chain ID binding
     const host = request.headers.get("host") ?? "localhost:3000";
 
-    // strictChainId: env override > network-aware default
-    // Shelbynet is a custom chain — most wallets omit chain_id from the
-    // APTOS envelope for non-standard networks, so we default to lenient.
-    // Mainnet/testnet wallets reliably include chain_id → strict by default.
+    // strictChainId: env override > always strict by default
     const envStrict = process.env.AUTH_STRICT_CHAIN_ID;
-    const strictChainId =
-      envStrict !== undefined
-        ? envStrict !== "false"
-        : requestedNetwork !== "shelbynet";
+    const strictChainId = envStrict !== undefined ? envStrict !== "false" : true;
 
     const result = verifyAuthMessage({
       fullMessage,
