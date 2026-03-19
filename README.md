@@ -171,7 +171,7 @@ The dashboard will be available at `http://localhost:3000`.
 | `pnpm build` | Build all packages and apps |
 | `pnpm lint` | Lint all packages |
 | `pnpm typecheck` | Type check all packages |
-| `pnpm test` | Run all tests (381 tests across 40 files) |
+| `pnpm test` | Run all tests (419 tests across 43 files) |
 | `pnpm db:push` | Push schema changes to database |
 | `pnpm db:migrate` | Run database migrations |
 | `pnpm check:shelby` | Shelby CLI health check |
@@ -189,7 +189,7 @@ The dashboard will be available at `http://localhost:3000`.
 | **Auth** | Sign In with Aptos (SIWA) + JWT |
 | **Storage** | Shelby Protocol (decentralized) |
 | **AI Agents** | Model Context Protocol (MCP) |
-| **Testing** | Vitest — 381 tests, 40 files, 4 packages |
+| **Testing** | Vitest — 419 tests, 43 files, 4 packages |
 | **CI/CD** | GitHub Actions + CodeQL |
 | **Versioning** | Changesets |
 

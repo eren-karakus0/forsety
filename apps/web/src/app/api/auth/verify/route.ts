@@ -44,10 +44,6 @@ export async function POST(request: NextRequest) {
     // Verify Aptos signature with domain + chain ID binding
     const host = request.headers.get("host") ?? "localhost:3000";
 
-    // strictChainId: env override > always strict by default
-    const envStrict = process.env.AUTH_STRICT_CHAIN_ID;
-    const strictChainId = envStrict !== undefined ? envStrict !== "false" : true;
-
     const result = verifyAuthMessage({
       fullMessage,
       signature,
@@ -55,7 +51,7 @@ export async function POST(request: NextRequest) {
       expectedAddress: address,
       expectedDomain: host,
       expectedChainId,
-      strictChainId,
+      strictChainId: true,
     });
 
     if (!result.success || !result.address || !result.nonce) {
