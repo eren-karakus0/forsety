@@ -1,10 +1,10 @@
 "use client";
 
-import { Component, type ReactNode, type ErrorInfo } from "react";
-import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
+import { Component, type ReactNode, type ErrorInfo, useEffect } from "react";
+import { AptosWalletAdapterProvider, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "@forsety/ui";
 import { ArrowRight } from "lucide-react";
-import { getWalletAdapterProps } from "@/lib/aptos-config";
+import { getWalletAdapterProps, getAptosNetwork } from "@/lib/aptos-config";
 import { WalletAuthButton } from "./wallet-auth-button";
 
 /** Catches wallet adapter errors (e.g. "Network not supported" on custom chains) */
@@ -55,6 +55,20 @@ function FallbackButton({
   );
 }
 
+/** Syncs wallet extension network to Shelby Testnet on connect */
+function NetworkWalletSync() {
+  const { connected, changeNetwork } = useWallet();
+
+  useEffect(() => {
+    if (!connected || !changeNetwork) return;
+    changeNetwork(getAptosNetwork()).catch((err) => {
+      console.warn("[NetworkSync] Wallet network change failed:", err);
+    });
+  }, [connected, changeNetwork]);
+
+  return null;
+}
+
 interface WalletLaunchFlowProps {
   size?: "sm" | "lg" | "default";
   children?: ReactNode;
@@ -77,6 +91,7 @@ export function WalletLaunchFlow({
       }
     >
       <AptosWalletAdapterProvider {...walletProps} autoConnect={false}>
+        <NetworkWalletSync />
         <WalletAuthButton size={size} className={className} autoOpen>
           {children}
         </WalletAuthButton>

@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useNetwork } from "@/lib/network-context";
-import { normalizeSignature } from "@/lib/wallet-utils";
+import { normalizeSignature, ensureCorrectNetwork } from "@/lib/wallet-utils";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -12,7 +12,7 @@ interface AuthState {
 }
 
 export function useForsetyAuth() {
-  const { account, connected, signMessage } = useWallet();
+  const { account, connected, signMessage, changeNetwork, network } = useWallet();
   const { activeNetwork } = useNetwork();
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
@@ -51,7 +51,10 @@ export function useForsetyAuth() {
 
       if (!nonce || !message) throw new Error("Invalid nonce response");
 
-      // 2. Sign with Aptos wallet - include address, application, chainId in envelope
+      // 2. Ensure wallet is on correct network before signing
+      await ensureCorrectNetwork(changeNetwork, network);
+
+      // 3. Sign with Aptos wallet - include address, application, chainId in envelope
       const signResult = await signMessage({
         message,
         nonce,
@@ -60,10 +63,10 @@ export function useForsetyAuth() {
         chainId: true,
       });
 
-      // 3. Normalize signature to hex string
+      // 4. Normalize signature to hex string
       const signatureHex = normalizeSignature(signResult.signature);
 
-      // 4. Verify on server - send fullMessage, signature, publicKey, and network
+      // 5. Verify on server - send fullMessage, signature, publicKey, and network
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,7 +93,7 @@ export function useForsetyAuth() {
         error: error instanceof Error ? error.message : "Sign in failed",
       });
     }
-  }, [account, connected, signMessage, activeNetwork]);
+  }, [account, connected, signMessage, changeNetwork, network, activeNetwork]);
 
   const signOut = useCallback(async () => {
     try {
