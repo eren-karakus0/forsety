@@ -37,6 +37,14 @@ export function WalletAuthButton({
   const autoOpened = useRef(false);
   const [dismissedError, setDismissedError] = useState(false);
 
+  // When wallet modal closes without connecting, allow re-opening
+  const handleModalChange = (open: boolean) => {
+    setWalletModalOpen(open);
+    if (!open && !connected) {
+      pendingAuth.current = false;
+    }
+  };
+
   // Reset dismissed state when a new error appears
   useEffect(() => {
     if (error) setDismissedError(false);
@@ -142,7 +150,7 @@ export function WalletAuthButton({
       </Button>
       <WalletSelector
         open={walletModalOpen}
-        onOpenChange={setWalletModalOpen}
+        onOpenChange={handleModalChange}
       />
     </>
   );
