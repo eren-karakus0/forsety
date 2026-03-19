@@ -97,7 +97,7 @@ Define granular access policies per dataset. Control who can access data, how ma
 Every action across the system is logged with status breakdown (success / denied / error). Filter by agent, action type, date range. Export for compliance reporting.
 
 ### Aptos Wallet Auth (SIWA)
-Sign In with Aptos — Ed25519 signature verification, JWT sessions, multi-network support (mainnet, testnet, devnet).
+Sign In with Aptos — Ed25519 signature verification, JWT sessions, Shelby Testnet.
 
 ## Architecture
 

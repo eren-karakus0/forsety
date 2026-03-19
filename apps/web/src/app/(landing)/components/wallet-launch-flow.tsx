@@ -5,7 +5,6 @@ import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "@forsety/ui";
 import { ArrowRight } from "lucide-react";
 import { getWalletAdapterProps } from "@/lib/aptos-config";
-import { useNetwork } from "@/lib/network-context";
 import { WalletAuthButton } from "./wallet-auth-button";
 
 /** Catches wallet adapter errors (e.g. "Network not supported" on custom chains) */
@@ -67,8 +66,7 @@ export function WalletLaunchFlow({
   children,
   className,
 }: WalletLaunchFlowProps) {
-  const { activeNetwork } = useNetwork();
-  const walletProps = getWalletAdapterProps(activeNetwork);
+  const walletProps = getWalletAdapterProps();
 
   return (
     <WalletErrorBoundary
@@ -78,7 +76,7 @@ export function WalletLaunchFlow({
         </FallbackButton>
       }
     >
-      <AptosWalletAdapterProvider key={activeNetwork} {...walletProps} autoConnect={false}>
+      <AptosWalletAdapterProvider {...walletProps} autoConnect={false}>
         <WalletAuthButton size={size} className={className} autoOpen>
           {children}
         </WalletAuthButton>
