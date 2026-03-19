@@ -46,7 +46,7 @@ export class ForsetyClient {
   constructor(config: ForsetyConfig) {
     this.config = {
       ...config,
-      shelbyNetwork: config.shelbyNetwork ?? "shelbynet",
+      shelbyNetwork: config.shelbyNetwork ?? "testnet",
       apiBaseUrl: config.apiBaseUrl ?? "http://localhost:3000/api",
       shelbyMode: config.shelbyMode ?? "live",
     };

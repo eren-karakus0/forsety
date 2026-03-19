@@ -6,7 +6,7 @@ import { ShelbyMockWrapper } from "../../src/shelby/mock-client.js";
 
 describe("ShelbyMockWrapper", () => {
   const mock = new ShelbyMockWrapper({
-    network: "shelbynet",
+    network: "testnet",
     walletAddress: "0xtest",
   });
 
@@ -22,12 +22,12 @@ describe("ShelbyMockWrapper", () => {
     const health = await mock.checkHealth();
     expect(health.cliVersion).toBe("mock");
     expect(health.connected).toBe(false);
-    expect(health.context).toBe("shelbynet");
+    expect(health.context).toBe("testnet");
   });
 
   it("should track uploaded blobs in getAccountBlobs", async () => {
     const freshMock = new ShelbyMockWrapper({
-      network: "shelbynet",
+      network: "testnet",
     });
     await freshMock.uploadDataset("/tmp/a.txt", "blob-a");
     await freshMock.uploadDataset("/tmp/b.txt", "blob-b");
@@ -37,7 +37,7 @@ describe("ShelbyMockWrapper", () => {
   });
 
   it("should remove blob on delete", async () => {
-    const freshMock = new ShelbyMockWrapper({ network: "shelbynet" });
+    const freshMock = new ShelbyMockWrapper({ network: "testnet" });
     await freshMock.uploadDataset("/tmp/x.txt", "blob-x");
     await freshMock.deleteBlob("blob-x");
 

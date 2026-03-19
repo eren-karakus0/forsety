@@ -1,34 +1,35 @@
 import { Network } from "@aptos-labs/ts-sdk";
 
-export type SupportedNetwork = "shelbynet" | "testnet" | "mainnet";
+export type SupportedNetwork = "testnet" | "mainnet";
 
 export const CHAIN_ID_MAP: Record<SupportedNetwork, number> = {
   mainnet: 1,
   testnet: 2,
-  shelbynet: 110,
 };
 
 export const NETWORK_DISPLAY_NAMES: Record<SupportedNetwork, string> = {
-  shelbynet: "Shelbynet",
-  testnet: "Aptos Testnet",
+  testnet: "Shelby Testnet",
   mainnet: "Aptos Mainnet",
 };
 
-const VALID_NETWORKS: readonly SupportedNetwork[] = ["shelbynet", "testnet", "mainnet"];
+const VALID_NETWORKS: readonly SupportedNetwork[] = ["testnet", "mainnet"];
 
 function validateNetwork(value: string): SupportedNetwork {
   if (VALID_NETWORKS.includes(value as SupportedNetwork)) {
     return value as SupportedNetwork;
   }
-  console.warn(
+  const msg =
     `[Forsety] Invalid NEXT_PUBLIC_APTOS_NETWORK="${value}". ` +
-    `Valid: ${VALID_NETWORKS.join(", ")}. Falling back to "shelbynet".`
-  );
-  return "shelbynet";
+    `Valid: ${VALID_NETWORKS.join(", ")}.`;
+  if (process.env.NODE_ENV === "development") {
+    throw new Error(msg);
+  }
+  console.error(msg + ` Falling back to "testnet".`);
+  return "testnet";
 }
 
 export const APTOS_NETWORK: SupportedNetwork = validateNetwork(
-  (process.env.NEXT_PUBLIC_APTOS_NETWORK as string) || "shelbynet"
+  (process.env.NEXT_PUBLIC_APTOS_NETWORK as string) || "testnet"
 );
 
 export function getAptosNetwork(networkName?: string): Network {
@@ -37,49 +38,31 @@ export function getAptosNetwork(networkName?: string): Network {
     case "mainnet":
       return Network.MAINNET;
     case "testnet":
-      return Network.TESTNET;
-    case "shelbynet":
-      return Network.SHELBYNET;
     default:
-      return Network.SHELBYNET;
+      return Network.TESTNET;
   }
 }
-
-export const SHELBYNET_CHAIN_ID = 110;
-
-export const SHELBYNET_CONFIG = {
-  name: "Shelbynet",
-  chainId: SHELBYNET_CHAIN_ID,
-  fullnode: "https://api.shelbynet.shelby.xyz/v1",
-  faucet: "https://faucet.shelbynet.shelby.xyz",
-};
 
 /** Shared wallet adapter props - single source of truth for providers.tsx & wallet-launch-flow.tsx */
 export function getWalletAdapterProps(networkName?: string) {
   const name = (networkName ?? APTOS_NETWORK) as SupportedNetwork;
   const network = getAptosNetwork(name);
-  const isAptosConnectSupported = name !== "shelbynet";
 
-  const baseWallets = [
+  const optInWallets = [
     "Petra",
     "OKX Wallet",
     "Nightly",
     "Backpack",
     "Bitget Wallet",
+    "Continue with Google",
   ] as const;
-
-  const optInWallets = isAptosConnectSupported
-    ? ([...baseWallets, "Continue with Google"] as const)
-    : baseWallets;
 
   return {
     autoConnect: true,
     optInWallets,
     dappConfig: {
       network,
-      ...(isAptosConnectSupported
-        ? { aptosConnect: {} }
-        : {}),
+      aptosConnect: {},
       ...(process.env.NEXT_PUBLIC_APTOS_API_KEY
         ? {
             aptosApiKeys: {

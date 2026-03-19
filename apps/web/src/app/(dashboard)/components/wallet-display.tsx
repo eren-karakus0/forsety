@@ -33,9 +33,8 @@ function getExplorerUrl(address: string, network: string): string {
     case "mainnet":
       return `https://explorer.aptoslabs.com/account/${address}?network=mainnet`;
     case "testnet":
-      return `https://explorer.aptoslabs.com/account/${address}?network=testnet`;
     default:
-      return `https://explorer.shelby.xyz/account/${address}`;
+      return `https://explorer.shelby.xyz/testnet/account/${address}`;
   }
 }
 

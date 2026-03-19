@@ -19,7 +19,7 @@ function createTestKeypair() {
  * Format:
  *   APTOS
  *   address: 0x...
- *   chain_id: 110
+ *   chain_id: 2
  *   application: forsety.app
  *   nonce: <nonce>
  *   message: <raw message content>
@@ -116,7 +116,7 @@ describe("Aptos Auth", () => {
       // Build APTOS envelope (simulates what wallet does)
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "forsety.app",
         nonce,
         message: rawMessage,
@@ -165,7 +165,7 @@ describe("Aptos Auth", () => {
 
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "forsety.app",
         nonce,
         message: rawMessage,
@@ -199,7 +199,7 @@ describe("Aptos Auth", () => {
       // Envelope has otherAddress but signature is from first keypair
       const fullMessage = buildAptosEnvelope({
         address: otherAddress,
-        chainId: 110,
+        chainId: 2,
         application: "forsety.app",
         nonce,
         message: rawMessage,
@@ -230,7 +230,7 @@ describe("Aptos Auth", () => {
 
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "forsety.app",
         nonce,
         message: rawMessage,
@@ -261,7 +261,7 @@ describe("Aptos Auth", () => {
 
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "forsety.app",
         nonce,
         message: rawMessage,
@@ -305,7 +305,7 @@ describe("Aptos Auth", () => {
         fullMessage,
         signature: signature.toString(),
         publicKey: publicKey.toString(),
-        expectedChainId: 110, // Shelbynet — mismatch
+        expectedChainId: 2, // Testnet — mismatch with mainnet envelope
       });
 
       expect(result.success).toBe(false);
@@ -325,7 +325,7 @@ describe("Aptos Auth", () => {
       const fullMessage = [
         "APTOS",
         `address: ${address}`,
-        `chain_id: 110`,
+        `chain_id: 2`,
         `nonce: ${nonce}`,
         `message: ${rawMessage}`,
       ].join("\n");
@@ -369,7 +369,7 @@ describe("Aptos Auth", () => {
         fullMessage,
         signature: signature.toString(),
         publicKey: publicKey.toString(),
-        expectedChainId: 110,
+        expectedChainId: 2,
         // strictChainId defaults to false (lenient)
       });
 
@@ -404,7 +404,7 @@ describe("Aptos Auth", () => {
         fullMessage,
         signature: signature.toString(),
         publicKey: publicKey.toString(),
-        expectedChainId: 110,
+        expectedChainId: 2,
         strictChainId: true,
       });
 
@@ -423,7 +423,7 @@ describe("Aptos Auth", () => {
 
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "https://forsety.xyz",
         nonce,
         message: rawMessage,
@@ -453,7 +453,7 @@ describe("Aptos Auth", () => {
 
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "forsety.app:443",
         nonce,
         message: rawMessage,
@@ -483,7 +483,7 @@ describe("Aptos Auth", () => {
 
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "https://evil.com",
         nonce,
         message: rawMessage,
@@ -514,7 +514,7 @@ describe("Aptos Auth", () => {
 
       const fullMessage = buildAptosEnvelope({
         address,
-        chainId: 110,
+        chainId: 2,
         application: "forsety.app",
         nonce,
         message: rawMessage,
@@ -529,7 +529,7 @@ describe("Aptos Auth", () => {
         publicKey: publicKey.toString(),
         expectedAddress: address,
         expectedDomain: "forsety.app",
-        expectedChainId: 110,
+        expectedChainId: 2,
       });
 
       expect(result.success).toBe(true);

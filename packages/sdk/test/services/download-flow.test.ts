@@ -153,7 +153,7 @@ describe("Download flow: Shelby fail => no quota", () => {
     expect(allowed).toBe(true);
 
     // Phase 2: Shelby download fails
-    const shelby = new ShelbyMockWrapper({ network: "shelbynet" });
+    const shelby = new ShelbyMockWrapper({ network: "testnet" });
     const badDownload = vi.spyOn(shelby, "downloadDataset").mockRejectedValue(
       new Error("Shelby 503: service unavailable")
     );
@@ -201,7 +201,7 @@ describe("Download flow: Shelby fail => no quota", () => {
     expect(allowed).toBe(true);
 
     // Phase 2: download succeeds
-    const shelby = new ShelbyMockWrapper({ network: "shelbynet" });
+    const shelby = new ShelbyMockWrapper({ network: "testnet" });
     const tempPath = join(tmpdir(), `${randomUUID()}-test`);
     await shelby.downloadDataset("blob-x", tempPath);
     expect(existsSync(tempPath)).toBe(true);
@@ -223,7 +223,7 @@ describe("Download flow: Shelby fail => no quota", () => {
 
 describe("Download flow: temp file cleanup", () => {
   it("should clean up temp file after successful read", async () => {
-    const shelby = new ShelbyMockWrapper({ network: "shelbynet" });
+    const shelby = new ShelbyMockWrapper({ network: "testnet" });
     const tempPath = join(tmpdir(), `${randomUUID()}-cleanup-test`);
 
     await shelby.downloadDataset("blob-cleanup", tempPath);

@@ -21,10 +21,10 @@ describe("JWT", () => {
 
     it("should include network when provided", async () => {
       const token = await signJwt("0x1234abcd", TEST_SECRET, {
-        network: "shelbynet",
+        network: "testnet",
       });
       const payload = await verifyJwt(token, TEST_SECRET);
-      expect(payload?.network).toBe("shelbynet");
+      expect(payload?.network).toBe("testnet");
     });
 
     it("should not include network when omitted", async () => {

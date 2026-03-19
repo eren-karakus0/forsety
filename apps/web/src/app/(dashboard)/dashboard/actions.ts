@@ -25,7 +25,7 @@ async function getWalletFromSession(opts?: { full: true }): Promise<string | Ses
   const payload = await verifyJwt(token, getEnv().JWT_SECRET);
   if (!payload?.sub) return null;
   if (opts?.full) {
-    return { wallet: payload.sub, network: payload.network ?? "shelbynet" };
+    return { wallet: payload.sub, network: payload.network ?? "testnet" };
   }
   return payload.sub;
 }

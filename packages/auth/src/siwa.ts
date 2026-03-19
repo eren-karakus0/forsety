@@ -41,7 +41,7 @@ export function createAuthMessage(params: AuthMessageParams): string {
  * The wallet's fullMessage format is:
  *   APTOS
  *   address: 0x...
- *   chain_id: 110
+ *   chain_id: 2
  *   application: example.com
  *   nonce: <nonce>
  *   message: <message content>

@@ -120,10 +120,10 @@ async function main() {
   if (!versionOk) allPassed = false;
 
   // 2. Context check
-  const contextOk = check("Shelbynet context active", () => {
+  const contextOk = check("Testnet context active", () => {
     const output = exec(["context", "list"]);
-    if (!output.toLowerCase().includes("shelbynet")) {
-      throw new Error("shelbynet context not found");
+    if (!output.toLowerCase().includes("testnet")) {
+      throw new Error("testnet context not found");
     }
   });
   if (!contextOk) allPassed = false;
