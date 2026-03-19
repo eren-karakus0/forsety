@@ -305,7 +305,7 @@ describe("Aptos Auth", () => {
         fullMessage,
         signature: signature.toString(),
         publicKey: publicKey.toString(),
-        expectedChainId: 2, // Shelbynet — mismatch
+        expectedChainId: 2, // Testnet — mismatch with mainnet envelope
       });
 
       expect(result.success).toBe(false);

@@ -18,10 +18,13 @@ function validateNetwork(value: string): SupportedNetwork {
   if (VALID_NETWORKS.includes(value as SupportedNetwork)) {
     return value as SupportedNetwork;
   }
-  console.warn(
+  const msg =
     `[Forsety] Invalid NEXT_PUBLIC_APTOS_NETWORK="${value}". ` +
-    `Valid: ${VALID_NETWORKS.join(", ")}. Falling back to "testnet".`
-  );
+    `Valid: ${VALID_NETWORKS.join(", ")}.`;
+  if (process.env.NODE_ENV === "development") {
+    throw new Error(msg);
+  }
+  console.error(msg + ` Falling back to "testnet".`);
   return "testnet";
 }
 
