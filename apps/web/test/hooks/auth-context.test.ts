@@ -15,15 +15,6 @@ vi.mock("@aptos-labs/wallet-adapter-react", () => ({
   useWallet: () => mockUseWallet(),
 }));
 
-// ─── Mock network context ─────────────────────────────────────
-const mockUseNetwork = vi.fn().mockReturnValue({
-  activeNetwork: "testnet",
-});
-
-vi.mock("@/lib/network-context", () => ({
-  useNetwork: () => mockUseNetwork(),
-}));
-
 // ─── Mock React hooks ─────────────────────────────────────
 let currentState: any = {
   isAuthenticated: false,
@@ -83,9 +74,6 @@ describe("useForsetyAuth", () => {
       signMessage: mockSignMessage,
       changeNetwork: mockChangeNetwork,
       network: { chainId: 2 },
-    });
-    mockUseNetwork.mockReturnValue({
-      activeNetwork: "testnet",
     });
   });
 
@@ -156,7 +144,6 @@ describe("useForsetyAuth", () => {
         signature: "a".repeat(128),
         publicKey: "b".repeat(64),
         address: "0xabc123def456",
-        network: "testnet",
       }),
     });
     expect(currentState.isAuthenticated).toBe(true);

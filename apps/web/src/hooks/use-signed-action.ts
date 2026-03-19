@@ -11,6 +11,7 @@ import { normalizeSignature, ensureCorrectNetwork } from "@/lib/wallet-utils";
  */
 export function useSignedAction() {
   const { signMessage, account, changeNetwork, network } = useWallet();
+  const chainId = network?.chainId;
 
   const executeWithSignature = useCallback(
     async <T>(
@@ -38,7 +39,7 @@ export function useSignedAction() {
       if (!nonce) throw new Error("Invalid nonce response");
 
       // 2. Ensure wallet is on correct network before signing
-      await ensureCorrectNetwork(changeNetwork, network);
+      await ensureCorrectNetwork(changeNetwork, { chainId });
 
       // 3. Sign approval message with wallet
       const message = `Approve action: ${actionDescription}`;
@@ -60,7 +61,7 @@ export function useSignedAction() {
         publicKey: pubKeyStr,
       });
     },
-    [signMessage, account, changeNetwork, network]
+    [signMessage, account, changeNetwork, chainId]
   );
 
   return { executeWithSignature };

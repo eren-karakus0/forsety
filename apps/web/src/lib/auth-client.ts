@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { useNetwork } from "@/lib/network-context";
 import { normalizeSignature, ensureCorrectNetwork } from "@/lib/wallet-utils";
 
 interface AuthState {
@@ -13,7 +12,7 @@ interface AuthState {
 
 export function useForsetyAuth() {
   const { account, connected, signMessage, changeNetwork, network } = useWallet();
-  const { activeNetwork } = useNetwork();
+  const chainId = network?.chainId;
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     isLoading: false,
@@ -52,7 +51,7 @@ export function useForsetyAuth() {
       if (!nonce || !message) throw new Error("Invalid nonce response");
 
       // 2. Ensure wallet is on correct network before signing
-      await ensureCorrectNetwork(changeNetwork, network);
+      await ensureCorrectNetwork(changeNetwork, { chainId });
 
       // 3. Sign with Aptos wallet - include address, application, chainId in envelope
       const signResult = await signMessage({
@@ -66,7 +65,7 @@ export function useForsetyAuth() {
       // 4. Normalize signature to hex string
       const signatureHex = normalizeSignature(signResult.signature);
 
-      // 5. Verify on server - send fullMessage, signature, publicKey, and network
+      // 5. Verify on server
       const verifyRes = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,7 +75,6 @@ export function useForsetyAuth() {
           signature: signatureHex,
           publicKey: pubKeyStr,
           address,
-          network: activeNetwork,
         }),
       });
 
@@ -93,7 +91,7 @@ export function useForsetyAuth() {
         error: error instanceof Error ? error.message : "Sign in failed",
       });
     }
-  }, [account, connected, signMessage, changeNetwork, network, activeNetwork]);
+  }, [account, connected, signMessage, changeNetwork, chainId]);
 
   const signOut = useCallback(async () => {
     try {
