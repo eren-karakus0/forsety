@@ -40,12 +40,12 @@ describe("ensureCorrectNetwork", () => {
     expect(changeNetwork).toHaveBeenCalledWith(Network.TESTNET);
   });
 
-  it("should not throw when changeNetwork rejects", async () => {
+  it("should throw actionable error when changeNetwork rejects", async () => {
     const changeNetwork = vi.fn().mockRejectedValue(new Error("Wallet rejected"));
 
     await expect(
       ensureCorrectNetwork(changeNetwork, { chainId: 1 })
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow("Please switch your wallet to Aptos Testnet and try again.");
 
     expect(changeNetwork).toHaveBeenCalledWith(Network.TESTNET);
   });

@@ -149,10 +149,17 @@ export function WalletAuthButton({
         <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div className="flex-1">
-            <p className="font-medium">{formatAuthError(error!).message}</p>
-            {formatAuthError(error!).hint && (
-              <p className="mt-0.5 text-xs text-red-400/80">{formatAuthError(error!).hint}</p>
-            )}
+            {(() => {
+              const { message, hint } = formatAuthError(error!);
+              return (
+                <>
+                  <p className="font-medium">{message}</p>
+                  {hint && (
+                    <p className="mt-0.5 text-xs text-red-400/80">{hint}</p>
+                  )}
+                </>
+              );
+            })()}
             <button
               onClick={() => {
                 setDismissedError(true);

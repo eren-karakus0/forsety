@@ -3,8 +3,9 @@ import { getAptosNetwork, TESTNET_CHAIN_ID } from "./aptos-config";
 
 /**
  * Ensure the wallet is on the correct network before signing.
- * Silently continues if changeNetwork is unavailable or fails —
- * server-side chain ID validation will catch mismatches.
+ * - If already on correct chain → no-op.
+ * - If changeNetwork is unavailable → silently continue (server will reject).
+ * - If changeNetwork is available but fails → fail-closed with actionable error.
  */
 export async function ensureCorrectNetwork(
   changeNetwork: ((network: Network) => Promise<unknown>) | undefined,
@@ -15,7 +16,9 @@ export async function ensureCorrectNetwork(
   try {
     await changeNetwork(getAptosNetwork());
   } catch {
-    // Wallet rejected or doesn't support changeNetwork — continue anyway
+    throw new Error(
+      "Please switch your wallet to Aptos Testnet and try again."
+    );
   }
 }
 
