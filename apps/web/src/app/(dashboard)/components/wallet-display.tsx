@@ -28,21 +28,15 @@ function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-function getExplorerUrl(address: string, network: string): string {
-  switch (network) {
-    case "mainnet":
-      return `https://explorer.aptoslabs.com/account/${address}?network=mainnet`;
-    case "testnet":
-    default:
-      return `https://explorer.shelby.xyz/testnet/account/${address}`;
-  }
+function getExplorerUrl(address: string): string {
+  return `https://explorer.shelby.xyz/testnet/account/${address}`;
 }
 
 export function WalletDisplay() {
   const router = useRouter();
   const { account, connected, disconnect, wallet } = useWallet();
   const { signOut } = useForsetyAuth();
-  const { activeNetwork, networkDisplayName } = useNetwork();
+  const { networkDisplayName } = useNetwork();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async (address: string) => {
@@ -65,7 +59,7 @@ export function WalletDisplay() {
   }
 
   const address = account.address.toString();
-  const explorerUrl = getExplorerUrl(address, activeNetwork);
+  const explorerUrl = getExplorerUrl(address);
 
   const handleSignOut = async () => {
     await signOut();

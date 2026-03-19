@@ -90,7 +90,7 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
             </p>
           )}
 
-          {/* Social login (Google/Apple) — visible on testnet/mainnet, disabled until keyless verification is supported */}
+          {/* Social login (Google/Apple) — visible on testnet, disabled until keyless verification is supported */}
           {isAptosConnectSupported && socialWallets.length > 0 && (
             <>
               <div className="flex items-center gap-2">

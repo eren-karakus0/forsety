@@ -4,16 +4,13 @@ import { verifyAuthMessage, signJwt } from "@forsety/auth";
 import { sessions, users } from "@forsety/db";
 import { getEnv } from "@/lib/env";
 import { getDb } from "@/lib/db";
-import { CHAIN_ID_MAP, APTOS_NETWORK } from "@/lib/aptos-config";
-import type { SupportedNetwork } from "@/lib/aptos-config";
+import { TESTNET_CHAIN_ID } from "@/lib/aptos-config";
 import { getAuthCookieOptions } from "@/lib/cookie-options";
 import * as Sentry from "@sentry/nextjs";
 
-const VALID_NETWORKS = ["testnet", "mainnet"] as const;
-
 export async function POST(request: NextRequest) {
   try {
-    const { fullMessage, signature, publicKey, address, network } = await request.json();
+    const { fullMessage, signature, publicKey, address } = await request.json();
 
     if (!fullMessage || !signature || !publicKey) {
       return NextResponse.json(
@@ -22,11 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine which network/chain to validate against
-    const requestedNetwork: SupportedNetwork = VALID_NETWORKS.includes(network)
-      ? network
-      : (APTOS_NETWORK as SupportedNetwork);
-    const expectedChainId = CHAIN_ID_MAP[requestedNetwork];
+    const expectedChainId = TESTNET_CHAIN_ID;
 
     // Strict Ed25519 validation — reject non-Ed25519 (keyless) credentials
     // Keyless accounts cannot be verified locally; when Aptos provides a
@@ -51,10 +44,6 @@ export async function POST(request: NextRequest) {
     // Verify Aptos signature with domain + chain ID binding
     const host = request.headers.get("host") ?? "localhost:3000";
 
-    // strictChainId: env override > always strict by default
-    const envStrict = process.env.AUTH_STRICT_CHAIN_ID;
-    const strictChainId = envStrict !== undefined ? envStrict !== "false" : true;
-
     const result = verifyAuthMessage({
       fullMessage,
       signature,
@@ -62,7 +51,7 @@ export async function POST(request: NextRequest) {
       expectedAddress: address,
       expectedDomain: host,
       expectedChainId,
-      strictChainId,
+      strictChainId: true,
     });
 
     if (!result.success || !result.address || !result.nonce) {
@@ -70,13 +59,13 @@ export async function POST(request: NextRequest) {
         error: result.error,
         host,
         address,
-        network: requestedNetwork,
+        network: "testnet",
         hasFullMessage: !!fullMessage,
         hasSignature: !!signature,
       });
       Sentry.captureMessage("Auth verification failed", {
         level: "warning",
-        extra: { error: result.error, host, address, network: requestedNetwork },
+        extra: { error: result.error, host, address, network: "testnet" },
       });
       return NextResponse.json(
         { error: result.error ?? "Verification failed" },
@@ -120,7 +109,7 @@ export async function POST(request: NextRequest) {
     const token = await signJwt(result.address, env.JWT_SECRET, {
       expiresIn: "1h",
       nonce: result.nonce,
-      network: requestedNetwork,
+      network: "testnet",
     });
 
     // Set httpOnly cookie

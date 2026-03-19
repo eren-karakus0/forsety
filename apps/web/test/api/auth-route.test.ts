@@ -37,8 +37,7 @@ vi.mock("@/lib/env", () => ({
 }));
 
 vi.mock("@/lib/aptos-config", () => ({
-  CHAIN_ID_MAP: { testnet: 2, mainnet: 1 },
-  APTOS_NETWORK: "testnet",
+  TESTNET_CHAIN_ID: 2,
 }));
 
 vi.mock("@sentry/nextjs", () => ({
