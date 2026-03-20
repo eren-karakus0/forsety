@@ -28,7 +28,6 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 import { formatDate, formatDateShort } from "@/lib/format";
 
 interface PolicyRow {
@@ -66,7 +65,7 @@ const statusConfig = {
 };
 
 export default function PoliciesPage() {
-  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated, guard } = useAuthGuard();
   const router = useRouter();
   const [policies, setPolicies] = useState<PolicyRow[]>([]);
   const [datasets, setDatasets] = useState<DatasetOption[]>([]);
@@ -209,14 +208,14 @@ export default function PoliciesPage() {
           <Table>
             <TableHeader>
               <TableRow className="table-header-row border-border/40 hover:bg-transparent">
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Dataset</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Version</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Accessors</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Reads</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Expires</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Created</TableHead>
-                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                <TableHead className="th-label">Dataset</TableHead>
+                <TableHead className="th-label">Version</TableHead>
+                <TableHead className="th-label">Accessors</TableHead>
+                <TableHead className="th-label">Reads</TableHead>
+                <TableHead className="th-label">Expires</TableHead>
+                <TableHead className="th-label">Status</TableHead>
+                <TableHead className="th-label">Created</TableHead>
+                <TableHead className="th-label text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -295,7 +294,6 @@ export default function PoliciesPage() {
       )}
       </>}
 
-      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

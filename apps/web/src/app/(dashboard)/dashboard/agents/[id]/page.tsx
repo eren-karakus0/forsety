@@ -17,7 +17,6 @@ import {
 import { ChevronRight, Users } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { ConnectWalletCTA } from "../../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 
 interface AgentData {
   agent: {
@@ -61,7 +60,7 @@ const statusVariant: Record<string, "default" | "destructive" | "secondary"> = {
 };
 
 export default function AgentDetailPage() {
-  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated } = useAuthGuard();
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<AgentData | null>(null);
@@ -101,15 +100,12 @@ export default function AgentDetailPage() {
 
   if (!isAuthenticated) {
     return (
-      <>
-        <ConnectWalletCTA
-          title="Connect to view agent details"
-          description="Connect your wallet to access agent information, permissions, and audit history"
-          icon={Users}
-          variant="full-page"
-        />
-        <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
-      </>
+      <ConnectWalletCTA
+        title="Connect to view agent details"
+        description="Connect your wallet to access agent information, permissions, and audit history"
+        icon={Users}
+        variant="full-page"
+      />
     );
   }
 

@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogTrigger,
+  toast,
 } from "@forsety/ui";
 import { UserPlus, Copy, Check } from "lucide-react";
 import { registerAgent } from "../actions";
@@ -71,14 +72,19 @@ export function RegisterAgentDialog() {
       setLoading(false);
 
       if (!res.success) {
-        setError(res.error ?? "Registration failed");
+        const message = res.error ?? "Registration failed";
+        setError(message);
+        toast.error(message);
         return;
       }
 
       setResult({ apiKey: res.apiKey!, agentId: res.agentId! });
+      toast.success("Agent registered");
     } catch (err) {
       setLoading(false);
-      setError(err instanceof Error ? err.message : "Registration failed");
+      const message = err instanceof Error ? err.message : "Registration failed";
+      setError(message);
+      toast.error(message);
     }
   }
 

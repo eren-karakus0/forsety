@@ -19,6 +19,7 @@ import {
   SelectValue,
   Alert,
   AlertDescription,
+  toast,
 } from "@forsety/ui";
 import { Loader2 } from "lucide-react";
 
@@ -78,12 +79,17 @@ export function CreatePolicyDialog({
         setExpiresAt("");
         onOpenChange(false);
         onCreated();
+        toast.success("Policy created");
       } else {
-        setError(result.error ?? "Failed to create policy");
+        const message = result.error ?? "Failed to create policy";
+        setError(message);
+        toast.error(message);
       }
     } catch (err) {
       setSubmitting(false);
-      setError(err instanceof Error ? err.message : "Failed to create policy");
+      const message = err instanceof Error ? err.message : "Failed to create policy";
+      setError(message);
+      toast.error(message);
     }
   };
 

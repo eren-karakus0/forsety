@@ -14,6 +14,7 @@ import {
   Textarea,
   Alert,
   AlertDescription,
+  toast,
 } from "@forsety/ui";
 import { Loader2, Info } from "lucide-react";
 
@@ -86,12 +87,17 @@ export function EditPolicyDialog({
       if (result.success) {
         onOpenChange(false);
         onUpdated();
+        toast.success("Policy updated");
       } else {
-        setError(result.error ?? "Failed to update policy");
+        const message = result.error ?? "Failed to update policy";
+        setError(message);
+        toast.error(message);
       }
     } catch (err) {
       setSubmitting(false);
-      setError(err instanceof Error ? err.message : "Failed to update policy");
+      const message = err instanceof Error ? err.message : "Failed to update policy";
+      setError(message);
+      toast.error(message);
     }
   };
 

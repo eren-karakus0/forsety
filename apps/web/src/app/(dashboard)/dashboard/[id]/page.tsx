@@ -24,7 +24,6 @@ import { computeDatasetStatus, statusConfig } from "../datasets/dataset-status";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 
 interface DatasetDetail {
   dataset: {
@@ -92,7 +91,7 @@ function MetadataRow({ label, value, mono }: { label: string; value: string | nu
 }
 
 export default function DatasetDetailPage() {
-  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated } = useAuthGuard();
   const { executeWithSignature } = useSignedAction();
   const params = useParams();
   const id = params.id as string;
@@ -218,15 +217,12 @@ export default function DatasetDetailPage() {
 
   if (!isAuthenticated) {
     return (
-      <>
-        <ConnectWalletCTA
-          title="Connect to view dataset details"
-          description="Connect your wallet to access dataset information, evidence packs, and access logs"
-          icon={Database}
-          variant="full-page"
-        />
-        <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
-      </>
+      <ConnectWalletCTA
+        title="Connect to view dataset details"
+        description="Connect your wallet to access dataset information, evidence packs, and access logs"
+        icon={Database}
+        variant="full-page"
+      />
     );
   }
 
