@@ -61,6 +61,27 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+async function validateDashboardAuth(request: NextRequest): Promise<NextResponse> {
+  const token = request.cookies.get("forsety-auth")?.value;
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, getJwtSecret());
+      if (payload.network && payload.network !== "testnet") {
+        const redirectResponse = NextResponse.redirect(new URL("/", request.url));
+        const cookieDomain = process.env.COOKIE_DOMAIN;
+        redirectResponse.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
+        return redirectResponse;
+      }
+    } catch {
+      const response = withSecurityHeaders(request);
+      const cookieDomain = process.env.COOKIE_DOMAIN;
+      response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
+      return response;
+    }
+  }
+  return withSecurityHeaders(request);
+}
+
 function getClientIp(request: NextRequest): string {
   const xff = request.headers.get("x-forwarded-for");
   if (xff) {
@@ -138,26 +159,7 @@ export async function middleware(request: NextRequest) {
 
     // Dashboard — allow guest access, validate existing tokens
     if (pathname.startsWith("/dashboard")) {
-      const token = request.cookies.get("forsety-auth")?.value;
-      if (token) {
-        try {
-          const { payload } = await jwtVerify(token, getJwtSecret());
-          // Reject tokens issued for a different network
-          if (payload.network && payload.network !== "testnet") {
-            const redirectResponse = NextResponse.redirect(new URL("/", request.url));
-            const cookieDomain = process.env.COOKIE_DOMAIN;
-            redirectResponse.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
-            return redirectResponse;
-          }
-        } catch {
-          // Invalid token — clear it, continue as guest
-          const response = withSecurityHeaders(request);
-          const cookieDomain = process.env.COOKIE_DOMAIN;
-          response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
-          return response;
-        }
-      }
-      return withSecurityHeaders(request);
+      return validateDashboardAuth(request);
     }
 
     return withSecurityHeaders(request);
@@ -172,26 +174,7 @@ export async function middleware(request: NextRequest) {
 
   // Dashboard — allow guest access, validate existing tokens
   if (pathname.startsWith("/dashboard")) {
-    const token = request.cookies.get("forsety-auth")?.value;
-    if (token) {
-      try {
-        const { payload } = await jwtVerify(token, getJwtSecret());
-        // Reject tokens issued for a different network
-        if (payload.network && payload.network !== "testnet") {
-          const redirectResponse = NextResponse.redirect(new URL("/", request.url));
-          const cookieDomain = process.env.COOKIE_DOMAIN;
-          redirectResponse.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
-          return redirectResponse;
-        }
-      } catch {
-        // Invalid token — clear it, continue as guest
-        const response = withSecurityHeaders(request);
-        const cookieDomain = process.env.COOKIE_DOMAIN;
-        response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
-        return response;
-      }
-    }
-    return withSecurityHeaders(request);
+    return validateDashboardAuth(request);
   }
 
   return withSecurityHeaders(request);

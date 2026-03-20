@@ -5,8 +5,8 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { getForsetyClient } from "@/lib/forsety";
 import { verifyMutationSignature } from "@/lib/verify-mutation-signature";
-import { withAuth } from "@/lib/with-auth";
-import { getWalletFromSession } from "@/lib/with-auth";
+import { withSignedMutation } from "@/lib/with-mutation";
+import { withAuth, getWalletFromSession } from "@/lib/with-auth";
 import type { SignaturePayload } from "@/lib/types";
 
 export interface UploadResult {
@@ -151,14 +151,7 @@ export async function fetchDatasetsList() {
 }
 
 export async function bulkDeleteDatasets(ids: string[], sig: SignaturePayload) {
-  try {
-    const wallet = await getWalletFromSession();
-    if (!wallet) return { success: false, error: "Not authenticated" };
-
-    const sigCheck = await verifyMutationSignature(sig, wallet);
-    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
-
-    const client = getForsetyClient();
+  return withSignedMutation(sig, async (wallet, client) => {
     const allDatasets = await client.datasets.listByIds(ids);
     const datasetMap = new Map(allDatasets.map((d) => [d.id, d]));
 
@@ -172,13 +165,8 @@ export async function bulkDeleteDatasets(ids: string[], sig: SignaturePayload) {
       const archived = await client.datasets.archive(id);
       results.push({ id, archived: !!archived });
     }
-    return { success: true, results };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Bulk archive failed",
-    };
-  }
+    return { results };
+  });
 }
 
 export async function bulkExportDatasets(ids: string[]) {
@@ -192,22 +180,23 @@ export async function bulkExportDatasets(ids: string[]) {
       .filter((d) => d.ownerAddress === wallet)
       .map((d) => d.id);
 
-    const data = [];
-    for (const id of ownedIds) {
-      const result = await client.datasets.getWithLicense(id);
-      if (result) {
-        data.push({
-          dataset: {
-            ...result.dataset,
-            createdAt: result.dataset.createdAt.toISOString(),
-          },
-          licenses: result.licenses.map((l) => ({
-            ...l,
-            createdAt: l.createdAt.toISOString(),
-          })),
-        });
-      }
-    }
+    const results = await Promise.all(
+      ownedIds.map((id) => client.datasets.getWithLicense(id))
+    );
+
+    const data = results
+      .filter(Boolean)
+      .map((result) => ({
+        dataset: {
+          ...result!.dataset,
+          createdAt: result!.dataset.createdAt.toISOString(),
+        },
+        licenses: result!.licenses.map((l) => ({
+          ...l,
+          createdAt: l.createdAt.toISOString(),
+        })),
+      }));
+
     return { success: true, data };
   } catch (error) {
     return {

@@ -6,15 +6,15 @@ import { withAuth } from "@/lib/with-auth";
 export async function fetchDashboardStats() {
   return withAuth(async (wallet) => {
     const client = getForsetyClient();
-    const [datasets, agents] = await Promise.all([
-      client.datasets.listWithLicensesByOwner(wallet),
+    const [datasetCount, agents] = await Promise.all([
+      client.datasets.countByOwner(wallet),
       client.agents.listByOwner(wallet),
     ]);
 
     const activeAgents = agents.filter((a) => a.isActive).length;
 
     return {
-      totalDatasets: datasets.length,
+      totalDatasets: datasetCount,
       registeredAgents: agents.length,
       activeAgents,
     };

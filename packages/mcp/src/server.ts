@@ -135,70 +135,33 @@ export function createForsetyMcpServer(
     }
   }
 
+  // Helper: register a tool with the standard auth → policy → audit pipeline
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function registerTool<T, S = any>(
+    name: string,
+    description: string,
+    schema: { shape: Record<string, unknown> },
+    handler: (args: T, ctx: McpContext, service: S) => Promise<ToolResult>,
+    service: S,
+    resourceType?: string
+  ) {
+    server.tool(name, description, schema.shape, async (args, extra) => {
+      const apiKey = extractApiKey(extra);
+      return executeWithPipeline(
+        name,
+        args as Record<string, unknown>,
+        apiKey,
+        (ctx) => handler(args as T, ctx, service),
+        resourceType
+      );
+    });
+  }
+
   // Register tools
-  server.tool(
-    "forsety_memory_store",
-    "Store a memory in RecallVault. Upserts by namespace+key.",
-    memoryStoreSchema.shape,
-    async (args, extra) => {
-      const apiKey = extractApiKey(extra);
-      return executeWithPipeline(
-        "forsety_memory_store",
-        args as Record<string, unknown>,
-        apiKey,
-        (ctx) => memoryStore(args, ctx, client.recallVault),
-        "memory"
-      );
-    }
-  );
-
-  server.tool(
-    "forsety_memory_retrieve",
-    "Retrieve a specific memory by namespace and key.",
-    memoryRetrieveSchema.shape,
-    async (args, extra) => {
-      const apiKey = extractApiKey(extra);
-      return executeWithPipeline(
-        "forsety_memory_retrieve",
-        args as Record<string, unknown>,
-        apiKey,
-        (ctx) => memoryRetrieve(args, ctx, client.recallVault),
-        "memory"
-      );
-    }
-  );
-
-  server.tool(
-    "forsety_memory_search",
-    "Search memories by namespace, tags, or key pattern.",
-    memorySearchSchema.shape,
-    async (args, extra) => {
-      const apiKey = extractApiKey(extra);
-      return executeWithPipeline(
-        "forsety_memory_search",
-        args as Record<string, unknown>,
-        apiKey,
-        (ctx) => memorySearch(args, ctx, client.recallVault),
-        "memory"
-      );
-    }
-  );
-
-  server.tool(
-    "forsety_memory_delete",
-    "Delete a memory by namespace and key.",
-    memoryDeleteSchema.shape,
-    async (args, extra) => {
-      const apiKey = extractApiKey(extra);
-      return executeWithPipeline(
-        "forsety_memory_delete",
-        args as Record<string, unknown>,
-        apiKey,
-        (ctx) => memoryDelete(args, ctx, client.recallVault),
-        "memory"
-      );
-    }
-  );
+  registerTool("forsety_memory_store", "Store a memory in RecallVault. Upserts by namespace+key.", memoryStoreSchema, memoryStore, client.recallVault, "memory");
+  registerTool("forsety_memory_retrieve", "Retrieve a specific memory by namespace and key.", memoryRetrieveSchema, memoryRetrieve, client.recallVault, "memory");
+  registerTool("forsety_memory_search", "Search memories by namespace, tags, or key pattern.", memorySearchSchema, memorySearch, client.recallVault, "memory");
+  registerTool("forsety_memory_delete", "Delete a memory by namespace and key.", memoryDeleteSchema, memoryDelete, client.recallVault, "memory");
 
   server.tool(
     "forsety_dataset_access",
@@ -285,21 +248,7 @@ export function createForsetyMcpServer(
     }
   );
 
-  server.tool(
-    "forsety_semantic_search",
-    "Search datasets or agent memories using natural language semantic similarity.",
-    semanticSearchSchema.shape,
-    async (args, extra) => {
-      const apiKey = extractApiKey(extra);
-      return executeWithPipeline(
-        "forsety_semantic_search",
-        args as Record<string, unknown>,
-        apiKey,
-        (ctx) => semanticSearch(args, ctx, client.vectorSearch),
-        args.type === "memory" ? "memory" : "dataset"
-      );
-    }
-  );
+  registerTool("forsety_semantic_search", "Search datasets or agent memories using natural language semantic similarity.", semanticSearchSchema, semanticSearch, client.vectorSearch, "memory");
 
   return { server, client };
 }

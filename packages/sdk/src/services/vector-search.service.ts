@@ -95,7 +95,7 @@ export class VectorSearchService {
   async searchDatasets(
     query: string,
     limit: number = 10
-  ): Promise<ScoredResult<{ id: string; name: string; description: string | null }>[]> {
+  ): Promise<ScoredResult<{ id: string; name: string; description: string | null; ownerAddress: string }>[]> {
     if (!query.trim()) return [];
 
     const queryVector = await this.embedder.embed(query);
@@ -130,6 +130,7 @@ export class VectorSearchService {
             id: dataset.id,
             name: dataset.name,
             description: dataset.description,
+            ownerAddress: dataset.ownerAddress,
           },
           score: Number(r.score),
           textContent: r.text_content as string,

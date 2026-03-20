@@ -64,6 +64,7 @@ export {
 } from "./components/dropdown-menu";
 
 export { Toaster } from "./components/sonner";
+export { toast } from "sonner";
 
 export { Separator } from "./components/separator";
 
