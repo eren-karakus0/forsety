@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { SignJWT } from "jose";
 
@@ -12,6 +12,9 @@ vi.mock("@/lib/rate-limit", () => ({
 // ─── JWT Secret (alphanumeric, 34+ chars, no special chars) ──
 const JWT_SECRET_STRING = "aGkQ2Lp9xRmZ7dFwN5vTsYeTestSecret";
 const SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
+const originalJwtSecret = process.env.JWT_SECRET;
+const originalCookieDomain = process.env.COOKIE_DOMAIN;
+
 process.env.JWT_SECRET = JWT_SECRET_STRING;
 
 import { middleware } from "../src/middleware";
@@ -40,6 +43,13 @@ beforeAll(async () => {
   testnetToken = await createToken({ sub: "0xabc", network: "testnet" });
   mainnetToken = await createToken({ sub: "0xabc", network: "mainnet" });
   noNetworkToken = await createToken({ sub: "0xabc" });
+});
+
+afterAll(() => {
+  if (originalJwtSecret === undefined) delete process.env.JWT_SECRET;
+  else process.env.JWT_SECRET = originalJwtSecret;
+  if (originalCookieDomain === undefined) delete process.env.COOKIE_DOMAIN;
+  else process.env.COOKIE_DOMAIN = originalCookieDomain;
 });
 
 describe("Middleware — network binding (localhost)", () => {
