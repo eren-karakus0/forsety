@@ -65,7 +65,10 @@ export default function GlobalError({
               fontWeight: 600,
               cursor: "pointer",
               fontSize: "0.875rem",
+              outline: "none",
             }}
+            onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 3px rgba(212,169,55,0.5)"; }}
+            onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
           >
             Try Again
           </button>

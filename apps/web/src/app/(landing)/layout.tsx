@@ -17,7 +17,7 @@ export default function LandingLayout({
   return (
     <NetworkProvider>
       <SessionProvider>
-        <div className="relative flex min-h-screen flex-col bg-white text-navy-900">
+        <div className="relative flex min-h-screen flex-col bg-background text-navy-900">
           {/* Scroll progress bar */}
           <ScrollProgress />
 

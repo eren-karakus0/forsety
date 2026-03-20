@@ -7,7 +7,6 @@ import { fetchAgents, fetchAllAuditLogs, countAuditLogs, fetchDatasetsList } fro
 import {
   Button,
   Card,
-  CardContent,
   Badge,
   Skeleton,
   Input,
@@ -35,6 +34,7 @@ import {
 } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
+import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
 
@@ -348,66 +348,10 @@ function AuditPageContent() {
 
         return (
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Card className="stat-card-teal rounded-xl">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Success
-                  </p>
-                  <p className="font-display text-lg font-bold text-emerald-600">
-                    {successCount}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="stat-card-gold rounded-xl">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50">
-                  <ShieldAlert className="h-4 w-4 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Denied
-                  </p>
-                  <p className="font-display text-lg font-bold text-red-500">
-                    {deniedCount}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="stat-card-violet rounded-xl">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50">
-                  <AlertCircle className="h-4 w-4 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Errors
-                  </p>
-                  <p className="font-display text-lg font-bold text-orange-500">
-                    {errorCount}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="stat-card-navy rounded-xl">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-50">
-                  <ClipboardList className="h-4 w-4 text-navy-500" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Avg Duration
-                  </p>
-                  <p className="font-display text-lg font-bold text-foreground">
-                    {avgDuration != null ? `${avgDuration}ms` : "-"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <StatCardCompact label="Success" value={successCount} icon={CheckCircle2} cardClass="stat-card-teal" iconBgClass="bg-emerald-50" iconColor="text-emerald-500" valueColor="text-emerald-600" />
+            <StatCardCompact label="Denied" value={deniedCount} icon={ShieldAlert} cardClass="stat-card-gold" iconBgClass="bg-red-50" iconColor="text-red-500" valueColor="text-red-500" />
+            <StatCardCompact label="Errors" value={errorCount} icon={AlertCircle} cardClass="stat-card-violet" iconBgClass="bg-orange-50" iconColor="text-orange-500" valueColor="text-orange-500" />
+            <StatCardCompact label="Avg Duration" value={avgDuration != null ? `${avgDuration}ms` : "-"} icon={ClipboardList} cardClass="stat-card-navy" iconBgClass="bg-navy-50" iconColor="text-navy-500" />
           </div>
         );
       })()}

@@ -6,7 +6,6 @@ import { fetchAgents } from "../actions";
 import {
   Button,
   Card,
-  CardContent,
   Badge,
   Skeleton,
   Table,
@@ -20,8 +19,11 @@ import { Users, ArrowRight, Activity, UserX } from "lucide-react";
 import { RegisterAgentDialog } from "./register-agent-dialog";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
+import { StatCard } from "../../components/stat-card";
+import { ErrorBanner } from "../../components/error-banner";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
+import { formatDateShort } from "@/lib/format";
 
 interface AgentRow {
   id: string;
@@ -37,15 +39,23 @@ export default function AgentsPage() {
   const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const loadData = () => {
+    setLoading(true);
+    setError(false);
+    fetchAgents()
+      .then((a) => setAgents(a as AgentRow[]))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
       setLoading(false);
       return;
     }
-    fetchAgents()
-      .then((a) => setAgents(a as AgentRow[]))
-      .finally(() => setLoading(false));
+    loadData();
   }, [isAuthenticated]);
 
   if (loading) {
@@ -129,79 +139,50 @@ export default function AgentsPage() {
         />
       )}
 
+      {/* Error Banner */}
+      {error && (
+        <ErrorBanner message="Unable to load agents. Please try again." onRetry={loadData} />
+      )}
+
       {/* Stats + Distribution */}
       {isAuthenticated && (<>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="stat-card-teal rounded-xl transition-all duration-300 hover:shadow-md">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Total Agents
-              </p>
-              <Users className="h-4 w-4 text-teal-500" />
-            </div>
-            <p className="mt-2 font-display text-2xl font-bold text-foreground">
-              {agents.length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="stat-card-gold rounded-xl transition-all duration-300 hover:shadow-md">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Active
-              </p>
-              <Activity className="h-4 w-4 text-gold-500" />
-            </div>
-            <p className="mt-2 font-display text-2xl font-bold text-emerald-500">
-              {activeCount}
-            </p>
-            {/* Status Distribution Bar */}
-            {agents.length > 0 && (
-              <div className="mt-3">
-                <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted/50">
-                  <div
-                    className="rounded-full bg-emerald-500 transition-all duration-500"
-                    style={{ width: `${activePercent}%` }}
-                  />
-                  <div
-                    className="bg-red-400/60"
-                    style={{ width: `${100 - activePercent}%` }}
-                  />
-                </div>
-                <p className="mt-1.5 text-[10px] text-muted-foreground">
-                  {activePercent}% active
-                </p>
+        <StatCard label="Total Agents" value={agents.length} icon={Users} cardClass="stat-card-teal" iconBgClass="bg-teal-50" iconColor="text-teal-500" />
+        <StatCard
+          label="Active"
+          value={activeCount}
+          icon={Activity}
+          cardClass="stat-card-gold"
+          iconBgClass="bg-gold-50"
+          iconColor="text-gold-500"
+          valueColor="text-emerald-500"
+          extra={agents.length > 0 ? (
+            <div className="mt-3">
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted/50">
+                <div className="rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${activePercent}%` }} />
+                <div className="bg-red-400/60" style={{ width: `${100 - activePercent}%` }} />
               </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="stat-card-violet rounded-xl transition-all duration-300 hover:shadow-md">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Inactive
-              </p>
-              <UserX className="h-4 w-4 text-violet-500" />
+              <p className="mt-1.5 text-[10px] text-muted-foreground">{activePercent}% active</p>
             </div>
-            <p className="mt-2 font-display text-2xl font-bold text-foreground">
-              {inactiveCount}
-            </p>
-            {/* Top Permissions */}
-            {topPermissions.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {topPermissions.map(([perm, count]) => (
-                  <span
-                    key={perm}
-                    className="rounded-md bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-600"
-                  >
-                    {perm} ({count})
-                  </span>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          ) : undefined}
+        />
+        <StatCard
+          label="Inactive"
+          value={inactiveCount}
+          icon={UserX}
+          cardClass="stat-card-violet"
+          iconBgClass="bg-violet-50"
+          iconColor="text-violet-500"
+          extra={topPermissions.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-1">
+              {topPermissions.map(([perm, count]) => (
+                <span key={perm} className="rounded-md bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-600">
+                  {perm} ({count})
+                </span>
+              ))}
+            </div>
+          ) : undefined}
+        />
       </div>
 
       {/* Table */}
@@ -299,12 +280,7 @@ export default function AgentsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {agent.lastSeenAt
-                      ? new Date(agent.lastSeenAt).toLocaleDateString(
-                          "en-US",
-                          { month: "short", day: "numeric" }
-                        )
-                      : "Never"}
+                    {agent.lastSeenAt ? formatDateShort(agent.lastSeenAt) : "Never"}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="outline" size="sm" asChild className="hover:border-gold-500/30 hover:text-gold-600">

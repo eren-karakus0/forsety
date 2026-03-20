@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { fetchAllEvidencePacks } from "../actions";
 import {
   Card,
-  CardContent,
   Badge,
   Skeleton,
   Table,
@@ -19,8 +17,10 @@ import {
 import { Layers, FileText, Database, Calendar } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
+import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
+import { formatDate } from "@/lib/format";
 
 interface EvidenceRow {
   id: string;
@@ -32,7 +32,6 @@ interface EvidenceRow {
 
 export default function EvidencePage() {
   const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
-  const { connected } = useWallet();
   const [packs, setPacks] = useState<EvidenceRow[]>([]);
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState(false);
@@ -53,23 +52,17 @@ export default function EvidencePage() {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [isAuthenticated, connected]);
+  }, [isAuthenticated]);
 
   const uniqueDatasets = new Set(packs.map((p) => p.datasetId)).size;
   const latestGeneration =
-    packs.length > 0
-      ? new Date(packs[0].generatedAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : "-";
+    packs.length > 0 ? formatDate(packs[0].generatedAt) : "-";
 
   if (loading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-40" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
@@ -104,46 +97,16 @@ export default function EvidencePage() {
 
       {/* Stats */}
       {!isAuthenticated ? (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <GuestStatCard label="Total Packs" icon={FileText} cardClass="stat-card-gold" iconColor="text-gold-500" />
           <GuestStatCard label="Latest Generation" icon={Calendar} cardClass="stat-card-teal" iconColor="text-teal-500" />
           <GuestStatCard label="Unique Datasets" icon={Database} cardClass="stat-card-violet" iconColor="text-violet-500" />
         </div>
       ) : packs.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="stat-card-gold rounded-xl">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold-50">
-                <FileText className="h-4 w-4 text-gold-500" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Packs</p>
-                <p className="font-display text-lg font-bold text-foreground">{packs.length}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="stat-card-teal rounded-xl">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50">
-                <Calendar className="h-4 w-4 text-teal-500" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Latest Generation</p>
-                <p className="font-display text-lg font-bold text-foreground">{latestGeneration}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="stat-card-violet rounded-xl">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
-                <Database className="h-4 w-4 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Unique Datasets</p>
-                <p className="font-display text-lg font-bold text-foreground">{uniqueDatasets}</p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCardCompact label="Total Packs" value={packs.length} icon={FileText} cardClass="stat-card-gold" iconBgClass="bg-gold-50" iconColor="text-gold-500" />
+          <StatCardCompact label="Latest Generation" value={latestGeneration} icon={Calendar} cardClass="stat-card-teal" iconBgClass="bg-teal-50" iconColor="text-teal-500" />
+          <StatCardCompact label="Unique Datasets" value={uniqueDatasets} icon={Database} cardClass="stat-card-violet" iconBgClass="bg-violet-50" iconColor="text-violet-500" />
         </div>
       )}
 
@@ -196,11 +159,7 @@ export default function EvidencePage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(pack.generatedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {formatDate(pack.generatedAt)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Link
