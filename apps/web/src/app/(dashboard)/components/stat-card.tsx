@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@forsety/ui";
 
@@ -11,6 +12,15 @@ interface StatCardProps {
   valueColor?: string;
   extra?: React.ReactNode;
   onClick?: () => void;
+}
+
+function handleCardKeyDown(onClick: () => void) {
+  return (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
+  };
 }
 
 export function StatCard({
@@ -28,6 +38,9 @@ export function StatCard({
     <Card
       className={`${cardClass} rounded-xl transition-all duration-300 hover:shadow-md${onClick ? " cursor-pointer hover:bg-muted/30" : ""}`}
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? handleCardKeyDown(onClick) : undefined}
     >
       <CardContent className="pt-5">
         <div className="flex items-center justify-between">
@@ -64,6 +77,9 @@ export function StatCardCompact({
     <Card
       className={`${cardClass} rounded-xl${onClick ? " cursor-pointer transition-colors hover:bg-muted/30" : ""}`}
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? handleCardKeyDown(onClick) : undefined}
     >
       <CardContent className="flex items-center gap-3 p-4">
         <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconBgClass}`}>

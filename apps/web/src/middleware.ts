@@ -144,10 +144,10 @@ export async function middleware(request: NextRequest) {
           const { payload } = await jwtVerify(token, getJwtSecret());
           // Reject tokens issued for a different network
           if (payload.network && payload.network !== "testnet") {
-            const response = withSecurityHeaders(request);
+            const redirectResponse = NextResponse.redirect(new URL("/", request.url));
             const cookieDomain = process.env.COOKIE_DOMAIN;
-            response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
-            return NextResponse.redirect(new URL("/", request.url));
+            redirectResponse.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
+            return redirectResponse;
           }
         } catch {
           // Invalid token — clear it, continue as guest
@@ -178,10 +178,10 @@ export async function middleware(request: NextRequest) {
         const { payload } = await jwtVerify(token, getJwtSecret());
         // Reject tokens issued for a different network
         if (payload.network && payload.network !== "testnet") {
-          const response = withSecurityHeaders(request);
+          const redirectResponse = NextResponse.redirect(new URL("/", request.url));
           const cookieDomain = process.env.COOKIE_DOMAIN;
-          response.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
-          return NextResponse.redirect(new URL("/", request.url));
+          redirectResponse.cookies.set("forsety-auth", "", { maxAge: 0, path: "/", ...(cookieDomain ? { domain: cookieDomain } : {}) });
+          return redirectResponse;
         }
       } catch {
         // Invalid token — clear it, continue as guest

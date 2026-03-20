@@ -17,6 +17,8 @@ export async function getWalletFromSession(opts?: { full: true }): Promise<strin
   if (!token) return null;
   const payload = await verifyJwt(token, getEnv().JWT_SECRET);
   if (!payload?.sub) return null;
+  // Reject tokens issued for a different network (defense-in-depth for API routes)
+  if (payload.network && payload.network !== "testnet") return null;
   if (opts?.full) {
     return { wallet: payload.sub, network: payload.network ?? "testnet" };
   }
