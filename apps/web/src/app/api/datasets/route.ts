@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { randomUUID } from "node:crypto";
 import { resolveAccessor, resolveAccessorStrict, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
@@ -49,10 +50,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "File size exceeds 50MB limit" },
+        { status: 413 }
+      );
+    }
+
     const uploadDir = join(tmpdir(), "forsety-uploads");
     mkdirSync(uploadDir, { recursive: true });
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    tempPath = join(uploadDir, `${Date.now()}-${safeName}`);
+    tempPath = join(uploadDir, `${randomUUID()}-${safeName}`);
     const buffer = Buffer.from(await file.arrayBuffer());
     writeFileSync(tempPath, buffer);
 

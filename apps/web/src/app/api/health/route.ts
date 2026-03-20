@@ -21,6 +21,14 @@ export async function GET() {
   }
 
   const overall = shelbyStatus.connected ? "ok" : "degraded";
+  const isProd = process.env.NODE_ENV === "production";
+
+  if (isProd) {
+    return NextResponse.json({
+      status: overall,
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   return NextResponse.json({
     status: overall,

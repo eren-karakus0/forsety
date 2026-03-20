@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveAccessor, resolveAccessorStrict, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
-import { apiError } from "@/lib/api-error";
+import { apiError, validationError } from "@/lib/api-error";
+import { z } from "zod";
+
+const createPolicySchema = z.object({
+  datasetId: z.string().uuid(),
+  allowedAccessors: z.array(z.string().min(1)).min(1),
+  maxReads: z.number().int().min(0).nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+});
 
 export async function GET(request: NextRequest) {
   const auth = await resolveAccessor(request);
@@ -36,14 +44,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { datasetId, allowedAccessors, maxReads, expiresAt, createdBy } = body;
-
-    if (!datasetId || !allowedAccessors?.length) {
-      return NextResponse.json(
-        { error: "Missing required fields: datasetId, allowedAccessors" },
-        { status: 400 }
-      );
+    const parsed = createPolicySchema.safeParse(body);
+    if (!parsed.success) {
+      return validationError(parsed.error);
     }
+    const { datasetId, allowedAccessors, maxReads, expiresAt } = parsed.data;
 
     const client = getForsetyClient();
 
@@ -65,9 +70,9 @@ export async function POST(request: NextRequest) {
     const policy = await client.policies.create({
       datasetId,
       allowedAccessors,
-      maxReads,
+      maxReads: maxReads ?? undefined,
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-      createdBy,
+      createdBy: auth.accessor,
     });
 
     return NextResponse.json(policy, { status: 201 });

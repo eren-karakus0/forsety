@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
-import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessorStrict, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 import { ForsetyAuthError } from "@forsety/sdk";
@@ -24,7 +24,7 @@ async function preflight(
   request: NextRequest,
   id: string
 ): Promise<PreflightResult | NextResponse> {
-  const auth = await resolveAccessor(request);
+  const auth = await resolveAccessorStrict(request);
   if (!auth) return unauthorizedResponse();
   const accessorAddress = auth.accessor;
 
@@ -124,7 +124,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${safeName}"`,
+        "Content-Disposition": `attachment; filename="${encodeURIComponent(safeName)}"`,
         "Content-Length": String(fileSize),
         ...(dataset.blobHash ? { "X-Blob-Hash": dataset.blobHash } : {}),
         "X-Access-Log-Id": accessLog.id,

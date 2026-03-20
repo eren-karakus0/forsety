@@ -17,6 +17,15 @@ function assertSafePath(filePath: string): void {
   }
 }
 
+/** Reject unsafe blob names (only alphanumeric, dots, hyphens, underscores, forward slashes allowed). */
+function assertSafeBlobName(name: string): void {
+  if (!/^[a-zA-Z0-9._\-/]+$/.test(name)) {
+    throw new ForsetyValidationError(
+      "Invalid blob name: only alphanumeric, dots, hyphens, underscores, and forward slashes allowed"
+    );
+  }
+}
+
 function toWslPath(windowsPath: string): string {
   return windowsPath
     .replace(/\\/g, "/")
@@ -76,6 +85,7 @@ export class ShelbyWrapper {
     expiration: string = "in 30 days"
   ): Promise<UploadResult> {
     assertSafePath(filePath);
+    assertSafeBlobName(blobName);
     try {
       const wslPath = toWslPath(filePath);
       const commitmentsPath = "/tmp/forsety-commitments.json";
@@ -114,6 +124,8 @@ export class ShelbyWrapper {
     blobName: string,
     outputPath: string
   ): Promise<void> {
+    assertSafeBlobName(blobName);
+    assertSafePath(outputPath);
     // CLI contract: shelby download [source] [destination]
     this.exec(["download", blobName, toWslPath(outputPath), "-f"]);
   }
@@ -123,6 +135,7 @@ export class ShelbyWrapper {
    * CLI: shelby delete [destination] --assume-yes
    */
   async deleteBlob(blobName: string): Promise<void> {
+    assertSafeBlobName(blobName);
     this.exec(["delete", blobName, "--assume-yes"]);
   }
 

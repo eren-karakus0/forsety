@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getForsetyClient } from "@/lib/forsety";
-import { validateApiKey, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) {
+  const auth = await resolveAccessor(request);
+  if (!auth) {
     return unauthorizedResponse();
   }
 
@@ -35,7 +36,8 @@ export async function GET(request: NextRequest) {
 
     if (type === "dataset") {
       const results = await client.vectorSearch.searchDatasets(query, limit);
-      return NextResponse.json({ type, query, results, total: results.length });
+      const filtered = results.filter(r => r.item.ownerAddress === auth.accessor);
+      return NextResponse.json({ type, query, results: filtered, total: filtered.length });
     }
 
     if (!agentId) {
@@ -43,6 +45,12 @@ export async function GET(request: NextRequest) {
         { error: "agentId is required for memory search" },
         { status: 400 }
       );
+    }
+
+    // Validate agent belongs to accessor
+    const agent = await client.agents.getById(agentId);
+    if (!agent || agent.ownerAddress !== auth.accessor) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const results = await client.vectorSearch.searchMemories(agentId, query, limit);

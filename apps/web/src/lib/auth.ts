@@ -66,7 +66,13 @@ export function unauthorizedResponse() {
  */
 export async function resolveAccessor(
   request: NextRequest
-): Promise<{ accessor: string; trusted: boolean } | null> {
+): Promise<{
+  accessor: string;
+  trusted: boolean;
+  agentId?: string;
+  agentPermissions?: string[];
+  agentAllowedDatasets?: string[];
+} | null> {
   // 1. JWT cookie → wallet address (always trusted)
   const wallet = await validateJwtCookie(request);
   if (wallet) return { accessor: wallet, trusted: true };
@@ -83,7 +89,13 @@ export async function resolveAccessor(
     const client = getForsetyClient();
     const agent = await client.agents.authenticate(apiKey);
     if (!agent) return null;
-    return { accessor: agent.ownerAddress, trusted: true };
+    return {
+      accessor: agent.ownerAddress,
+      trusted: true,
+      agentId: agent.id,
+      agentPermissions: agent.permissions ?? [],
+      agentAllowedDatasets: agent.allowedDatasets ?? [],
+    };
   }
 
   // 2b. Global API key → accessor from query param (backward-compat)
@@ -108,6 +120,28 @@ export async function resolveAccessorStrict(
   if (!auth) return null;
   if (!auth.trusted) return null;
   return auth;
+}
+
+/**
+ * Check if agent auth context has required permission and dataset scope.
+ * Passes through for non-agent (wallet) auth.
+ */
+export function checkAgentScope(
+  auth: { agentId?: string; agentPermissions?: string[]; agentAllowedDatasets?: string[] },
+  requiredPermission: string,
+  datasetId?: string
+): { allowed: boolean; error?: string } {
+  if (!auth.agentId) return { allowed: true }; // wallet auth, no agent restrictions
+
+  if (auth.agentPermissions && !auth.agentPermissions.includes(requiredPermission)) {
+    return { allowed: false, error: `Agent lacks permission: ${requiredPermission}` };
+  }
+
+  if (datasetId && auth.agentAllowedDatasets?.length && !auth.agentAllowedDatasets.includes(datasetId)) {
+    return { allowed: false, error: "Agent not authorized for this dataset" };
+  }
+
+  return { allowed: true };
 }
 
 /**

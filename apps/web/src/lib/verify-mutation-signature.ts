@@ -25,6 +25,15 @@ function validatePayload(sig: SignaturePayload): string | null {
   if (!/^[0-9a-fA-F]{64}$/.test(pubClean)) {
     return "Invalid public key format";
   }
+
+  // Validate action and domain binding in full message
+  if (!sig.fullMessage.includes("Application: Forsety")) {
+    return "Invalid application binding";
+  }
+  if (!sig.fullMessage.includes("Chain Id: 2")) {
+    return "Invalid chain binding";
+  }
+
   return null;
 }
 

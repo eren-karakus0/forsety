@@ -27,6 +27,12 @@ export class LicenseService {
       );
     }
 
+    const computedHash = canonicalHash({
+      spdxType: input.spdxType,
+      grantorAddress: input.grantorAddress,
+      terms: input.terms ?? {},
+    });
+
     const [license] = await this.db
       .insert(licenses)
       .values({
@@ -34,7 +40,7 @@ export class LicenseService {
         spdxType: input.spdxType,
         grantorAddress: input.grantorAddress,
         terms: input.terms ?? {},
-        termsHash: input.termsHash,
+        termsHash: computedHash,
       })
       .returning();
 
