@@ -154,9 +154,9 @@ export default function EvidenceDetailPage() {
     URL.revokeObjectURL(url);
   };
 
-  const downloadPdf = () => {
+  const downloadPdf = async () => {
     if (!data) return;
-    const pdf = generateEvidencePackPdf(data.packJson as Parameters<typeof generateEvidencePackPdf>[0], data.packHash);
+    const pdf = await generateEvidencePackPdf(data.packJson as Parameters<typeof generateEvidencePackPdf>[0], data.packHash);
     pdf.save(`evidence-pack-${data.packHash.slice(0, 8)}.pdf`);
   };
 

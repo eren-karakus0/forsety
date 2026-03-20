@@ -9,7 +9,6 @@ import { EditPolicyDialog } from "./edit-policy-dialog";
 import {
   Button,
   Card,
-  CardContent,
   Badge,
   Skeleton,
   Table,
@@ -27,8 +26,10 @@ import {
 import { Shield, Plus, Clock, ShieldAlert, Pencil, ShieldX } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
+import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
+import { formatDate, formatDateShort } from "@/lib/format";
 
 interface PolicyRow {
   id: string;
@@ -105,7 +106,7 @@ export default function PoliciesPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-40" />
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
@@ -146,7 +147,7 @@ export default function PoliciesPage() {
 
       {/* Guest Stats */}
       {!isAuthenticated && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <GuestStatCard label="Total Policies" icon={Shield} cardClass="stat-card-violet" iconColor="text-violet-500" />
           <GuestStatCard label="Expiring Soon" icon={Clock} cardClass="stat-card-gold" iconColor="text-orange-500" />
           <GuestStatCard label="Expired" icon={ShieldAlert} cardClass="stat-card-navy" iconColor="text-red-500" />
@@ -155,62 +156,11 @@ export default function PoliciesPage() {
       )}
 
       {/* Stats */}
-      {isAuthenticated && <div className="grid grid-cols-4 gap-4">
-        <Card className="stat-card-violet rounded-xl">
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
-              <Shield className="h-4 w-4 text-violet-500" />
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Total Policies
-              </p>
-              <p className="font-display text-lg font-bold text-foreground">{policies.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="stat-card-gold rounded-xl">
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50">
-              <Clock className="h-4 w-4 text-orange-500" />
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Expiring Soon
-              </p>
-              <p className="font-display text-lg font-bold text-orange-500">{expiringSoon}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="stat-card-navy rounded-xl">
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50">
-              <ShieldAlert className="h-4 w-4 text-red-500" />
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Expired
-              </p>
-              <p className="font-display text-lg font-bold text-red-500">{expired}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card
-          className="stat-card-navy cursor-pointer rounded-xl transition-colors hover:bg-muted/30"
-          onClick={() => router.push("/dashboard/audit?status=denied")}
-        >
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50">
-              <ShieldX className="h-4 w-4 text-red-500" />
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Violations
-              </p>
-              <p className="font-display text-lg font-bold text-red-500">{violationCount}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {isAuthenticated && <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCardCompact label="Total Policies" value={policies.length} icon={Shield} cardClass="stat-card-violet" iconBgClass="bg-violet-50" iconColor="text-violet-500" />
+        <StatCardCompact label="Expiring Soon" value={expiringSoon} icon={Clock} cardClass="stat-card-gold" iconBgClass="bg-orange-50" iconColor="text-orange-500" valueColor="text-orange-500" />
+        <StatCardCompact label="Expired" value={expired} icon={ShieldAlert} cardClass="stat-card-navy" iconBgClass="bg-red-50" iconColor="text-red-500" valueColor="text-red-500" />
+        <StatCardCompact label="Violations" value={violationCount} icon={ShieldX} cardClass="stat-card-navy" iconBgClass="bg-red-50" iconColor="text-red-500" valueColor="text-red-500" onClick={() => router.push("/dashboard/audit?status=denied")} />
       </div>}
 
       {/* Guest CTA */}
@@ -243,6 +193,7 @@ export default function PoliciesPage() {
       </div>
 
       {/* Table */}
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
       <Card className="overflow-hidden rounded-xl">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-5 py-16">
@@ -300,15 +251,13 @@ export default function PoliciesPage() {
                       {pol.readsConsumed}/{pol.maxReads ?? "\u221e"}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {pol.expiresAt
-                        ? new Date(pol.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                        : "-"}
+                      {pol.expiresAt ? formatDate(pol.expiresAt) : "-"}
                     </TableCell>
                     <TableCell>
                       <Badge variant={cfg.variant} className={cfg.className}>{cfg.label}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(pol.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      {formatDateShort(pol.createdAt)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -327,6 +276,7 @@ export default function PoliciesPage() {
           </Table>
         )}
       </Card>
+      </div>
 
       <CreatePolicyDialog
         open={createOpen}

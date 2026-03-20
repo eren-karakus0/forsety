@@ -120,7 +120,7 @@ export default function DashboardLayout({
         <AuthProvider>
           <div className="min-h-screen bg-background">
             {/* Desktop Sidebar */}
-            <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 border-r border-border/50 bg-white/80 backdrop-blur-xl lg:block">
+            <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 border-r border-border/50 bg-background/80 backdrop-blur-xl lg:block">
               <SidebarContent />
             </aside>
 

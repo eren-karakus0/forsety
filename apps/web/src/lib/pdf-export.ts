@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import type { jsPDF } from "jspdf";
 
 interface PdfPackData {
   version?: string;
@@ -43,11 +43,12 @@ function checkPage(doc: jsPDF, y: number, margin: number = 30): number {
   return y;
 }
 
-export function generateEvidencePackPdf(
+export async function generateEvidencePackPdf(
   packData: PdfPackData,
   hash: string
-): jsPDF {
-  const doc = new jsPDF();
+): Promise<jsPDF> {
+  const { jsPDF: JsPDF } = await import("jspdf");
+  const doc = new JsPDF();
   const leftMargin = 14;
   let y = 20;
 

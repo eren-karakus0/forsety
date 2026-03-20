@@ -11,7 +11,6 @@ import { statusConfig, type DatasetStatus } from "./dataset-status";
 import {
   Button,
   Card,
-  CardContent,
   Badge,
   Skeleton,
   Table,
@@ -49,8 +48,11 @@ import {
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
 import { GuestStatCard } from "../../components/guest-stat-card";
+import { StatCardCompact } from "../../components/stat-card";
+import { ErrorBanner } from "../../components/error-banner";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { WalletSelector } from "@/components/wallet-selector";
+import { formatDate, formatBytes } from "@/lib/format";
 
 interface DatasetRow {
   id: string;
@@ -61,12 +63,6 @@ interface DatasetRow {
   blobHash: string | null;
   sizeBytes: number | null;
   archivedAt: string | null;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default function DatasetsPage() {
@@ -88,6 +84,7 @@ export default function DatasetsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
   const loadData = () => {
     setLoading(true);
@@ -170,16 +167,24 @@ export default function DatasetsPage() {
 
   const handleBulkExport = async () => {
     setBulkLoading(true);
-    const result = await bulkExportDatasets(Array.from(selectedIds));
-    setBulkLoading(false);
-    if (result.success && result.data) {
-      const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `forsety-datasets-export-${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+    setExportError(false);
+    try {
+      const result = await bulkExportDatasets(Array.from(selectedIds));
+      if (result.success && result.data) {
+        const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `forsety-datasets-export-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        setExportError(true);
+      }
+    } catch {
+      setExportError(true);
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -203,7 +208,7 @@ export default function DatasetsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-40" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
@@ -254,7 +259,7 @@ export default function DatasetsPage() {
 
       {/* Guest Stats */}
       {!isAuthenticated && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <GuestStatCard label="Total Datasets" icon={FileText} cardClass="stat-card-gold" iconColor="text-gold-500" />
           <GuestStatCard label="Total Size" icon={HardDrive} cardClass="stat-card-teal" iconColor="text-teal-500" />
           <GuestStatCard label="Top License" icon={Shield} cardClass="stat-card-violet" iconColor="text-violet-500" />
@@ -263,52 +268,10 @@ export default function DatasetsPage() {
 
       {/* Storage Summary */}
       {isAuthenticated && !error && datasets.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="stat-card-gold rounded-xl">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold-50">
-                <FileText className="h-4 w-4 text-gold-500" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Total Datasets
-                </p>
-                <p className="font-display text-lg font-bold text-foreground">
-                  {datasets.length}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="stat-card-teal rounded-xl">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50">
-                <HardDrive className="h-4 w-4 text-teal-500" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Total Size
-                </p>
-                <p className="font-display text-lg font-bold text-foreground">
-                  {totalSize > 0 ? formatBytes(totalSize) : "-"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="stat-card-violet rounded-xl">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
-                <Shield className="h-4 w-4 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Top License
-                </p>
-                <p className="font-display text-lg font-bold text-foreground">
-                  {topLicense ? topLicense[0] : "-"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCardCompact label="Total Datasets" value={datasets.length} icon={FileText} cardClass="stat-card-gold" iconBgClass="bg-gold-50" iconColor="text-gold-500" />
+          <StatCardCompact label="Total Size" value={totalSize > 0 ? formatBytes(totalSize) : "-"} icon={HardDrive} cardClass="stat-card-teal" iconBgClass="bg-teal-50" iconColor="text-teal-500" />
+          <StatCardCompact label="Top License" value={topLicense ? topLicense[0] : "-"} icon={Shield} cardClass="stat-card-violet" iconBgClass="bg-violet-50" iconColor="text-violet-500" />
         </div>
       )}
 
@@ -403,6 +366,11 @@ export default function DatasetsPage() {
         </div>
       )}
 
+      {/* Export Error */}
+      {exportError && (
+        <ErrorBanner message="Export failed. Please try again." />
+      )}
+
       {/* Guest CTA */}
       {!isAuthenticated && (
         <ConnectWalletCTA
@@ -422,6 +390,7 @@ export default function DatasetsPage() {
                   type="checkbox"
                   checked={filtered.length > 0 && selectedIds.size === filtered.length}
                   onChange={toggleSelectAll}
+                  aria-label="Select all datasets"
                   className="h-4 w-4 rounded border-border accent-violet-500"
                 />
               </TableHead>
@@ -499,6 +468,7 @@ export default function DatasetsPage() {
                       type="checkbox"
                       checked={selectedIds.has(dataset.id)}
                       onChange={() => toggleSelect(dataset.id)}
+                      aria-label={`Select ${dataset.name}`}
                       className="h-4 w-4 rounded border-border accent-violet-500"
                     />
                   </TableCell>
@@ -533,13 +503,7 @@ export default function DatasetsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {dataset.createdAt
-                      ? new Date(dataset.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : "-"}
+                    {dataset.createdAt ? formatDate(dataset.createdAt) : "-"}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="outline" size="sm" asChild className="hover:border-gold-500/30 hover:text-gold-600">

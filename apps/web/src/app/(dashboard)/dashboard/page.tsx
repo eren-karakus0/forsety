@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { fetchDashboardStats, fetchAllAuditLogs } from "./actions";
 import {
   Card,
@@ -22,6 +21,7 @@ import {
   AlertTriangle,
   Shield,
   CheckCircle2,
+  XCircle,
   Wifi,
   Layers,
 } from "lucide-react";
@@ -29,11 +29,12 @@ import {
   FadeInWrapper,
   StaggerWrapper,
   StaggerItemWrapper,
-  CounterWrapper,
 } from "./overview-animations";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../components/guest-stat-card";
+import { StatCard } from "../components/stat-card";
 import { WalletSelector } from "@/components/wallet-selector";
+import { formatRelativeTime } from "@/lib/format";
 
 interface RecentLog {
   id: string;
@@ -57,17 +58,6 @@ const statusColor: Record<string, string> = {
   denied: "destructive",
   error: "destructive",
 };
-
-function formatRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
 
 const quickActions = [
   {
@@ -129,7 +119,6 @@ const guestStats = [
 
 export default function OverviewPage() {
   const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
-  const { connected } = useWallet();
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(isAuthenticated);
 
@@ -165,7 +154,7 @@ export default function OverviewPage() {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [isAuthenticated, connected]);
+  }, [isAuthenticated]);
 
   const healthItems = [
     { label: "Shelby Protocol", status: !data?.error, icon: Wifi },
@@ -216,13 +205,11 @@ export default function OverviewPage() {
                     key={item.label}
                     className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 backdrop-blur-sm"
                   >
-                    <div
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        item.status
-                          ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"
-                          : "bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.5)]"
-                      }`}
-                    />
+                    {item.status ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-red-400" />
+                    )}
                     <item.icon className="h-3.5 w-3.5 text-navy-400" />
                     <span className="hidden text-xs font-medium text-navy-300 sm:inline">
                       {item.label}
@@ -268,25 +255,20 @@ export default function OverviewPage() {
       ) : data ? (
         <StaggerWrapper className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[
-            { label: "Total Datasets", value: data.totalDatasets.toString(), icon: Database, cardClass: "stat-card-gold", iconColor: "text-gold-500" },
-            { label: "Registered Agents", value: data.registeredAgents.toString(), icon: Users, cardClass: "stat-card-teal", iconColor: "text-teal-500" },
-            { label: "Active Agents", value: data.activeAgents.toString(), icon: Activity, cardClass: "stat-card-violet", iconColor: "text-violet-500" },
-            { label: "Audit Events", value: data.recentLogs.length.toString(), icon: ClipboardList, cardClass: "stat-card-navy", iconColor: "text-navy-500" },
+            { label: "Total Datasets", value: data.totalDatasets, icon: Database, cardClass: "stat-card-gold", iconBgClass: "bg-gold-50", iconColor: "text-gold-500" },
+            { label: "Registered Agents", value: data.registeredAgents, icon: Users, cardClass: "stat-card-teal", iconBgClass: "bg-teal-50", iconColor: "text-teal-500" },
+            { label: "Active Agents", value: data.activeAgents, icon: Activity, cardClass: "stat-card-violet", iconBgClass: "bg-violet-50", iconColor: "text-violet-500" },
+            { label: "Audit Events", value: data.recentLogs.length, icon: ClipboardList, cardClass: "stat-card-navy", iconBgClass: "bg-navy-50", iconColor: "text-navy-500" },
           ].map((stat) => (
             <StaggerItemWrapper key={stat.label}>
-              <Card className={`${stat.cardClass} rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]`}>
-                <CardContent className="pt-5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {stat.label}
-                    </p>
-                    <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
-                  </div>
-                  <div className="mt-2 font-display text-2xl font-bold text-foreground">
-                    <CounterWrapper value={stat.value} className="font-display text-2xl font-bold" />
-                  </div>
-                </CardContent>
-              </Card>
+              <StatCard
+                label={stat.label}
+                value={stat.value}
+                icon={stat.icon}
+                cardClass={stat.cardClass}
+                iconBgClass={stat.iconBgClass}
+                iconColor={stat.iconColor}
+              />
             </StaggerItemWrapper>
           ))}
         </StaggerWrapper>
