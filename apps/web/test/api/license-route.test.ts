@@ -63,16 +63,18 @@ function makeParams(id: string = "lic-1") {
   return { params: Promise.resolve({ id }) };
 }
 
+const DS_ID = "550e8400-e29b-41d4-a716-446655440000";
+
 const MOCK_LICENSE = {
   id: "lic-1",
-  datasetId: "ds-1",
+  datasetId: DS_ID,
   spdxType: "MIT",
   grantorAddress: "0xowner",
   revokedAt: null,
 };
 
 const MOCK_DATASET = {
-  id: "ds-1",
+  id: DS_ID,
   name: "test",
   ownerAddress: "0xowner",
 };
@@ -122,7 +124,7 @@ describe("POST /api/licenses", () => {
     mockResolveAccessor.mockResolvedValue(null);
     const req = new NextRequest("http://localhost/api/licenses", {
       method: "POST",
-      body: JSON.stringify({ datasetId: "ds-1", spdxType: "MIT", grantorAddress: "0x1" }),
+      body: JSON.stringify({ datasetId: DS_ID, spdxType: "MIT", grantorAddress: "0x1" }),
       headers: { "content-type": "application/json" },
     });
     const res = await POST(req);
@@ -132,7 +134,7 @@ describe("POST /api/licenses", () => {
   it("should return 400 for missing fields", async () => {
     const req = new NextRequest("http://localhost/api/licenses", {
       method: "POST",
-      body: JSON.stringify({ datasetId: "ds-1" }),
+      body: JSON.stringify({ datasetId: DS_ID }),
       headers: { "content-type": "application/json" },
     });
     const res = await POST(req);
@@ -144,7 +146,7 @@ describe("POST /api/licenses", () => {
     mockDatasetGetById.mockResolvedValue(MOCK_DATASET);
     const req = new NextRequest("http://localhost/api/licenses", {
       method: "POST",
-      body: JSON.stringify({ datasetId: "ds-1", spdxType: "MIT", grantorAddress: "0x1" }),
+      body: JSON.stringify({ datasetId: DS_ID, spdxType: "MIT", grantorAddress: "0x1" }),
       headers: { "content-type": "application/json" },
     });
     const res = await POST(req);
@@ -156,7 +158,7 @@ describe("POST /api/licenses", () => {
     mockAttach.mockResolvedValue(MOCK_LICENSE);
     const req = new NextRequest("http://localhost/api/licenses", {
       method: "POST",
-      body: JSON.stringify({ datasetId: "ds-1", spdxType: "MIT", grantorAddress: "0xowner" }),
+      body: JSON.stringify({ datasetId: DS_ID, spdxType: "MIT", grantorAddress: "0xowner" }),
       headers: { "content-type": "application/json" },
     });
     const res = await POST(req);

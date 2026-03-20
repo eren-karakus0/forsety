@@ -24,7 +24,7 @@ const mockResolveAccessor = vi.fn();
 vi.mock("@/lib/auth", async () => {
   const { NextResponse } = await import("next/server");
   return {
-    resolveAccessor: (...args: unknown[]) => mockResolveAccessor(...args),
+    resolveAccessorStrict: (...args: unknown[]) => mockResolveAccessor(...args),
     unauthorizedResponse: vi.fn().mockReturnValue(
       NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     ),
