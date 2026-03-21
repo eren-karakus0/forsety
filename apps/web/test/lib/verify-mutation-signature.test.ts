@@ -168,12 +168,13 @@ describe("verify-mutation-signature.ts", () => {
       nonce: "nonce-valid",
     });
 
+    const mockFor = vi.fn().mockResolvedValue([{ id: "session-1" }]);
     mockTransaction.mockImplementation(async (callback: any) => {
       const mockTx = {
         select: vi.fn().mockReturnValue({
           from: vi.fn().mockReturnValue({
             where: vi.fn().mockReturnValue({
-              for: vi.fn().mockResolvedValue([{ id: "session-1" }]),
+              for: mockFor,
             }),
           }),
         }),
@@ -188,6 +189,8 @@ describe("verify-mutation-signature.ts", () => {
 
     expect(result.valid).toBe(true);
     expect(result.error).toBeUndefined();
+    // Verify SELECT FOR UPDATE lock is used for atomic nonce consumption
+    expect(mockFor).toHaveBeenCalledWith("update");
   });
 
   it("should handle case-insensitive wallet address comparison", async () => {

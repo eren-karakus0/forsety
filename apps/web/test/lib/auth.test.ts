@@ -336,5 +336,44 @@ describe("auth.ts", () => {
 
       expect(result.allowed).toBe(true);
     });
+
+    // T3: allowedDatasets null vs empty vs scoped semantics
+    it("should treat null allowedDatasets as unrestricted (access any dataset)", () => {
+      const auth = {
+        agentId: "agent-null-ds",
+        agentPermissions: ["read"],
+        agentAllowedDatasets: null as unknown as string[],
+      };
+      // null means no restriction — should allow access to any dataset
+      const result = checkAgentScope(auth, "read", "ds-any");
+      expect(result.allowed).toBe(true);
+    });
+
+    it("should treat empty allowedDatasets [] as unrestricted (access any dataset)", () => {
+      const auth = {
+        agentId: "agent-empty-ds",
+        agentPermissions: ["read"],
+        agentAllowedDatasets: [],
+      };
+      // Empty array means no restriction — should allow access to any dataset
+      const result = checkAgentScope(auth, "read", "ds-any");
+      expect(result.allowed).toBe(true);
+    });
+
+    it("should restrict access when allowedDatasets is a non-empty array", () => {
+      const auth = {
+        agentId: "agent-scoped",
+        agentPermissions: ["read"],
+        agentAllowedDatasets: ["ds-1"],
+      };
+      // Scoped: should deny access to ds-2
+      const denied = checkAgentScope(auth, "read", "ds-2");
+      expect(denied.allowed).toBe(false);
+      expect(denied.error).toContain("not authorized");
+
+      // Scoped: should allow access to ds-1
+      const allowed = checkAgentScope(auth, "read", "ds-1");
+      expect(allowed.allowed).toBe(true);
+    });
   });
 });
