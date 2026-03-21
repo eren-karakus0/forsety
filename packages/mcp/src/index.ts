@@ -34,7 +34,10 @@ const transport =
 if (transport === "http") {
   const port = parseInt(process.env.MCP_PORT ?? "3001", 10);
   const host = process.env.MCP_HOST ?? "127.0.0.1";
-  const corsOrigin = process.env.MCP_CORS_ORIGIN ?? "*";
+  const corsOrigin = process.env.MCP_CORS_ORIGIN ?? "http://localhost:3000";
+  if (corsOrigin === "*") {
+    console.warn("[MCP] WARNING: CORS origin set to wildcard (*). Restrict to specific origins in production.");
+  }
 
   startHttpServer(config, { port, host, corsOrigin });
 } else {

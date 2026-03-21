@@ -63,6 +63,7 @@ export class AgentService {
 
   async authenticate(apiKey: string) {
     if (!apiKey) return null;
+    if (!apiKey.startsWith("fsy_")) return null;
 
     const hashedKey = hashApiKey(apiKey);
     const result = await this.db

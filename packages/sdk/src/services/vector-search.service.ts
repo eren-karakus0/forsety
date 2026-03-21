@@ -94,18 +94,33 @@ export class VectorSearchService {
 
   async searchDatasets(
     query: string,
-    limit: number = 10
+    limit: number = 10,
+    ownerAddress?: string,
+    datasetIds?: string[]
   ): Promise<ScoredResult<{ id: string; name: string; description: string | null; ownerAddress: string }>[]> {
     if (!query.trim()) return [];
 
     const queryVector = await this.embedder.embed(query);
     const vectorStr = `[${queryVector.join(",")}]`;
 
+    const conditions = [sql`e.source_type = 'dataset'`];
+    if (ownerAddress) {
+      conditions.push(sql`d.owner_address = ${ownerAddress}`);
+    }
+    if (datasetIds && datasetIds.length > 0) {
+      conditions.push(
+        sql`d.id = ANY(ARRAY[${sql.join(datasetIds.map((id) => sql`${id}::uuid`), sql`, `)}])`
+      );
+    }
+
+    const whereClause = sql.join(conditions, sql` AND `);
+
     const results = await this.db.execute(
       sql`SELECT e.source_id, e.text_content,
             1 - (e.embedding <=> ${vectorStr}::vector) as score
           FROM embeddings e
-          WHERE e.source_type = 'dataset'
+          JOIN datasets d ON d.id = e.source_id
+          WHERE ${whereClause}
           ORDER BY e.embedding <=> ${vectorStr}::vector
           LIMIT ${limit}`
     );

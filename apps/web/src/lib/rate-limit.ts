@@ -39,13 +39,13 @@ function cleanup() {
     for (const [key, entry] of store) {
       if (now > entry.resetAt) store.delete(key);
     }
-    // Hard cap: evict oldest entries if store exceeds max size
+    // Hard cap: evict entries closest to expiry first (TTL-sorted)
     if (store.size > MAX_STORE_SIZE) {
       const excess = store.size - MAX_STORE_SIZE;
-      const keys = store.keys();
-      for (let i = 0; i < excess; i++) {
-        const { value } = keys.next();
-        if (value) store.delete(value);
+      const sorted = Array.from(store.entries())
+        .sort((a, b) => a[1].resetAt - b[1].resetAt);
+      for (let i = 0; i < excess && i < sorted.length; i++) {
+        store.delete(sorted[i]![0]);
       }
     }
   }

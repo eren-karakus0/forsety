@@ -188,9 +188,8 @@ describe("GET /api/auth/mutation-nonce", () => {
     expect(json.nonce.length).toBeGreaterThan(0);
   });
 
-  it("should trigger deterministic cleanup based on time interval", async () => {
+  it("should trigger probabilistic cleanup (~10% chance, fire-and-forget)", async () => {
     // Arrange
-    vi.useFakeTimers();
     mockCookiesGet.mockReturnValue({ value: "valid-token" });
     mockVerifyJwt.mockResolvedValue({ sub: "0xuser123" });
 
@@ -217,18 +216,19 @@ describe("GET /api/auth/mutation-nonce", () => {
 
     const { GET } = await import("../../src/app/api/auth/mutation-nonce/route");
 
-    // Advance time well past the 60s interval so cleanup fires regardless of previous state
-    vi.advanceTimersByTime(120_000);
+    // Force Math.random to return 0.05 (< 0.1 threshold) to trigger cleanup
+    const mathRandomSpy = vi.spyOn(Math, "random").mockReturnValue(0.05);
     mockDbDelete.mockClear();
     await GET();
     expect(mockDbDelete).toHaveBeenCalledTimes(1);
 
-    // Calling again immediately should NOT trigger cleanup (within 60s)
+    // Force Math.random to return 0.5 (> 0.1 threshold) to skip cleanup
+    mathRandomSpy.mockReturnValue(0.5);
     mockDbDelete.mockClear();
     await GET();
     expect(mockDbDelete).not.toHaveBeenCalled();
 
-    vi.useRealTimers();
+    mathRandomSpy.mockRestore();
   });
 
   it("should normalize wallet address to lowercase", async () => {

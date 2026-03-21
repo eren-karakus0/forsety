@@ -80,11 +80,10 @@ describe("GET /api/search", () => {
     expect(res.status).toBe(400);
   });
 
-  it("should return dataset search results filtered by owner", async () => {
+  it("should pass owner filter to searchDatasets (DB-level filtering)", async () => {
     mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
     mockSearchDatasets.mockResolvedValue([
       { item: { id: "ds-1", name: "Mine", ownerAddress: OWNER } },
-      { item: { id: "ds-2", name: "Theirs", ownerAddress: STRANGER } },
     ]);
 
     const req = new NextRequest("http://localhost/api/search?q=test&type=dataset");
@@ -93,7 +92,8 @@ describe("GET /api/search", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.results).toHaveLength(1);
-    expect(body.results[0].item.ownerAddress).toBe(OWNER);
+    // Verify DB-level filtering params were passed
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 10, OWNER, undefined);
   });
 
   it("should return memory search results", async () => {
@@ -165,7 +165,70 @@ describe("GET /api/search", () => {
     expect(body.error).toContain("memory.read");
   });
 
-  it("should filter dataset results by agent allowedDatasets", async () => {
+  // T4: Limit clamping tests — verify Math.min/Math.max/parseInt logic
+  it("should fallback limit=0 to default 10 (falsy parseInt)", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
+    mockSearchDatasets.mockResolvedValue([]);
+
+    // parseInt("0") || 10 = 10 because 0 is falsy
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset&limit=0");
+    await GET(req);
+
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 10, OWNER, undefined);
+  });
+
+  it("should clamp negative limit to 1", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
+    mockSearchDatasets.mockResolvedValue([]);
+
+    // parseInt("-5") || 10 = -5 (truthy), Math.max(-5, 1) = 1
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset&limit=-5");
+    await GET(req);
+
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 1, OWNER, undefined);
+  });
+
+  it("should clamp limit=100 down to 50", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
+    mockSearchDatasets.mockResolvedValue([]);
+
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset&limit=100");
+    await GET(req);
+
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 50, OWNER, undefined);
+  });
+
+  it("should default NaN limit to 10", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
+    mockSearchDatasets.mockResolvedValue([]);
+
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset&limit=abc");
+    await GET(req);
+
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 10, OWNER, undefined);
+  });
+
+  it("should default empty limit to 10", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
+    mockSearchDatasets.mockResolvedValue([]);
+
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset&limit=");
+    await GET(req);
+
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 10, OWNER, undefined);
+  });
+
+  it("should default to 10 when no limit param", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: OWNER, trusted: true });
+    mockSearchDatasets.mockResolvedValue([]);
+
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset");
+    await GET(req);
+
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 10, OWNER, undefined);
+  });
+
+  it("should pass allowedDatasets to searchDatasets (DB-level filtering)", async () => {
     mockResolveAccessor.mockResolvedValue({
       accessor: OWNER,
       trusted: true,
@@ -175,7 +238,6 @@ describe("GET /api/search", () => {
     });
     mockSearchDatasets.mockResolvedValue([
       { item: { id: "ds-1", name: "Allowed", ownerAddress: OWNER } },
-      { item: { id: "ds-2", name: "Not Allowed", ownerAddress: OWNER } },
     ]);
 
     const req = new NextRequest("http://localhost/api/search?q=test&type=dataset");
@@ -184,6 +246,7 @@ describe("GET /api/search", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.results).toHaveLength(1);
-    expect(body.results[0].item.id).toBe("ds-1");
+    // Verify DB-level filtering: ownerAddress + datasetIds passed to service
+    expect(mockSearchDatasets).toHaveBeenCalledWith("test", 10, OWNER, ["ds-1"]);
   });
 });

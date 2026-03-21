@@ -61,7 +61,7 @@ export class ShelbyWrapper {
   private exec(args: string[]): string {
     try {
       const cmd = ["shelby", ...args].map(shellQuote).join(" ");
-      const result = execFileSync("wsl", ["-e", "bash", "-lc", cmd], {
+      const result = execFileSync("wsl", ["-e", "bash", "-c", cmd], {
         encoding: "utf-8",
         timeout: 60_000,
       });
