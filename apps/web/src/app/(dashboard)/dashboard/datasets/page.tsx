@@ -31,6 +31,7 @@ import {
   DialogTitle,
   Alert,
   AlertDescription,
+  toast,
 } from "@forsety/ui";
 import {
   Plus,
@@ -51,8 +52,9 @@ import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCardCompact } from "../../components/stat-card";
 import { ErrorBanner } from "../../components/error-banner";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 import { formatDate, formatBytes } from "@/lib/format";
+
+const PAGE_SIZE = 20;
 
 interface DatasetRow {
   id: string;
@@ -66,7 +68,7 @@ interface DatasetRow {
 }
 
 export default function DatasetsPage() {
-  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated, guard } = useAuthGuard();
   const { executeWithSignature } = useSignedAction();
   const [datasets, setDatasets] = useState<DatasetRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +81,9 @@ export default function DatasetsPage() {
 
   // Archive toggle
   const [showArchived, setShowArchived] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -121,6 +126,11 @@ export default function DatasetsPage() {
     return () => { cancelled = true; };
   }, [isAuthenticated]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, licenseFilter, statusFilter, showArchived]);
+
   // Unique licenses for filter dropdown
   const uniqueLicenses = useMemo(
     () => [...new Set(datasets.map((d) => d.license))].sort(),
@@ -137,6 +147,10 @@ export default function DatasetsPage() {
       return true;
     });
   }, [datasets, searchQuery, licenseFilter, statusFilter, showArchived]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedData = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Stats (over all datasets, not filtered)
   const totalSize = datasets.reduce((acc, d) => acc + (d.sizeBytes ?? 0), 0);
@@ -158,10 +172,20 @@ export default function DatasetsPage() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === filtered.length) {
-      setSelectedIds(new Set());
+    const pageIds = paginatedData.map((d) => d.id);
+    const allSelected = pageIds.every((id) => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        pageIds.forEach((id) => next.delete(id));
+        return next;
+      });
     } else {
-      setSelectedIds(new Set(filtered.map((d) => d.id)));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        pageIds.forEach((id) => next.add(id));
+        return next;
+      });
     }
   };
 
@@ -178,11 +202,14 @@ export default function DatasetsPage() {
         a.download = `forsety-datasets-export-${Date.now()}.json`;
         a.click();
         URL.revokeObjectURL(url);
+        toast.success("Export downloaded");
       } else {
         setExportError(true);
+        toast.error("Export failed");
       }
     } catch {
       setExportError(true);
+      toast.error("Export failed");
     } finally {
       setBulkLoading(false);
     }
@@ -196,6 +223,7 @@ export default function DatasetsPage() {
         (sig) => bulkDeleteDatasets(Array.from(selectedIds), sig)
       );
       setArchiveConfirmOpen(false);
+      toast.success(`${selectedIds.size} dataset(s) archived`);
       loadData();
     } catch {
       // User rejected wallet signature
@@ -277,12 +305,7 @@ export default function DatasetsPage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 backdrop-blur-sm">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
-          <p className="text-sm text-destructive">
-            Unable to load datasets. Please try again later.
-          </p>
-        </div>
+        <ErrorBanner message="Unable to load datasets. Please try again." onRetry={loadData} />
       )}
 
       {/* Filter Bar */}
@@ -294,6 +317,7 @@ export default function DatasetsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search datasets..."
+              aria-label="Search datasets"
               className="w-[220px] rounded-lg pl-9"
             />
           </div>
@@ -388,25 +412,25 @@ export default function DatasetsPage() {
               <TableHead className="w-10">
                 <input
                   type="checkbox"
-                  checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  checked={paginatedData.length > 0 && paginatedData.every((d) => selectedIds.has(d.id))}
                   onChange={toggleSelectAll}
-                  aria-label="Select all datasets"
+                  aria-label="Select all datasets on this page"
                   className="h-4 w-4 rounded border-border accent-violet-500"
                 />
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Name
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 License
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Status
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Created
               </TableHead>
-              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label text-right">
                 Actions
               </TableHead>
             </TableRow>
@@ -461,7 +485,7 @@ export default function DatasetsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((dataset) => (
+              paginatedData.map((dataset) => (
                 <TableRow key={dataset.id} className="group border-border/30 transition-colors hover:bg-muted/20">
                   <TableCell>
                     <input
@@ -520,6 +544,36 @@ export default function DatasetsPage() {
         </Table>
       </Card>}
 
+      {/* Pagination Controls */}
+      {filtered.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between px-2 pt-2">
+          <p className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * PAGE_SIZE) + 1}-{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Archive Confirmation Dialog */}
       <Dialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
         <DialogContent className="sm:max-w-sm">
@@ -546,8 +600,6 @@ export default function DatasetsPage() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

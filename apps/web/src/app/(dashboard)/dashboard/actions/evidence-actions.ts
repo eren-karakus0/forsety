@@ -1,8 +1,8 @@
 "use server";
 
 import { getForsetyClient } from "@/lib/forsety";
-import { verifyMutationSignature } from "@/lib/verify-mutation-signature";
-import { withAuth, getWalletFromSession } from "@/lib/with-auth";
+import { withSignedMutation } from "@/lib/with-mutation";
+import { withAuth } from "@/lib/with-auth";
 import type { SignaturePayload } from "@/lib/types";
 
 export interface EvidenceResult {
@@ -13,31 +13,18 @@ export interface EvidenceResult {
 }
 
 export async function generateEvidencePack(datasetId: string, sig: SignaturePayload): Promise<EvidenceResult> {
-  try {
-    const wallet = await getWalletFromSession();
-    if (!wallet) return { success: false, error: "Not authenticated" };
-
-    const sigCheck = await verifyMutationSignature(sig, wallet);
-    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
-
-    const client = getForsetyClient();
+  return withSignedMutation(sig, async (wallet, client) => {
     const dataset = await client.datasets.getById(datasetId);
     if (!dataset || dataset.ownerAddress !== wallet) {
-      return { success: false, error: "Forbidden" };
+      throw new Error("Forbidden");
     }
 
     const result = await client.evidence.generatePack(datasetId);
     return {
-      success: true,
       json: result.json as unknown as Record<string, unknown>,
       hash: result.hash,
     };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Generation failed",
-    };
-  }
+  });
 }
 
 export async function fetchAllEvidencePacks(filters?: { limit?: number; offset?: number }) {

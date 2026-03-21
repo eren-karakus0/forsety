@@ -11,6 +11,14 @@ interface HttpServerOptions {
   corsOrigin?: string;
 }
 
+const MAX_SESSIONS = 100;
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+interface SessionEntry {
+  transport: StreamableHTTPServerTransport;
+  createdAt: number;
+}
+
 /**
  * Start the Forsety MCP server with Streamable HTTP transport.
  *
@@ -21,7 +29,7 @@ export function startHttpServer(
   config: ForsetyMcpServerConfig,
   options: HttpServerOptions = {}
 ) {
-  const { port = 3001, host = "127.0.0.1", corsOrigin = "*" } = options;
+  const { port = 3001, host = "127.0.0.1", corsOrigin = "http://localhost:3000" } = options;
 
   const sharedClient = new ForsetyClient({
     databaseUrl: config.databaseUrl,
@@ -30,7 +38,20 @@ export function startHttpServer(
     hmacSecret: config.hmacSecret,
   });
 
-  const sessions = new Map<string, StreamableHTTPServerTransport>();
+  const sessions = new Map<string, SessionEntry>();
+
+  // Periodic cleanup of expired sessions
+  const cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [id, entry] of sessions) {
+      if (now - entry.createdAt > SESSION_TTL_MS) {
+        sessions.delete(id);
+      }
+    }
+  }, 5 * 60 * 1000); // every 5 minutes
+
+  // Prevent interval from keeping process alive
+  cleanupInterval.unref();
 
   const httpServer = http.createServer(async (req, res) => {
     // CORS headers
@@ -55,7 +76,6 @@ export function startHttpServer(
         JSON.stringify({
           status: "ok",
           transport: "streamable-http",
-          sessions: sessions.size,
         })
       );
       return;
@@ -93,14 +113,14 @@ async function handleMcpRequest(
   res: http.ServerResponse,
   config: ForsetyMcpServerConfig,
   sharedClient: ForsetyClient,
-  sessions: Map<string, StreamableHTTPServerTransport>
+  sessions: Map<string, SessionEntry>
 ) {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   // Existing session — delegate to its transport
   if (sessionId && sessions.has(sessionId)) {
-    const transport = sessions.get(sessionId)!;
-    await transport.handleRequest(req, res);
+    const entry = sessions.get(sessionId)!;
+    await entry.transport.handleRequest(req, res);
     return;
   }
 
@@ -113,6 +133,13 @@ async function handleMcpRequest(
 
   // New session — only via POST (initialization)
   if (!sessionId && req.method === "POST") {
+    // Enforce session cap
+    if (sessions.size >= MAX_SESSIONS) {
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Too many active sessions" }));
+      return;
+    }
+
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
     });
@@ -121,7 +148,7 @@ async function handleMcpRequest(
     await server.connect(transport);
 
     if (transport.sessionId) {
-      sessions.set(transport.sessionId, transport);
+      sessions.set(transport.sessionId, { transport, createdAt: Date.now() });
     }
 
     transport.onclose = () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { fetchAgents } from "../actions";
 import {
@@ -22,7 +22,6 @@ import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCard } from "../../components/stat-card";
 import { ErrorBanner } from "../../components/error-banner";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 import { formatDateShort } from "@/lib/format";
 
 interface AgentRow {
@@ -36,7 +35,7 @@ interface AgentRow {
 }
 
 export default function AgentsPage() {
-  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated, guard } = useAuthGuard();
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -80,15 +79,21 @@ export default function AgentsPage() {
   const activePercent = agents.length > 0 ? Math.round((activeCount / agents.length) * 100) : 0;
 
   // Collect all unique permissions for distribution
-  const permissionCounts: Record<string, number> = {};
-  agents.forEach((a) => {
-    a.permissions.forEach((p) => {
-      permissionCounts[p] = (permissionCounts[p] ?? 0) + 1;
+  const permissionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    agents.forEach((a) => {
+      a.permissions.forEach((p) => {
+        counts[p] = (counts[p] ?? 0) + 1;
+      });
     });
-  });
-  const topPermissions = Object.entries(permissionCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    return counts;
+  }, [agents]);
+
+  const topPermissions = useMemo(() => {
+    return Object.entries(permissionCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }, [permissionCounts]);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -187,25 +192,26 @@ export default function AgentsPage() {
 
       {/* Table */}
       <Card className="overflow-hidden rounded-xl">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="table-header-row border-border/40 hover:bg-transparent">
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Name
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Owner
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Permissions
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Status
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label">
                 Last Seen
               </TableHead>
-              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="th-label text-right">
                 Actions
               </TableHead>
             </TableRow>
@@ -295,10 +301,10 @@ export default function AgentsPage() {
             )}
           </TableBody>
         </Table>
+        </div>
       </Card>
       </>)}
 
-      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

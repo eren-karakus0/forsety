@@ -438,28 +438,28 @@ describe("PATCH /api/policies/[id]", () => {
     );
   });
 
-  it("should pass createdBy field to policy creation", async () => {
+  it("should use auth.accessor for createdBy (not request body)", async () => {
     // Arrange
     mockResolveAccessorStrict.mockResolvedValue({ accessor: "0xowner", trusted: true });
     mockPolicyGetById.mockResolvedValue(MOCK_POLICY);
     mockDatasetGetById.mockResolvedValue(MOCK_DATASET);
 
-    const newPolicy = { ...MOCK_POLICY, version: 2, createdBy: "0xadmin" };
+    const newPolicy = { ...MOCK_POLICY, version: 2, createdBy: "0xowner" };
     mockPolicyCreate.mockResolvedValue(newPolicy);
 
     const req = new NextRequest("http://localhost/api/policies/policy-1", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ createdBy: "0xadmin", maxReads: 50 }),
+      body: JSON.stringify({ createdBy: "0xspoofed", maxReads: 50 }),
     });
 
     // Act
     await PATCH(req, makeParams());
 
-    // Assert
+    // Assert — createdBy must come from auth, not from request body
     expect(mockPolicyCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        createdBy: "0xadmin",
+        createdBy: "0xowner",
       })
     );
   });

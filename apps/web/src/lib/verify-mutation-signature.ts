@@ -25,6 +25,15 @@ function validatePayload(sig: SignaturePayload): string | null {
   if (!/^[0-9a-fA-F]{64}$/.test(pubClean)) {
     return "Invalid public key format";
   }
+
+  // Validate domain and chain binding using Aptos envelope format (lowercase fields)
+  if (!/\napplication:\s*\S+/.test(sig.fullMessage)) {
+    return "Invalid application binding";
+  }
+  if (!/\nchain_id:\s*2\b/.test(sig.fullMessage)) {
+    return "Invalid chain binding";
+  }
+
   return null;
 }
 
@@ -44,11 +53,13 @@ export async function verifyMutationSignature(
     return { valid: false, error: isProd ? GENERIC_ERROR : validationError };
   }
 
-  // Verify Ed25519 signature
+  // Verify Ed25519 signature with chain ID binding
   const result = verifyAuthMessage({
     fullMessage: sig.fullMessage,
     signature: sig.signature,
     publicKey: sig.publicKey,
+    expectedChainId: 2,
+    strictChainId: true,
   });
 
   if (!result.success || !result.nonce) {

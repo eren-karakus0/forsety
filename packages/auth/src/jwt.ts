@@ -29,6 +29,8 @@ export async function signJwt(
     .setSubject(walletAddress)
     .setIssuedAt()
     .setExpirationTime(options?.expiresIn ?? DEFAULT_EXPIRY)
+    .setIssuer("forsety")
+    .setAudience("forsety-web")
     .sign(getSecret(secret));
 }
 
@@ -41,7 +43,10 @@ export async function verifyJwt(
   secret: string
 ): Promise<JwtPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, getSecret(secret));
+    const { payload } = await jose.jwtVerify(token, getSecret(secret), {
+      issuer: "forsety",
+      audience: "forsety-web",
+    });
     return {
       sub: payload.sub ?? "",
       iat: payload.iat ?? 0,

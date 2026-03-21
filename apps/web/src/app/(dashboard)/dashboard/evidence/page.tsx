@@ -19,7 +19,6 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 import { formatDate } from "@/lib/format";
 
 interface EvidenceRow {
@@ -31,7 +30,7 @@ interface EvidenceRow {
 }
 
 export default function EvidencePage() {
-  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated } = useAuthGuard();
   const [packs, setPacks] = useState<EvidenceRow[]>([]);
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState(false);
@@ -119,13 +118,14 @@ export default function EvidencePage() {
         />
       ) : (
         <Card className="overflow-hidden rounded-xl">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="table-header-row border-border/40 hover:bg-transparent">
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Dataset</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Hash</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Generated</TableHead>
-                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                <TableHead className="th-label">Dataset</TableHead>
+                <TableHead className="th-label">Hash</TableHead>
+                <TableHead className="th-label">Generated</TableHead>
+                <TableHead className="th-label text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -175,10 +175,10 @@ export default function EvidencePage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </Card>
       )}
 
-      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

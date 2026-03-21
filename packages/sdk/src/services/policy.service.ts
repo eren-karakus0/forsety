@@ -224,7 +224,7 @@ export class PolicyService {
     }
 
     if (
-      latestPolicy.maxReads &&
+      latestPolicy.maxReads != null &&
       latestPolicy.readsConsumed >= latestPolicy.maxReads
     ) {
       return { allowed: false, policy: latestPolicy };
@@ -274,7 +274,7 @@ export class PolicyService {
     }
 
     // If maxReads is set, atomically check + increment in a single UPDATE
-    if (latestPolicy.maxReads) {
+    if (latestPolicy.maxReads != null) {
       const [updated] = await this.db
         .update(policies)
         .set({ readsConsumed: sql`${policies.readsConsumed} + 1` })

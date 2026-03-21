@@ -29,6 +29,10 @@ function computeContentHash(content: Record<string, unknown>): string {
   return canonicalHash(content);
 }
 
+function escapeIlike(pattern: string): string {
+  return pattern.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
 export class RecallVaultService {
   constructor(
     private db: Database,
@@ -128,7 +132,7 @@ export class RecallVaultService {
     }
 
     if (query.keyPattern) {
-      conditions.push(ilike(agentMemories.key, `%${query.keyPattern}%`));
+      conditions.push(ilike(agentMemories.key, `%${escapeIlike(query.keyPattern)}%`));
     }
 
     if (query.tags?.length) {
@@ -149,15 +153,23 @@ export class RecallVaultService {
       sql`(${agentMemories.expiresAt} IS NULL OR ${agentMemories.expiresAt} > NOW())`
     );
 
-    const items = await this.db
-      .select()
-      .from(agentMemories)
-      .where(and(...conditions))
-      .orderBy(desc(agentMemories.updatedAt))
-      .limit(limit)
-      .offset(offset);
+    const whereClause = and(...conditions);
 
-    return { items, total: items.length };
+    const [items, countResult] = await Promise.all([
+      this.db
+        .select()
+        .from(agentMemories)
+        .where(whereClause)
+        .orderBy(desc(agentMemories.updatedAt))
+        .limit(limit)
+        .offset(offset),
+      this.db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(agentMemories)
+        .where(whereClause),
+    ]);
+
+    return { items, total: countResult[0]?.total ?? items.length };
   }
 
   async delete(agentId: string, memoryId: string) {
@@ -187,15 +199,23 @@ export class RecallVaultService {
     const limit = options?.limit ?? 50;
     const offset = options?.offset ?? 0;
 
-    const items = await this.db
-      .select()
-      .from(agentMemories)
-      .where(and(...conditions))
-      .orderBy(desc(agentMemories.updatedAt))
-      .limit(limit)
-      .offset(offset);
+    const whereClause = and(...conditions);
 
-    return { items, total: items.length };
+    const [items, countResult] = await Promise.all([
+      this.db
+        .select()
+        .from(agentMemories)
+        .where(whereClause)
+        .orderBy(desc(agentMemories.updatedAt))
+        .limit(limit)
+        .offset(offset),
+      this.db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(agentMemories)
+        .where(whereClause),
+    ]);
+
+    return { items, total: countResult[0]?.total ?? items.length };
   }
 
   async exportSnapshot(agentId: string, namespace?: string) {

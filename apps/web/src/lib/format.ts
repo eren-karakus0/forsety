@@ -29,3 +29,15 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export function formatDateTime(date: string | Date): string {
+  return new Date(date).toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+export function truncateAddress(addr: string, start = 6, end = 4): string {
+  if (addr.length <= start + end + 3) return addr;
+  return `${addr.slice(0, start)}...${addr.slice(-end)}`;
+}

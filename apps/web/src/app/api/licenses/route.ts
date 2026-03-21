@@ -4,6 +4,13 @@ import { getForsetyClient } from "@/lib/forsety";
 import { apiError, validationError } from "@/lib/api-error";
 import { z } from "zod";
 
+const attachLicenseSchema = z.object({
+  datasetId: z.string().uuid(),
+  spdxType: z.string().min(1),
+  grantorAddress: z.string().min(1).optional(),
+  terms: z.record(z.unknown()).optional(),
+});
+
 const listQuerySchema = z.object({
   datasetId: z.string().uuid().optional(),
   includeRevoked: z.boolean().default(false),
@@ -56,14 +63,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { datasetId, spdxType, grantorAddress, terms } = body;
-
-    if (!datasetId || !spdxType || !grantorAddress) {
-      return NextResponse.json(
-        { error: "Missing required fields: datasetId, spdxType, grantorAddress" },
-        { status: 400 }
-      );
+    const parsed = attachLicenseSchema.safeParse(body);
+    if (!parsed.success) {
+      return validationError(parsed.error);
     }
+    const { datasetId, spdxType, grantorAddress, terms } = parsed.data;
 
     const client = getForsetyClient();
 
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
     const license = await client.licenses.attach({
       datasetId,
       spdxType,
-      grantorAddress,
+      grantorAddress: grantorAddress ?? auth.accessor,
       terms,
     });
 

@@ -36,7 +36,6 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 
 interface AuditLog {
   id: string;
@@ -89,7 +88,7 @@ export default function AuditPage() {
 }
 
 function AuditPageContent() {
-  const { isAuthenticated, guard, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated, guard } = useAuthGuard();
   const searchParams = useSearchParams();
   const filterAgentId = searchParams.get("agentId");
 
@@ -271,9 +270,9 @@ function AuditPageContent() {
       )}
 
       {/* Filters */}
-      {isAuthenticated && <div className="flex flex-wrap items-center gap-3">
+      {isAuthenticated && <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-          <SelectTrigger className="w-[180px] rounded-lg">
+          <SelectTrigger className="w-full rounded-lg sm:w-[180px]">
             <SelectValue placeholder="All Agents" />
           </SelectTrigger>
           <SelectContent>
@@ -288,7 +287,7 @@ function AuditPageContent() {
         </Select>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px] rounded-lg">
+          <SelectTrigger className="w-full rounded-lg sm:w-[140px]">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -300,7 +299,7 @@ function AuditPageContent() {
         </Select>
 
         <Select value={datasetFilter} onValueChange={setDatasetFilter}>
-          <SelectTrigger className="w-[180px] rounded-lg">
+          <SelectTrigger className="w-full rounded-lg sm:w-[180px]">
             <SelectValue placeholder="All Datasets" />
           </SelectTrigger>
           <SelectContent>
@@ -318,17 +317,17 @@ function AuditPageContent() {
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
           placeholder="From"
-          className="w-[150px] rounded-lg"
+          className="w-full rounded-lg sm:w-[150px]"
         />
         <Input
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
           placeholder="To"
-          className="w-[150px] rounded-lg"
+          className="w-full rounded-lg sm:w-[150px]"
         />
 
-        <div className="ml-auto flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground sm:ml-auto">
           <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-gold-400 to-teal-400" />
           {totalCount} total
         </div>
@@ -375,16 +374,17 @@ function AuditPageContent() {
             </p>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="table-header-row border-border/40 hover:bg-transparent">
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Time</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Agent</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Action</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tool</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Resource</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
+                <TableHead className="th-label">Time</TableHead>
+                <TableHead className="th-label">Agent</TableHead>
+                <TableHead className="th-label">Action</TableHead>
+                <TableHead className="th-label">Tool</TableHead>
+                <TableHead className="th-label">Resource</TableHead>
+                <TableHead className="th-label">Status</TableHead>
+                <TableHead className="th-label text-right">Duration</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -454,6 +454,7 @@ function AuditPageContent() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </Card>
 
@@ -487,7 +488,6 @@ function AuditPageContent() {
       )}
       </>}
 
-      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

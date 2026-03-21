@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { signJwt, verifyJwt } from "../src/jwt.js";
 
 const TEST_SECRET = "test-secret-key-for-jwt-signing-min32chars!!";
@@ -58,14 +58,18 @@ describe("JWT", () => {
       expect(payload).toBeNull();
     });
 
-    it("should return null for expired token", async () => {
-      const token = await signJwt("0x1234", TEST_SECRET, {
-        expiresIn: "0s",
-      });
-      // Wait a tick for expiration
-      await new Promise((r) => setTimeout(r, 1100));
-      const payload = await verifyJwt(token, TEST_SECRET);
-      expect(payload).toBeNull();
-    });
+    it(
+      "should return null for expired token",
+      async () => {
+        const token = await signJwt("0x1234", TEST_SECRET, {
+          expiresIn: "1s",
+        });
+        // Wait for token to expire (jose needs real time)
+        await new Promise((r) => setTimeout(r, 1500));
+        const payload = await verifyJwt(token, TEST_SECRET);
+        expect(payload).toBeNull();
+      },
+      5000
+    );
   });
 });

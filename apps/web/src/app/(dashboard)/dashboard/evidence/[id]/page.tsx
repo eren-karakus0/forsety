@@ -23,6 +23,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  toast,
 } from "@forsety/ui";
 import {
   Download,
@@ -44,7 +45,6 @@ import { generateEvidencePackPdf } from "@/lib/pdf-export";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
 import { ConnectWalletCTA } from "../../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 
 interface EvidencePackDetail {
   id: string;
@@ -98,7 +98,7 @@ type PackData = {
 };
 
 export default function EvidenceDetailPage() {
-  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated } = useAuthGuard();
   const { executeWithSignature } = useSignedAction();
   const params = useParams();
   const id = params.id as string;
@@ -158,6 +158,7 @@ export default function EvidenceDetailPage() {
     if (!data) return;
     const pdf = await generateEvidencePackPdf(data.packJson as Parameters<typeof generateEvidencePackPdf>[0], data.packHash);
     pdf.save(`evidence-pack-${data.packHash.slice(0, 8)}.pdf`);
+    toast.success("PDF exported");
   };
 
   if (loading) {
@@ -177,15 +178,12 @@ export default function EvidenceDetailPage() {
 
   if (!isAuthenticated) {
     return (
-      <>
-        <ConnectWalletCTA
-          title="Connect to view evidence pack"
-          description="Connect your wallet to access cryptographic evidence details and verification"
-          icon={Layers}
-          variant="full-page"
-        />
-        <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
-      </>
+      <ConnectWalletCTA
+        title="Connect to view evidence pack"
+        description="Connect your wallet to access cryptographic evidence details and verification"
+        icon={Layers}
+        variant="full-page"
+      />
     );
   }
 
@@ -534,6 +532,7 @@ export default function EvidenceDetailPage() {
                         );
                         if (result.success && result.url) {
                           setShareUrl(result.url);
+                          toast.success("Share link created");
                         }
                       } catch {
                         // User rejected wallet signature or error
@@ -563,6 +562,7 @@ export default function EvidenceDetailPage() {
                     onClick={() => {
                       navigator.clipboard.writeText(shareUrl);
                       setCopied(true);
+                      toast.success("Copied to clipboard");
                       setTimeout(() => setCopied(false), 2000);
                     }}
                     variant="outline"

@@ -13,12 +13,12 @@ import {
   Textarea,
   Alert,
   AlertDescription,
+  toast,
 } from "@forsety/ui";
 import { Upload, Check, Loader2, ArrowRight, FileUp } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
-import { WalletSelector } from "@/components/wallet-selector";
 
 const LICENSE_OPTIONS = [
   { value: "CC-BY-4.0", label: "CC BY 4.0", desc: "Attribution" },
@@ -29,7 +29,7 @@ const LICENSE_OPTIONS = [
 ];
 
 export default function UploadPage() {
-  const { isAuthenticated, isLoading, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated, isLoading } = useAuthGuard();
   const { executeWithSignature } = useSignedAction();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -68,10 +68,13 @@ export default function UploadPage() {
         throw new Error(result.error ?? "Upload failed");
       }
 
+      toast.success("Dataset uploaded successfully");
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const message = err instanceof Error ? err.message : "Upload failed";
+      toast.error(message);
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -106,14 +109,11 @@ export default function UploadPage() {
             </p>
           </div>
         ) : !isAuthenticated ? (
-          <>
-            <ConnectWalletCTA
-              title="Connect your wallet to upload datasets"
-              description="You need to connect your wallet before uploading datasets to Shelby Protocol"
-              icon={Upload}
-            />
-            <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
-          </>
+          <ConnectWalletCTA
+            title="Connect your wallet to upload datasets"
+            description="You need to connect your wallet before uploading datasets to Shelby Protocol"
+            icon={Upload}
+          />
         ) : <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Zone */}
           <Card
@@ -139,6 +139,7 @@ export default function UploadPage() {
                   type="file"
                   className="absolute inset-0 cursor-pointer opacity-0"
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  aria-label="Choose a file to upload"
                 />
 
                 {file ? (
@@ -172,10 +173,11 @@ export default function UploadPage() {
 
           {/* Name */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Label htmlFor="dataset-name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Dataset Name
             </Label>
             <Input
+              id="dataset-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. ImageNet Training Subset"
@@ -185,10 +187,11 @@ export default function UploadPage() {
 
           {/* Description */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Label htmlFor="dataset-description" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Description
             </Label>
             <Textarea
+              id="dataset-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of the dataset..."
@@ -202,16 +205,18 @@ export default function UploadPage() {
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               License Type
             </Label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="License type">
               {LICENSE_OPTIONS.map((opt) => (
                 <button
+                  role="radio"
+                  aria-checked={license === opt.value}
                   key={opt.value}
                   type="button"
                   onClick={() => setLicense(opt.value)}
                   className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 ${
                     license === opt.value
                       ? "border-gold-500 bg-gold-50/60 shadow-[0_0_20px_rgba(212,175,55,0.1)]"
-                      : "border-navy-200 bg-white hover:border-gold-400/40 hover:bg-gold-50/20"
+                      : "border-navy-200 bg-card hover:border-gold-400/40 hover:bg-gold-50/20"
                   }`}
                 >
                   <span

@@ -2,8 +2,8 @@
 
 import { getForsetyClient } from "@/lib/forsety";
 import { sanitizeAgent } from "@forsety/sdk";
-import { verifyMutationSignature } from "@/lib/verify-mutation-signature";
-import { withAuth, getWalletFromSession } from "@/lib/with-auth";
+import { withSignedMutation } from "@/lib/with-mutation";
+import { withAuth } from "@/lib/with-auth";
 import type { SignaturePayload } from "@/lib/types";
 
 export async function fetchAgents() {
@@ -74,14 +74,7 @@ export async function registerAgent(input: {
   permissions?: string[];
   allowedDatasets?: string[];
 }, sig: SignaturePayload) {
-  try {
-    const wallet = await getWalletFromSession();
-    if (!wallet) return { success: false, error: "Not authenticated" };
-
-    const sigCheck = await verifyMutationSignature(sig, wallet);
-    if (!sigCheck.valid) return { success: false, error: sigCheck.error ?? "Signature invalid" };
-
-    const client = getForsetyClient();
+  return withSignedMutation(sig, async (wallet, client) => {
     const result = await client.agents.register({
       name: input.name,
       description: input.description,
@@ -91,14 +84,8 @@ export async function registerAgent(input: {
     });
 
     return {
-      success: true,
       agentId: result.agent.id,
       apiKey: result.apiKey,
     };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Registration failed",
-    };
-  }
+  });
 }

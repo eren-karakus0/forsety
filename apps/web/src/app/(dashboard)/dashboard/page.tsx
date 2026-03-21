@@ -33,7 +33,6 @@ import {
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../components/guest-stat-card";
 import { StatCard } from "../components/stat-card";
-import { WalletSelector } from "@/components/wallet-selector";
 import { formatRelativeTime } from "@/lib/format";
 
 interface RecentLog {
@@ -118,7 +117,7 @@ const guestStats = [
 ];
 
 export default function OverviewPage() {
-  const { isAuthenticated, selectorOpen, setSelectorOpen } = useAuthGuard();
+  const { isAuthenticated } = useAuthGuard();
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(isAuthenticated);
 
@@ -394,7 +393,6 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      <WalletSelector open={selectorOpen} onOpenChange={setSelectorOpen} />
     </div>
   );
 }

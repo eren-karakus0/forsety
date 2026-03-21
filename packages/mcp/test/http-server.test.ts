@@ -117,7 +117,6 @@ describe("HTTP Server", () => {
     const body = JSON.parse(res.body);
     expect(body.status).toBe("ok");
     expect(body.transport).toBe("streamable-http");
-    expect(body.sessions).toBe(0);
   });
 
   it("should return 404 for unknown paths", async () => {

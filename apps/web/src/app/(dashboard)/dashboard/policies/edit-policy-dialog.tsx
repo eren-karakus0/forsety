@@ -14,6 +14,7 @@ import {
   Textarea,
   Alert,
   AlertDescription,
+  toast,
 } from "@forsety/ui";
 import { Loader2, Info } from "lucide-react";
 
@@ -86,12 +87,17 @@ export function EditPolicyDialog({
       if (result.success) {
         onOpenChange(false);
         onUpdated();
+        toast.success("Policy updated");
       } else {
-        setError(result.error ?? "Failed to update policy");
+        const message = result.error ?? "Failed to update policy";
+        setError(message);
+        toast.error(message);
       }
     } catch (err) {
       setSubmitting(false);
-      setError(err instanceof Error ? err.message : "Failed to update policy");
+      const message = err instanceof Error ? err.message : "Failed to update policy";
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -111,8 +117,9 @@ export function EditPolicyDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Allowed Accessors</Label>
+            <Label htmlFor="edit-policy-accessors">Allowed Accessors</Label>
             <Textarea
+              id="edit-policy-accessors"
               value={accessors}
               onChange={(e) => setAccessors(e.target.value)}
               placeholder={"One address per line\n0x1234...\n* (for all)"}
@@ -126,8 +133,9 @@ export function EditPolicyDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Max Reads</Label>
+              <Label htmlFor="edit-policy-max-reads">Max Reads</Label>
               <Input
+                id="edit-policy-max-reads"
                 type="number"
                 value={maxReads}
                 onChange={(e) => setMaxReads(e.target.value)}
@@ -137,8 +145,9 @@ export function EditPolicyDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Expires At</Label>
+              <Label htmlFor="edit-policy-expires">Expires At</Label>
               <Input
+                id="edit-policy-expires"
                 type="date"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}

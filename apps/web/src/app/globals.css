@@ -71,6 +71,10 @@
 }
 
 @layer components {
+  .th-label {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+
   .glass {
     @apply bg-white/70 backdrop-blur-xl border border-navy-200/50 shadow-sm;
   }

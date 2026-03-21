@@ -93,16 +93,19 @@ export async function POST(request: NextRequest) {
       operationType,
     });
 
-    // Cross-reference audit log if agentId provided
+    // Cross-reference audit log if agentId provided — verify ownership first
     if (agentId) {
-      await client.agentAudit.log({
-        agentId,
-        action: "dataset.access",
-        resourceType: "dataset",
-        resourceId: datasetId,
-        input: { operationType, accessorAddress },
-        output: { accessLogId: log.id },
-      }).catch(() => {});
+      const agent = await client.agents.getById(agentId);
+      if (agent && agent.ownerAddress === auth.accessor) {
+        await client.agentAudit.log({
+          agentId,
+          action: "dataset.access",
+          resourceType: "dataset",
+          resourceId: datasetId,
+          input: { operationType, accessorAddress },
+          output: { accessLogId: log.id },
+        }).catch(() => {});
+      }
     }
 
     return NextResponse.json(log, { status: 201 });
