@@ -9,6 +9,9 @@ import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 import { ForsetyAuthError } from "@forsety/sdk";
 
+/** Maximum allowed download size: 100 MB */
+const MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024;
+
 interface PreflightResult {
   accessor: string;
   dataset: {
@@ -101,6 +104,16 @@ export async function GET(
     await client.getShelby().downloadDataset(dataset.shelbyBlobName, tempPath);
 
     const fileSize = statSync(tempPath).size;
+
+    // Enforce download size limit
+    if (fileSize > MAX_DOWNLOAD_SIZE) {
+      try { unlinkSync(tempPath); } catch { /* best-effort */ }
+      tempPath = null;
+      return NextResponse.json(
+        { error: "File exceeds maximum download size (100 MB)" },
+        { status: 413 }
+      );
+    }
 
     // --- Phase 3: Log access + consume quota (only after successful download) ---
     const accessLog = await client.access.logAccess({

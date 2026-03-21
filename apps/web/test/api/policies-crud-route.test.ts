@@ -159,4 +159,98 @@ describe("POST /api/policies", () => {
 
     expect(res.status).toBe(404);
   });
+
+  // T5: Policy field validation tests (Zod schema enforcement)
+  it("should return 400 for empty allowedAccessors array", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/policies", {
+      method: "POST",
+      body: JSON.stringify({
+        datasetId: "550e8400-e29b-41d4-a716-446655440000",
+        allowedAccessors: [],
+      }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for empty string in allowedAccessors", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/policies", {
+      method: "POST",
+      body: JSON.stringify({
+        datasetId: "550e8400-e29b-41d4-a716-446655440000",
+        allowedAccessors: [""],
+      }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for negative maxReads", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/policies", {
+      method: "POST",
+      body: JSON.stringify({
+        datasetId: "550e8400-e29b-41d4-a716-446655440000",
+        allowedAccessors: [OWNER],
+        maxReads: -1,
+      }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for float maxReads", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/policies", {
+      method: "POST",
+      body: JSON.stringify({
+        datasetId: "550e8400-e29b-41d4-a716-446655440000",
+        allowedAccessors: [OWNER],
+        maxReads: 3.5,
+      }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for invalid UUID datasetId", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/policies", {
+      method: "POST",
+      body: JSON.stringify({
+        datasetId: "not-a-uuid",
+        allowedAccessors: [OWNER],
+      }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for invalid datetime expiresAt", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/policies", {
+      method: "POST",
+      body: JSON.stringify({
+        datasetId: "550e8400-e29b-41d4-a716-446655440000",
+        allowedAccessors: [OWNER],
+        expiresAt: "not-a-date",
+      }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+  });
 });

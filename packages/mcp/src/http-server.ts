@@ -12,11 +12,13 @@ interface HttpServerOptions {
 }
 
 const MAX_SESSIONS = 100;
+const MAX_SESSIONS_PER_IP = 5;
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 interface SessionEntry {
   transport: StreamableHTTPServerTransport;
   createdAt: number;
+  clientIp: string;
 }
 
 /**
@@ -39,6 +41,7 @@ export function startHttpServer(
   });
 
   const sessions = new Map<string, SessionEntry>();
+  const ipSessionCounts = new Map<string, number>();
 
   // Periodic cleanup of expired sessions
   const cleanupInterval = setInterval(() => {
@@ -46,6 +49,12 @@ export function startHttpServer(
     for (const [id, entry] of sessions) {
       if (now - entry.createdAt > SESSION_TTL_MS) {
         sessions.delete(id);
+        const count = ipSessionCounts.get(entry.clientIp) ?? 0;
+        if (count <= 1) {
+          ipSessionCounts.delete(entry.clientIp);
+        } else {
+          ipSessionCounts.set(entry.clientIp, count - 1);
+        }
       }
     }
   }, 5 * 60 * 1000); // every 5 minutes
@@ -84,7 +93,7 @@ export function startHttpServer(
     // MCP endpoint
     if (req.url === "/mcp") {
       try {
-        await handleMcpRequest(req, res, config, sharedClient, sessions);
+        await handleMcpRequest(req, res, config, sharedClient, sessions, ipSessionCounts);
       } catch (error) {
         console.error("MCP request error:", error);
         if (!res.headersSent) {
@@ -108,12 +117,19 @@ export function startHttpServer(
   return httpServer;
 }
 
+function getClientIp(req: http.IncomingMessage): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") return forwarded.split(",")[0]!.trim();
+  return req.socket.remoteAddress ?? "unknown";
+}
+
 async function handleMcpRequest(
   req: http.IncomingMessage,
   res: http.ServerResponse,
   config: ForsetyMcpServerConfig,
   sharedClient: ForsetyClient,
-  sessions: Map<string, SessionEntry>
+  sessions: Map<string, SessionEntry>,
+  ipSessionCounts: Map<string, number>
 ) {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
@@ -140,6 +156,15 @@ async function handleMcpRequest(
       return;
     }
 
+    // Enforce per-IP session cap
+    const clientIp = getClientIp(req);
+    const ipCount = ipSessionCounts.get(clientIp) ?? 0;
+    if (ipCount >= MAX_SESSIONS_PER_IP) {
+      res.writeHead(429, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Too many sessions from this IP" }));
+      return;
+    }
+
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
     });
@@ -148,12 +173,22 @@ async function handleMcpRequest(
     await server.connect(transport);
 
     if (transport.sessionId) {
-      sessions.set(transport.sessionId, { transport, createdAt: Date.now() });
+      sessions.set(transport.sessionId, { transport, createdAt: Date.now(), clientIp });
+      ipSessionCounts.set(clientIp, ipCount + 1);
     }
 
     transport.onclose = () => {
       if (transport.sessionId) {
+        const entry = sessions.get(transport.sessionId);
         sessions.delete(transport.sessionId);
+        if (entry) {
+          const count = ipSessionCounts.get(entry.clientIp) ?? 0;
+          if (count <= 1) {
+            ipSessionCounts.delete(entry.clientIp);
+          } else {
+            ipSessionCounts.set(entry.clientIp, count - 1);
+          }
+        }
       }
     };
 

@@ -41,16 +41,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: scope.error }, { status: 403 });
       }
 
-      const results = await client.vectorSearch.searchDatasets(query, limit);
-      // Filter by owner + agent's allowed datasets
-      const filtered = results.filter(r => {
-        if (r.item.ownerAddress !== auth.accessor) return false;
-        if (auth.agentAllowedDatasets && auth.agentAllowedDatasets.length > 0) {
-          return auth.agentAllowedDatasets.includes(r.item.id);
-        }
-        return true;
-      });
-      return NextResponse.json({ type, query, results: filtered, total: filtered.length });
+      const datasetIds = auth.agentAllowedDatasets && auth.agentAllowedDatasets.length > 0
+        ? auth.agentAllowedDatasets
+        : undefined;
+      const results = await client.vectorSearch.searchDatasets(query, limit, auth.accessor, datasetIds);
+      return NextResponse.json({ type, query, results, total: results.length });
     }
 
     if (!agentId) {

@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
+// --- Mock node:fs to control statSync for download size limit tests ---
+const actualFs = await vi.importActual<typeof import("node:fs")>("node:fs");
+const mockStatSync = vi.fn().mockImplementation((...args: unknown[]) =>
+  (actualFs.statSync as Function)(...args)
+);
+vi.mock("node:fs", async () => {
+  const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
+  return { ...actual, statSync: (...args: unknown[]) => mockStatSync(...args) };
+});
+
 // --- Mock dependencies before importing route ---
 
 const mockGetById = vi.fn();
@@ -66,6 +76,10 @@ const MOCK_DATASET = {
 describe("GET /api/datasets/[id]/download", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset statSync to delegate to real implementation
+    mockStatSync.mockImplementation((...args: unknown[]) =>
+      (actualFs.statSync as Function)(...args)
+    );
     // Default: JWT auth succeeds (trusted)
     mockResolveAccessor.mockResolvedValue({ accessor: "0xuser-wallet", trusted: true });
   });
@@ -189,6 +203,23 @@ describe("GET /api/datasets/[id]/download", () => {
     expect(mockLogAccess).toHaveBeenCalledWith(
       expect.objectContaining({ accessorAddress: "0xagent-owner" })
     );
+  });
+
+  it("should return 413 when downloaded file exceeds size limit", async () => {
+    mockGetById.mockResolvedValue(MOCK_DATASET);
+    mockCheckAccess.mockResolvedValue({ allowed: true, policy: { id: "p1" } });
+    mockDownloadDataset.mockImplementation((_blob: string, path: string) => {
+      actualFs.writeFileSync(path, "small-content");
+    });
+
+    // Override statSync to report file as > 100MB
+    mockStatSync.mockReturnValue({ size: 101 * 1024 * 1024 });
+
+    const res = await GET(makeRequest(), makeParams());
+
+    expect(res.status).toBe(413);
+    const body = await res.json();
+    expect(body.error).toContain("100 MB");
   });
 
   it("should use untrusted accessor from global API key", async () => {

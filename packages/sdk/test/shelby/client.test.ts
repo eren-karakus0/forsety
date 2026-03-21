@@ -18,16 +18,15 @@ const mockReadFileSync = vi.mocked(readFileSync);
 const mockStatSync = vi.mocked(statSync);
 
 /**
- * Extract the bash -lc command string from an execFileSync call.
- * Call pattern: execFileSync("wsl", ["-e", "bash", "-lc", <cmd>], opts)
+ * Extract the bash -c command string from an execFileSync call.
+ * Call pattern: execFileSync("wsl", ["-e", "bash", "-c", <cmd>], opts)
  */
 function getShellCommand(callIndex: number): string {
   const call = mockExecFileSync.mock.calls[callIndex];
   if (!call) throw new Error(`No call at index ${callIndex}`);
   const args = call[1] as string[];
-  // Find the -lc arg — the command is the next element
-  const lcIdx = args.indexOf("-lc");
-  return lcIdx >= 0 ? args[lcIdx + 1]! : "";
+  const cIdx = args.indexOf("-c");
+  return cIdx >= 0 ? args[cIdx + 1]! : "";
 }
 
 describe("ShelbyWrapper", () => {

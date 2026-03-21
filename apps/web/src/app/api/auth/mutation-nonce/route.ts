@@ -12,9 +12,8 @@ const MAX_ACTIVE_NONCES = 3;
 /** Mutation nonce TTL: 90 seconds */
 const NONCE_TTL_MS = 90 * 1000;
 
-/** Deterministic session cleanup interval (60 seconds) */
-const CLEANUP_INTERVAL_MS = 60_000;
-let lastCleanup = 0;
+/** Probabilistic cleanup: ~10% chance per request */
+const CLEANUP_PROBABILITY = 0.1;
 
 export async function GET() {
   try {
@@ -60,17 +59,12 @@ export async function GET() {
       expiresAt: new Date(Date.now() + NONCE_TTL_MS),
     });
 
-    // Deterministic cleanup: purge expired sessions at most once per 60s
-    if (Date.now() - lastCleanup > CLEANUP_INTERVAL_MS) {
-      lastCleanup = Date.now();
-      await db.delete(sessions)
-        .where(
-          and(
-            eq(sessions.walletAddress, walletAddress),
-            lt(sessions.expiresAt, new Date())
-          )
-        )
-        .execute();
+    // Probabilistic cleanup: ~10% chance, global expired session purge
+    if (Math.random() < CLEANUP_PROBABILITY) {
+      db.delete(sessions)
+        .where(lt(sessions.expiresAt, new Date()))
+        .execute()
+        .catch(() => {});
     }
 
     return NextResponse.json({ nonce });
