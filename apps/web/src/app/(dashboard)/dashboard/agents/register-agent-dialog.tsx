@@ -97,14 +97,19 @@ export function RegisterAgentDialog() {
 
   function handleClose() {
     setOpen(false);
-    // Reset state after close animation
+    // Reset state after close animation — guard against rapid reopen
     setTimeout(() => {
-      setName("");
-      setDescription("");
-      setSelectedPermissions(["memory.read", "memory.write", "dataset.read", "policy.read"]);
-      setResult(null);
-      setError(null);
-      setCopied(false);
+      setOpen((current) => {
+        if (!current) {
+          setName("");
+          setDescription("");
+          setSelectedPermissions(["memory.read", "memory.write", "dataset.read", "policy.read"]);
+          setResult(null);
+          setError(null);
+          setCopied(false);
+        }
+        return current;
+      });
     }, 200);
   }
 

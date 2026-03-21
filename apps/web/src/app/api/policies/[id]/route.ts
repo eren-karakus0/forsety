@@ -73,7 +73,7 @@ export async function PATCH(
       allowedAccessors: body.allowedAccessors ?? existing.allowedAccessors,
       maxReads: body.maxReads ?? existing.maxReads ?? undefined,
       expiresAt: body.expiresAt ? new Date(body.expiresAt) : existing.expiresAt ?? undefined,
-      createdBy: body.createdBy,
+      createdBy: auth.accessor,
     });
 
     return NextResponse.json(newPolicy);

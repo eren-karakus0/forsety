@@ -115,8 +115,9 @@ export function CreatePolicyDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Allowed Accessors</Label>
+            <Label htmlFor="policy-accessors">Allowed Accessors</Label>
             <Textarea
+              id="policy-accessors"
               value={accessors}
               onChange={(e) => setAccessors(e.target.value)}
               placeholder={"One address per line\n0x1234...\n* (for all)"}
@@ -130,8 +131,9 @@ export function CreatePolicyDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Max Reads</Label>
+              <Label htmlFor="policy-max-reads">Max Reads</Label>
               <Input
+                id="policy-max-reads"
                 type="number"
                 value={maxReads}
                 onChange={(e) => setMaxReads(e.target.value)}
@@ -141,8 +143,9 @@ export function CreatePolicyDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Expires At</Label>
+              <Label htmlFor="policy-expires">Expires At</Label>
               <Input
+                id="policy-expires"
                 type="date"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}

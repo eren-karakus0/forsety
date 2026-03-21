@@ -26,11 +26,11 @@ function validatePayload(sig: SignaturePayload): string | null {
     return "Invalid public key format";
   }
 
-  // Validate action and domain binding in full message
-  if (!sig.fullMessage.includes("Application: Forsety")) {
+  // Validate domain and chain binding using Aptos envelope format (lowercase fields)
+  if (!/\napplication:\s*\S+/.test(sig.fullMessage)) {
     return "Invalid application binding";
   }
-  if (!sig.fullMessage.includes("Chain Id: 2")) {
+  if (!/\nchain_id:\s*2\b/.test(sig.fullMessage)) {
     return "Invalid chain binding";
   }
 
@@ -53,11 +53,13 @@ export async function verifyMutationSignature(
     return { valid: false, error: isProd ? GENERIC_ERROR : validationError };
   }
 
-  // Verify Ed25519 signature
+  // Verify Ed25519 signature with chain ID binding
   const result = verifyAuthMessage({
     fullMessage: sig.fullMessage,
     signature: sig.signature,
     publicKey: sig.publicKey,
+    expectedChainId: 2,
+    strictChainId: true,
   });
 
   if (!result.success || !result.nonce) {

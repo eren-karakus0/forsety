@@ -24,6 +24,12 @@ vi.mock("@/lib/auth", async () => {
   return {
     resolveAccessor: (...args: unknown[]) => mockResolveAccessor(...args),
     unauthorizedResponse: () => NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    checkAgentScope: (auth: Record<string, unknown>, permission: string) => {
+      if (!auth.agentId) return { allowed: true };
+      const perms = (auth.agentPermissions as string[]) ?? [];
+      if (!perms.includes(permission)) return { allowed: false, error: `Agent lacks permission: ${permission}` };
+      return { allowed: true };
+    },
   };
 });
 
@@ -123,5 +129,61 @@ describe("GET /api/search", () => {
     const res = await GET(req);
 
     expect(res.status).toBe(403);
+  });
+
+  it("should return 403 when agent lacks dataset.read permission for dataset search", async () => {
+    mockResolveAccessor.mockResolvedValue({
+      accessor: OWNER,
+      trusted: true,
+      agentId: "agent-1",
+      agentPermissions: ["memory.read"],
+      agentAllowedDatasets: [],
+    });
+
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset");
+    const res = await GET(req);
+
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error).toContain("dataset.read");
+  });
+
+  it("should return 403 when agent lacks memory.read permission for memory search", async () => {
+    mockResolveAccessor.mockResolvedValue({
+      accessor: OWNER,
+      trusted: true,
+      agentId: "agent-2",
+      agentPermissions: ["dataset.read"],
+      agentAllowedDatasets: [],
+    });
+
+    const req = new NextRequest("http://localhost/api/search?q=test&type=memory&agentId=ag-1");
+    const res = await GET(req);
+
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error).toContain("memory.read");
+  });
+
+  it("should filter dataset results by agent allowedDatasets", async () => {
+    mockResolveAccessor.mockResolvedValue({
+      accessor: OWNER,
+      trusted: true,
+      agentId: "agent-3",
+      agentPermissions: ["dataset.read"],
+      agentAllowedDatasets: ["ds-1"],
+    });
+    mockSearchDatasets.mockResolvedValue([
+      { item: { id: "ds-1", name: "Allowed", ownerAddress: OWNER } },
+      { item: { id: "ds-2", name: "Not Allowed", ownerAddress: OWNER } },
+    ]);
+
+    const req = new NextRequest("http://localhost/api/search?q=test&type=dataset");
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.results).toHaveLength(1);
+    expect(body.results[0].item.id).toBe("ds-1");
   });
 });

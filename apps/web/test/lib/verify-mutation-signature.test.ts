@@ -29,7 +29,7 @@ import { verifyMutationSignature } from "../../src/lib/verify-mutation-signature
 
 const validPayload = {
   fullMessage:
-    "APTOS\nmessage: Approve action: test\nnonce: nonce-123\nApplication: Forsety\nChain Id: 2\nAddress: 0xabc123",
+    "APTOS\naddress: 0xabc123\napplication: forsety.xyz\nchain_id: 2\nmessage: Approve action: test\nnonce: nonce-123",
   signature: "0x" + "a".repeat(128),
   publicKey: "0x" + "b".repeat(64),
 };
@@ -85,10 +85,10 @@ describe("verify-mutation-signature.ts", () => {
     expect(result.error).toContain("public key");
   });
 
-  it("should return error for missing Application binding", async () => {
+  it("should return error for missing application binding", async () => {
     const payload = {
       ...validPayload,
-      fullMessage: "APTOS\nmessage: test\nnonce: nonce-123\nChain Id: 2",
+      fullMessage: "APTOS\naddress: 0xabc123\nchain_id: 2\nmessage: test\nnonce: nonce-123",
     };
 
     const result = await verifyMutationSignature(payload, "0xwallet");
@@ -97,10 +97,10 @@ describe("verify-mutation-signature.ts", () => {
     expect(result.error).toContain("application");
   });
 
-  it("should return error for missing Chain Id binding", async () => {
+  it("should return error for missing chain_id binding", async () => {
     const payload = {
       ...validPayload,
-      fullMessage: "APTOS\nmessage: test\nnonce: nonce-123\nApplication: Forsety",
+      fullMessage: "APTOS\naddress: 0xabc123\napplication: forsety.xyz\nmessage: test\nnonce: nonce-123",
     };
 
     const result = await verifyMutationSignature(payload, "0xwallet");

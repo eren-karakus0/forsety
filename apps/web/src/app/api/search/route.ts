@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getForsetyClient } from "@/lib/forsety";
-import { resolveAccessor, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, checkAgentScope, unauthorizedResponse } from "@/lib/auth";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
@@ -35,8 +35,21 @@ export async function GET(request: NextRequest) {
     const client = getForsetyClient();
 
     if (type === "dataset") {
+      // Enforce agent permission scope for dataset search
+      const scope = checkAgentScope(auth, "dataset.read");
+      if (!scope.allowed) {
+        return NextResponse.json({ error: scope.error }, { status: 403 });
+      }
+
       const results = await client.vectorSearch.searchDatasets(query, limit);
-      const filtered = results.filter(r => r.item.ownerAddress === auth.accessor);
+      // Filter by owner + agent's allowed datasets
+      const filtered = results.filter(r => {
+        if (r.item.ownerAddress !== auth.accessor) return false;
+        if (auth.agentAllowedDatasets && auth.agentAllowedDatasets.length > 0) {
+          return auth.agentAllowedDatasets.includes(r.item.id);
+        }
+        return true;
+      });
       return NextResponse.json({ type, query, results: filtered, total: filtered.length });
     }
 
@@ -45,6 +58,12 @@ export async function GET(request: NextRequest) {
         { error: "agentId is required for memory search" },
         { status: 400 }
       );
+    }
+
+    // Enforce agent permission scope for memory search
+    const memScope = checkAgentScope(auth, "memory.read");
+    if (!memScope.allowed) {
+      return NextResponse.json({ error: memScope.error }, { status: 403 });
     }
 
     // Validate agent belongs to accessor

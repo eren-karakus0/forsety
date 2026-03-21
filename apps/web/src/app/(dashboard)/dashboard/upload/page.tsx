@@ -205,9 +205,11 @@ export default function UploadPage() {
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               License Type
             </Label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="License type">
               {LICENSE_OPTIONS.map((opt) => (
                 <button
+                  role="radio"
+                  aria-checked={license === opt.value}
                   key={opt.value}
                   type="button"
                   onClick={() => setLicense(opt.value)}
