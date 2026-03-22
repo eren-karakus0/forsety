@@ -57,6 +57,7 @@ let _jwtSecretCache: Uint8Array | null = null;
 function getJwtSecret(): Uint8Array {
   if (_jwtSecretCache) return _jwtSecretCache;
   const secret = process.env.JWT_SECRET;
+  // env.ts Zod schema enforces 64+ chars at startup; this is a fallback guard
   if (!secret || secret.length < 32) {
     throw new Error("JWT_SECRET environment variable is required (min 32 chars)");
   }

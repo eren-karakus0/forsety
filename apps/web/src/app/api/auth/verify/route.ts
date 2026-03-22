@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
       expectedAddress: address,
       expectedDomain: host,
       expectedChainId,
+      // Lenient: chain_id present → validated (mismatch rejected), missing → allowed
+      // Petra Wallet does not include chain_id in APTOS envelope
       strictChainId: false,
     });
 
