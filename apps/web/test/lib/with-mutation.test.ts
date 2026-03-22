@@ -18,7 +18,7 @@ vi.mock("@/lib/forsety", () => ({
 
 const { withSignedMutation } = await import("@/lib/with-mutation");
 
-const SIG = { nonce: "n1", signature: "0xsig", message: "msg" };
+const SIG = { fullMessage: "APTOS\nmsg", signature: "0xsig", publicKey: "0xpub" };
 
 describe("withSignedMutation", () => {
   beforeEach(() => vi.clearAllMocks());
