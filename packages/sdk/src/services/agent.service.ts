@@ -32,9 +32,21 @@ export function sanitizeAgent<T extends { agentApiKey?: unknown }>(
 export class AgentService {
   constructor(private db: Database) {}
 
+  /** Maximum metadata size: 10 KB */
+  private static readonly MAX_METADATA_BYTES = 10 * 1024;
+
   async register(input: RegisterAgentInput) {
     if (!input.name || !input.ownerAddress) {
       throw new ForsetyValidationError("name and ownerAddress are required");
+    }
+
+    if (input.metadata) {
+      const metadataSize = Buffer.byteLength(JSON.stringify(input.metadata), "utf-8");
+      if (metadataSize > AgentService.MAX_METADATA_BYTES) {
+        throw new ForsetyValidationError(
+          `Agent metadata exceeds maximum size (${AgentService.MAX_METADATA_BYTES} bytes)`
+        );
+      }
     }
 
     const plainApiKey = generateApiKey();

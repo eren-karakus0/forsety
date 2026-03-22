@@ -22,7 +22,7 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-b from-navy-50/80 to-white">
+    <footer className="bg-gradient-to-b from-navy-50/80 to-white dark:from-navy-950 dark:to-navy-900">
       <div className="mx-auto max-w-7xl h-px bg-gradient-to-r from-transparent via-gold-400/20 to-transparent" />
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -36,7 +36,7 @@ export function Footer() {
                 height={32}
                 className="h-8 w-8"
               />
-              <span className="font-display text-lg font-semibold tracking-tight text-navy-900">
+              <span className="font-display text-lg font-semibold tracking-tight text-navy-900 dark:text-navy-100">
                 Forsety
               </span>
               {/* Subtle Tiwaz accent */}
@@ -46,7 +46,7 @@ export function Footer() {
                 <line x1="200" y1="100" x2="300" y2="300" stroke="currentColor" strokeWidth="6" />
               </svg>
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-navy-400">
+            <p className="mt-3 text-sm leading-relaxed text-navy-400 dark:text-navy-300">
               Evidence layer for licensed AI data access. Built on Shelby
               Protocol.
             </p>
@@ -55,7 +55,7 @@ export function Footer() {
             </p>
 
             {/* Powered by Shelby badge */}
-            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-navy-200/80 bg-navy-100/60 px-3 py-1 text-xs font-medium text-navy-500">
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-navy-200/80 bg-navy-100/60 px-3 py-1 text-xs font-medium text-navy-500 dark:border-navy-700 dark:bg-navy-800/60 dark:text-navy-300">
               Powered by Shelby Protocol
             </div>
           </div>
@@ -63,7 +63,7 @@ export function Footer() {
           {/* Link Groups */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h3 className="text-sm font-semibold text-navy-700">{title}</h3>
+              <h3 className="text-sm font-semibold text-navy-700 dark:text-navy-200">{title}</h3>
               <ul className="mt-3 space-y-2">
                 {links.map((link) => (
                   <li key={link.label}>
@@ -72,7 +72,7 @@ export function Footer() {
                     ) : (
                       <Link
                         href={link.href}
-                        className="text-sm text-navy-400 transition-colors hover:text-gold-500"
+                        className="text-sm text-navy-400 transition-colors hover:text-gold-500 dark:text-navy-300 dark:hover:text-gold-400"
                         {...(link.href.startsWith("http")
                           ? { target: "_blank", rel: "noopener noreferrer" }
                           : {})}
@@ -87,8 +87,8 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 border-t border-navy-200 pt-6">
-          <p className="text-center text-xs text-navy-300">
+        <div className="mt-12 border-t border-navy-200 pt-6 dark:border-navy-700">
+          <p className="text-center text-xs text-navy-300 dark:text-navy-400">
             &copy; {new Date().getFullYear()} Forsety. Built by{" "}
             <Link
               href="https://github.com/Forsetyxyz"

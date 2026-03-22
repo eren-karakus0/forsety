@@ -199,18 +199,7 @@ export class AccessService {
   }
 
   private buildOwnerConditions(ownerAddress: string, filters?: AccessLogFilters) {
-    const conditions = [eq(datasets.ownerAddress, ownerAddress)];
-    if (filters?.datasetId)
-      conditions.push(eq(accessLogs.datasetId, filters.datasetId));
-    if (filters?.accessorAddress)
-      conditions.push(eq(accessLogs.accessorAddress, filters.accessorAddress));
-    if (filters?.operationType)
-      conditions.push(eq(accessLogs.operationType, filters.operationType));
-    if (filters?.from)
-      conditions.push(gte(accessLogs.timestamp, filters.from));
-    if (filters?.to)
-      conditions.push(lte(accessLogs.timestamp, filters.to));
-    return conditions;
+    return [eq(datasets.ownerAddress, ownerAddress), ...this.buildConditions(filters)];
   }
 
   private buildConditions(filters?: AccessLogFilters) {

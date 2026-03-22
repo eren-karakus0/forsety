@@ -18,15 +18,17 @@ const mockReadFileSync = vi.mocked(readFileSync);
 const mockStatSync = vi.mocked(statSync);
 
 /**
- * Extract the bash -c command string from an execFileSync call.
- * Call pattern: execFileSync("wsl", ["-e", "bash", "-c", <cmd>], opts)
+ * Extract the args array from an execFileSync call.
+ * Call pattern: execFileSync("wsl", ["-e", "shelby", ...args], opts)
+ * Returns the args after "shelby" (i.e. the CLI arguments).
  */
-function getShellCommand(callIndex: number): string {
+function getCliArgs(callIndex: number): string[] {
   const call = mockExecFileSync.mock.calls[callIndex];
   if (!call) throw new Error(`No call at index ${callIndex}`);
   const args = call[1] as string[];
-  const cIdx = args.indexOf("-c");
-  return cIdx >= 0 ? args[cIdx + 1]! : "";
+  // Pattern: ["-e", "shelby", ...cliArgs]
+  const shelbyIdx = args.indexOf("shelby");
+  return shelbyIdx >= 0 ? args.slice(shelbyIdx + 1) : [];
 }
 
 describe("ShelbyWrapper", () => {
@@ -84,13 +86,27 @@ describe("ShelbyWrapper", () => {
       expect(balance.shelbyUsd).toBe("0");
     });
 
-    it("should call CLI with correct contract: shelby account balance", async () => {
+    it("should call CLI with correct args: account balance", async () => {
       mockExecFileSync.mockReturnValue("APT: 1.0\nShelbyUSD: 5.0" as never);
 
       await wrapper.getBalance();
 
-      const cmd = getShellCommand(0);
-      expect(cmd).toBe("'shelby' 'account' 'balance'");
+      const args = getCliArgs(0);
+      expect(args).toEqual(["account", "balance"]);
+    });
+
+    it("should use execFileSync without bash -c (no shell)", async () => {
+      mockExecFileSync.mockReturnValue("APT: 1.0" as never);
+
+      await wrapper.getBalance();
+
+      const call = mockExecFileSync.mock.calls[0]!;
+      expect(call[0]).toBe("wsl");
+      const allArgs = call[1] as string[];
+      expect(allArgs).toEqual(["-e", "shelby", "account", "balance"]);
+      // Must NOT contain "bash" or "-c" (no shell invocation)
+      expect(allArgs).not.toContain("bash");
+      expect(allArgs).not.toContain("-c");
     });
   });
 
@@ -106,13 +122,13 @@ describe("ShelbyWrapper", () => {
       expect(blobs[0]?.blobId).toBe("blob-1");
     });
 
-    it("should call CLI with correct contract: shelby account blobs -a <account>", async () => {
+    it("should call CLI with correct args: account blobs -a <account>", async () => {
       mockExecFileSync.mockReturnValue("" as never);
 
       await wrapper.getAccountBlobs("myaccount");
 
-      const cmd = getShellCommand(0);
-      expect(cmd).toBe("'shelby' 'account' 'blobs' '-a' 'myaccount'");
+      const args = getCliArgs(0);
+      expect(args).toEqual(["account", "blobs", "-a", "myaccount"]);
     });
 
     it("should omit -a flag when no account specified", async () => {
@@ -120,8 +136,8 @@ describe("ShelbyWrapper", () => {
 
       await wrapper.getAccountBlobs();
 
-      const cmd = getShellCommand(0);
-      expect(cmd).toBe("'shelby' 'account' 'blobs'");
+      const args = getCliArgs(0);
+      expect(args).toEqual(["account", "blobs"]);
     });
   });
 
@@ -133,14 +149,15 @@ describe("ShelbyWrapper", () => {
 
       await wrapper.uploadDataset("C:\\test\\file.txt", "forsety/test", "in 30 days");
 
-      const cmd = getShellCommand(0);
-      // Contract: shelby upload [source] [destination] -e <expiration> --output-commitments <file> --assume-yes
-      expect(cmd).toContain("'shelby' 'upload' '/mnt/c/test/file.txt' 'forsety/test'");
-      expect(cmd).toContain("'-e'");
-      expect(cmd).toContain("'in 30 days'");
-      expect(cmd).toContain("'--assume-yes'");
+      const args = getCliArgs(0);
+      expect(args).toContain("upload");
+      expect(args).toContain("/mnt/c/test/file.txt");
+      expect(args).toContain("forsety/test");
+      expect(args).toContain("-e");
+      expect(args).toContain("in 30 days");
+      expect(args).toContain("--assume-yes");
       // Must NOT contain --name (deprecated/nonexistent flag)
-      expect(cmd).not.toContain("--name");
+      expect(args).not.toContain("--name");
     });
 
     it("should return upload result", async () => {
@@ -163,8 +180,8 @@ describe("ShelbyWrapper", () => {
 
       await wrapper.uploadDataset("C:\\test.txt", "test");
 
-      const cmd = getShellCommand(0);
-      expect(cmd).toContain("'in 30 days'");
+      const args = getCliArgs(0);
+      expect(args).toContain("in 30 days");
     });
   });
 
@@ -174,11 +191,8 @@ describe("ShelbyWrapper", () => {
 
       await wrapper.downloadDataset("forsety/my-data", "C:\\output\\data.txt");
 
-      const cmd = getShellCommand(0);
-      // Contract: shelby download [source] [destination] -f
-      expect(cmd).toContain("'shelby' 'download' 'forsety/my-data' '/mnt/c/output/data.txt' '-f'");
-      // Must NOT have account as first positional arg
-      expect(cmd).not.toMatch(/download\s+\S+\s+forsety/);
+      const args = getCliArgs(0);
+      expect(args).toEqual(["download", "forsety/my-data", "/mnt/c/output/data.txt", "-f"]);
     });
   });
 
@@ -188,8 +202,8 @@ describe("ShelbyWrapper", () => {
 
       await wrapper.deleteBlob("forsety/test-blob");
 
-      const cmd = getShellCommand(0);
-      expect(cmd).toBe("'shelby' 'delete' 'forsety/test-blob' '--assume-yes'");
+      const args = getCliArgs(0);
+      expect(args).toEqual(["delete", "forsety/test-blob", "--assume-yes"]);
     });
   });
 
@@ -203,8 +217,10 @@ describe("ShelbyWrapper", () => {
 
       const result = await wrapper.generateCommitments("C:\\test\\file.txt");
 
-      const cmd = getShellCommand(0);
-      expect(cmd).toContain("'shelby' 'commitment' '/mnt/c/test/file.txt' '/tmp/forsety-commitment-output.json'");
+      const args = getCliArgs(0);
+      expect(args).toContain("commitment");
+      expect(args).toContain("/mnt/c/test/file.txt");
+      expect(args).toContain("/tmp/forsety-commitment-output.json");
       expect(result.commitments).toEqual(["c1", "c2"]);
       expect(result.hash).toBe("hashval");
     });

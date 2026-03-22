@@ -3,6 +3,7 @@ import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
 import type { VectorSearchService } from "./vector-search.service.js";
+import { resolveVectorSearch } from "../utils/resolve-vector-search.js";
 import { ForsetyValidationError } from "../errors.js";
 import { canonicalHash } from "../crypto/canonical-hash.js";
 
@@ -24,11 +25,6 @@ export class DatasetService {
     private shelby: ShelbyWrapper,
     private vectorSearch?: VectorSearchService | (() => VectorSearchService)
   ) {}
-
-  private resolveVectorSearch(): VectorSearchService | undefined {
-    if (typeof this.vectorSearch === "function") return this.vectorSearch();
-    return this.vectorSearch;
-  }
 
   async upload(input: UploadDatasetInput) {
     if (!input.name || !input.ownerAddress) {
@@ -73,7 +69,7 @@ export class DatasetService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.resolveVectorSearch()?.embedDataset(dataset!.id).catch((err) => {
+    resolveVectorSearch(this.vectorSearch)?.embedDataset(dataset!.id).catch((err) => {
       console.error(`[forsety] auto-embed dataset ${dataset!.id} failed:`, err);
     });
 

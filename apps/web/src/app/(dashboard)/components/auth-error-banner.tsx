@@ -10,7 +10,7 @@ export function AuthErrorBanner() {
   if (!error || isAuthenticated) return null;
 
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+    <div role="alert" className="mb-4 flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
       <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
       <div className="flex-1">
         <p className="text-sm font-medium text-destructive">Sign-in failed</p>

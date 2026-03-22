@@ -5,6 +5,11 @@ import { checkRateLimit, getRateLimitTier, RATE_LIMIT_TIERS } from "@/lib/rate-l
 const LANDING_DOMAIN = "forsety.xyz";
 const APP_DOMAIN = "app.forsety.xyz";
 const WWW_DOMAIN = "www.forsety.xyz";
+const ALLOWED_ORIGINS = new Set([
+  `https://${LANDING_DOMAIN}`,
+  `https://${APP_DOMAIN}`,
+  `https://${WWW_DOMAIN}`,
+]);
 
 function generateNonce(): string {
   const array = new Uint8Array(32); // 256-bit entropy
@@ -41,6 +46,10 @@ function withSecurityHeaders(request: NextRequest): NextResponse {
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("x-nonce", nonce);
   response.headers.set("Content-Security-Policy", buildCsp(nonce));
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
   return response;
 }
 
@@ -121,10 +130,37 @@ function handleRateLimit(request: NextRequest, pathname: string): NextResponse {
   return response;
 }
 
+/** CSRF: reject mutation requests with missing/mismatched Origin header. */
+function validateOrigin(request: NextRequest): NextResponse | null {
+  const method = request.method;
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") return null;
+
+  const host = request.headers.get("host") ?? "";
+  const bareHost = host.split(":")[0]?.toLowerCase() ?? "";
+
+  // Skip for localhost / preview deploys
+  if (bareHost === "localhost" || bareHost.endsWith(".vercel.app")) return null;
+
+  const origin = request.headers.get("origin");
+  if (!origin) {
+    return NextResponse.json({ error: "Missing Origin header" }, { status: 403 });
+  }
+  if (!ALLOWED_ORIGINS.has(origin)) {
+    return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
+  }
+  return null;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") ?? "";
   const bareHost = host.split(":")[0]?.toLowerCase() ?? "";
+
+  // ── 0. CSRF origin validation for mutation requests ──
+  if (pathname.startsWith("/api/")) {
+    const originError = validateOrigin(request);
+    if (originError) return originError;
+  }
 
   // ── 1. www.forsety.xyz → 301 redirect to forsety.xyz ──
   if (bareHost === WWW_DOMAIN) {
