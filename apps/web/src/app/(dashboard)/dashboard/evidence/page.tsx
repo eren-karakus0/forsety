@@ -19,7 +19,10 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { Pagination } from "../../components/pagination";
 import { formatDate } from "@/lib/format";
+
+const PAGE_SIZE = 20;
 
 interface EvidenceRow {
   id: string;
@@ -34,6 +37,7 @@ export default function EvidencePage() {
   const [packs, setPacks] = useState<EvidenceRow[]>([]);
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -56,6 +60,11 @@ export default function EvidencePage() {
   const uniqueDatasets = new Set(packs.map((p) => p.datasetId)).size;
   const latestGeneration =
     packs.length > 0 ? formatDate(packs[0].generatedAt) : "-";
+  const totalPages = Math.ceil(packs.length / PAGE_SIZE);
+  const paginatedPacks = packs.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   if (loading) {
     return (
@@ -144,7 +153,7 @@ export default function EvidencePage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                packs.map((pack) => (
+                paginatedPacks.map((pack) => (
                   <TableRow key={pack.id} className="group border-border/30 transition-colors hover:bg-muted/20">
                     <TableCell>
                       <Link href={`/dashboard/${pack.datasetId}`}>
@@ -176,6 +185,7 @@ export default function EvidencePage() {
             </TableBody>
           </Table>
           </div>
+          <Pagination page={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </Card>
       )}
 

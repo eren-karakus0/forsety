@@ -30,6 +30,7 @@ import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { formatDate, formatDateShort } from "@/lib/format";
+import { computePolicyStatus, policyStatusConfig } from "../datasets/dataset-status";
 
 interface PolicyRow {
   id: string;
@@ -48,22 +49,6 @@ interface DatasetOption {
   id: string;
   name: string;
 }
-
-function computeStatus(expiresAt: string | null): "active" | "expiring" | "expired" {
-  if (!expiresAt) return "active";
-  const exp = new Date(expiresAt);
-  const now = new Date();
-  if (exp < now) return "expired";
-  const sevenDays = 7 * 24 * 60 * 60 * 1000;
-  if (exp.getTime() - now.getTime() < sevenDays) return "expiring";
-  return "active";
-}
-
-const statusConfig = {
-  active: { label: "Active", variant: "default" as const, className: "" },
-  expiring: { label: "Expiring Soon", variant: "secondary" as const, className: "text-orange-600" },
-  expired: { label: "Expired", variant: "destructive" as const, className: "" },
-};
 
 export default function PoliciesPage() {
   const { isAuthenticated, guard } = useAuthGuard();
@@ -102,8 +87,8 @@ export default function PoliciesPage() {
     ? policies
     : policies.filter((p) => p.datasetId === datasetFilter);
 
-  const expiringSoon = policies.filter((p) => computeStatus(p.expiresAt) === "expiring").length;
-  const expired = policies.filter((p) => computeStatus(p.expiresAt) === "expired").length;
+  const expiringSoon = policies.filter((p) => computePolicyStatus(p.expiresAt) === "expiring").length;
+  const expired = policies.filter((p) => computePolicyStatus(p.expiresAt) === "expired").length;
 
   if (loading) {
     return (
@@ -120,16 +105,13 @@ export default function PoliciesPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <ErrorBanner message="Unable to load policies. Please try again." onRetry={loadData} />
-      </div>
-    );
-  }
-
   return (
     <div className="animate-fade-in space-y-6">
+      {/* Error (inline — preserves header/stats) */}
+      {error && (
+        <ErrorBanner message="Unable to load policies. Please try again." onRetry={loadData} />
+      )}
+
       {/* Header */}
       <div className="flex items-end justify-between">
         <div className="page-header-accent">
@@ -232,8 +214,8 @@ export default function PoliciesPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((pol) => {
-                const status = computeStatus(pol.expiresAt);
-                const cfg = statusConfig[status];
+                const status = computePolicyStatus(pol.expiresAt);
+                const cfg = policyStatusConfig[status];
                 return (
                   <TableRow key={pol.id} className="group border-border/30 transition-colors hover:bg-muted/20">
                     <TableCell>
@@ -275,7 +257,7 @@ export default function PoliciesPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setEditPolicy(pol)}
-                        className="h-8 w-8 p-0 hover:text-violet-600"
+                        className="h-10 w-10 p-0 hover:text-violet-600"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>

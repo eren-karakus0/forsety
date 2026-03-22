@@ -62,6 +62,17 @@ export interface EvidencePackData {
   }>;
 }
 
+/** Shared select fields for listAll/listByOwner queries. */
+const LIST_SELECT_FIELDS = {
+  id: evidencePacks.id,
+  datasetId: evidencePacks.datasetId,
+  datasetName: datasets.name,
+  packHash: evidencePacks.packHash,
+  packJson: evidencePacks.packJson,
+  generatedAt: evidencePacks.generatedAt,
+  generatedBy: evidencePacks.generatedBy,
+} as const;
+
 export class EvidenceService {
   constructor(private db: Database) {}
 
@@ -175,15 +186,7 @@ export class EvidenceService {
     const offset = filters?.offset ?? 0;
 
     const rows = await this.db
-      .select({
-        id: evidencePacks.id,
-        datasetId: evidencePacks.datasetId,
-        datasetName: datasets.name,
-        packHash: evidencePacks.packHash,
-        packJson: evidencePacks.packJson,
-        generatedAt: evidencePacks.generatedAt,
-        generatedBy: evidencePacks.generatedBy,
-      })
+      .select(LIST_SELECT_FIELDS)
       .from(evidencePacks)
       .innerJoin(datasets, eq(evidencePacks.datasetId, datasets.id))
       .orderBy(desc(evidencePacks.generatedAt))
@@ -202,15 +205,7 @@ export class EvidenceService {
     const offset = filters?.offset ?? 0;
 
     return this.db
-      .select({
-        id: evidencePacks.id,
-        datasetId: evidencePacks.datasetId,
-        datasetName: datasets.name,
-        packHash: evidencePacks.packHash,
-        packJson: evidencePacks.packJson,
-        generatedAt: evidencePacks.generatedAt,
-        generatedBy: evidencePacks.generatedBy,
-      })
+      .select(LIST_SELECT_FIELDS)
       .from(evidencePacks)
       .innerJoin(datasets, eq(evidencePacks.datasetId, datasets.id))
       .where(eq(datasets.ownerAddress, ownerAddress))

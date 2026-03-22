@@ -93,7 +93,7 @@ export function WalletDisplay() {
             </span>
             <button
               onClick={() => handleCopy(address)}
-              className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+              className="shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:text-foreground"
               title="Copy address"
             >
               {copied ? (

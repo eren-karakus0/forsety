@@ -12,6 +12,21 @@ export interface CreatePolicyInput {
   createdBy?: string;
 }
 
+/** Shared select fields for listAll/listByOwner queries. */
+const POLICY_LIST_SELECT_FIELDS = {
+  id: policies.id,
+  datasetId: policies.datasetId,
+  datasetName: datasets.name,
+  version: policies.version,
+  hash: policies.hash,
+  allowedAccessors: policies.allowedAccessors,
+  maxReads: policies.maxReads,
+  readsConsumed: policies.readsConsumed,
+  expiresAt: policies.expiresAt,
+  createdAt: policies.createdAt,
+  createdBy: policies.createdBy,
+} as const;
+
 export class PolicyService {
   constructor(private db: Database) {}
 
@@ -62,19 +77,7 @@ export class PolicyService {
     const offset = filters?.offset ?? 0;
 
     return this.db
-      .select({
-        id: policies.id,
-        datasetId: policies.datasetId,
-        datasetName: datasets.name,
-        version: policies.version,
-        hash: policies.hash,
-        allowedAccessors: policies.allowedAccessors,
-        maxReads: policies.maxReads,
-        readsConsumed: policies.readsConsumed,
-        expiresAt: policies.expiresAt,
-        createdAt: policies.createdAt,
-        createdBy: policies.createdBy,
-      })
+      .select(POLICY_LIST_SELECT_FIELDS)
       .from(policies)
       .innerJoin(datasets, eq(policies.datasetId, datasets.id))
       .orderBy(desc(policies.createdAt))
@@ -91,19 +94,7 @@ export class PolicyService {
     const offset = filters?.offset ?? 0;
 
     return this.db
-      .select({
-        id: policies.id,
-        datasetId: policies.datasetId,
-        datasetName: datasets.name,
-        version: policies.version,
-        hash: policies.hash,
-        allowedAccessors: policies.allowedAccessors,
-        maxReads: policies.maxReads,
-        readsConsumed: policies.readsConsumed,
-        expiresAt: policies.expiresAt,
-        createdAt: policies.createdAt,
-        createdBy: policies.createdBy,
-      })
+      .select(POLICY_LIST_SELECT_FIELDS)
       .from(policies)
       .innerJoin(datasets, eq(policies.datasetId, datasets.id))
       .where(eq(datasets.ownerAddress, ownerAddress))

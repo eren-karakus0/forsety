@@ -51,13 +51,34 @@ export function CreatePolicyDialog({
       return;
     }
 
-    setSubmitting(true);
-    setError(null);
-
     const allowedAccessors = accessors
       .split("\n")
       .map((a) => a.trim())
       .filter(Boolean);
+
+    // Validate accessor format (must be * or 0x-prefixed hex)
+    const invalidAccessor = allowedAccessors.find(
+      (a) => a !== "*" && !/^0x[a-fA-F0-9]+$/.test(a)
+    );
+    if (invalidAccessor) {
+      setError(`Invalid accessor address: "${invalidAccessor}". Must be a 0x-prefixed hex address or *`);
+      return;
+    }
+
+    // Validate maxReads is positive
+    if (maxReads && parseInt(maxReads, 10) <= 0) {
+      setError("Max reads must be a positive number");
+      return;
+    }
+
+    // Validate expiration is in the future
+    if (expiresAt && new Date(expiresAt) <= new Date()) {
+      setError("Expiration date must be in the future");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
 
     try {
       const result = await executeWithSignature(

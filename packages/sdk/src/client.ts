@@ -31,7 +31,7 @@ export class ForsetyClient {
   public readonly recallVault: RecallVaultService;
   public readonly agentAudit: AgentAuditService;
   private _vectorSearch: VectorSearchService | null = null;
-  public readonly shieldStore: ShieldStoreService;
+  private _shieldStore: ShieldStoreService | null = null;
   public readonly share: ShareService;
 
   /** Lazy-initialized VectorSearch — avoids loading LocalEmbedder until first use. */
@@ -41,6 +41,14 @@ export class ForsetyClient {
       this._vectorSearch = new VectorSearchService(this.db, embedder);
     }
     return this._vectorSearch;
+  }
+
+  /** Lazy-initialized ShieldStore — deferred to Phase 4, avoids eager allocation. */
+  get shieldStore(): ShieldStoreService {
+    if (!this._shieldStore) {
+      this._shieldStore = new ShieldStoreService(this.db, this.recallVault);
+    }
+    return this._shieldStore;
   }
 
   constructor(config: ForsetyConfig) {
@@ -84,7 +92,6 @@ export class ForsetyClient {
     this.agents = new AgentService(this.db);
     this.recallVault = new RecallVaultService(this.db, undefined, lazyVectorSearch);
     this.agentAudit = new AgentAuditService(this.db);
-    this.shieldStore = new ShieldStoreService(this.db, this.recallVault);
     if (!config.hmacSecret) {
       throw new Error("hmacSecret is required in ForsetyConfig");
     }

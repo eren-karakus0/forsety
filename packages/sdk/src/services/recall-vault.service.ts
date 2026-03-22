@@ -4,6 +4,7 @@ import type { Database } from "@forsety/db";
 import { agentMemories } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
 import type { VectorSearchService } from "./vector-search.service.js";
+import { resolveVectorSearch } from "../utils/resolve-vector-search.js";
 import { ForsetyValidationError } from "../errors.js";
 import { canonicalHash } from "../crypto/canonical-hash.js";
 
@@ -39,11 +40,6 @@ export class RecallVaultService {
     private shelby?: ShelbyWrapper,
     private vectorSearch?: VectorSearchService | (() => VectorSearchService)
   ) {}
-
-  private resolveVectorSearch(): VectorSearchService | undefined {
-    if (typeof this.vectorSearch === "function") return this.vectorSearch();
-    return this.vectorSearch;
-  }
 
   async store(input: StoreMemoryInput) {
     if (!input.agentId || !input.key) {
@@ -91,7 +87,7 @@ export class RecallVaultService {
       .returning();
 
     // Fire-and-forget: auto-embed for vector search
-    this.resolveVectorSearch()?.embedMemory(memory!.id).catch((err) => {
+    resolveVectorSearch(this.vectorSearch)?.embedMemory(memory!.id).catch((err) => {
       console.error(`[forsety] auto-embed memory ${memory!.id} failed:`, err);
     });
 

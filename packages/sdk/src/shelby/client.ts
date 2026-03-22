@@ -44,11 +44,6 @@ function toWslPath(windowsPath: string): string {
     .replace(/^([A-Za-z]):/, (_m, d: string) => `/mnt/${d.toLowerCase()}`);
 }
 
-/** Shell-quote a single argument for bash (POSIX single-quote escaping). Always wrap. */
-function shellQuote(arg: string): string {
-  return `'${arg.replace(/'/g, "'\\''")}'`;
-}
-
 /**
  * Shelby CLI wrapper — all commands match `shelby <cmd> --help` contract.
  *
@@ -71,8 +66,7 @@ export class ShelbyWrapper {
 
   private exec(args: string[]): string {
     try {
-      const cmd = ["shelby", ...args].map(shellQuote).join(" ");
-      const result = execFileSync("wsl", ["-e", "bash", "-c", cmd], {
+      const result = execFileSync("wsl", ["-e", "shelby", ...args], {
         encoding: "utf-8",
         timeout: 60_000,
       });

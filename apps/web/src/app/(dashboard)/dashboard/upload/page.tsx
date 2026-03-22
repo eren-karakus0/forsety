@@ -80,7 +80,10 @@ export default function UploadPage() {
     }
   };
 
-  const isValid = name && license && file;
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+  const nameError = name.length > 0 && name.trim().length < 2 ? "Name must be at least 2 characters" : null;
+  const fileError = file && file.size > MAX_FILE_SIZE ? "File exceeds 100 MB limit" : null;
+  const isValid = name.trim().length >= 2 && license && file && !fileError;
 
   return (
     <div className="animate-fade-in">
@@ -133,6 +136,15 @@ export default function UploadPage() {
                 }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    const input = e.currentTarget.querySelector<HTMLInputElement>("input[type=file]");
+                    input?.click();
+                  }
+                }}
                 className="flex flex-col items-center justify-center"
               >
                 <input
@@ -151,8 +163,11 @@ export default function UploadPage() {
                       {file.name}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {(file.size / 1024).toFixed(1)} KB
+                      {file.size < 1024 * 1024
+                        ? `${(file.size / 1024).toFixed(1)} KB`
+                        : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
                     </p>
+                    {fileError && <p className="mt-1 text-xs text-destructive">{fileError}</p>}
                   </>
                 ) : (
                   <>
@@ -182,7 +197,9 @@ export default function UploadPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. ImageNet Training Subset"
               className="rounded-lg"
+              minLength={2}
             />
+            {nameError && <p className="text-xs text-destructive">{nameError}</p>}
           </div>
 
           {/* Description */}

@@ -42,6 +42,11 @@ async function preflight(
     );
   }
 
+  // Warn if sizeBytes is missing (new uploads may not have it yet)
+  if (!dataset.sizeBytes) {
+    console.warn(`[download] Dataset ${id} has no sizeBytes recorded — skipping pre-check`);
+  }
+
   // Pre-check size from DB before downloading (avoid wasted bandwidth)
   if (dataset.sizeBytes && dataset.sizeBytes > MAX_DOWNLOAD_SIZE) {
     return NextResponse.json(
