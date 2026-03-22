@@ -42,6 +42,14 @@ async function preflight(
     );
   }
 
+  // Pre-check size from DB before downloading (avoid wasted bandwidth)
+  if (dataset.sizeBytes && dataset.sizeBytes > MAX_DOWNLOAD_SIZE) {
+    return NextResponse.json(
+      { error: "File exceeds maximum download size (100 MB)" },
+      { status: 413 }
+    );
+  }
+
   // Policy check (read-only, no quota consumed)
   const { allowed } = await client.policies.checkAccess(id, accessorAddress);
   if (!allowed) {

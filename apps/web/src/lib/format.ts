@@ -37,6 +37,16 @@ export function formatDateTime(date: string | Date): string {
   });
 }
 
+export function formatDateTimeLong(date: string | Date): string {
+  return new Date(date).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 export function truncateAddress(addr: string, start = 6, end = 4): string {
   if (addr.length <= start + end + 3) return addr;
   return `${addr.slice(0, start)}...${addr.slice(-end)}`;

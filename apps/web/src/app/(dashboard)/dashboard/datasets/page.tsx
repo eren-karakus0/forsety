@@ -53,6 +53,7 @@ import { StatCardCompact } from "../../components/stat-card";
 import { ErrorBanner } from "../../components/error-banner";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 import { formatDate, formatBytes } from "@/lib/format";
+import { triggerDownload } from "@/lib/download";
 
 const PAGE_SIZE = 20;
 
@@ -195,13 +196,11 @@ export default function DatasetsPage() {
     try {
       const result = await bulkExportDatasets(Array.from(selectedIds));
       if (result.success && result.data) {
-        const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `forsety-datasets-export-${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        triggerDownload(
+          JSON.stringify(result.data, null, 2),
+          `forsety-datasets-export-${Date.now()}.json`,
+          "application/json"
+        );
         toast.success("Export downloaded");
       } else {
         setExportError(true);

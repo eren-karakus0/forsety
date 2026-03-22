@@ -79,7 +79,7 @@ describe("PolicyService - checkAndIncrementReads atomicity", () => {
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
-    it("should return allowed=false when maxReads reached (atomic update returns empty)", async () => {
+    it("should return allowed=false when maxReads reached (short-circuits before atomic update)", async () => {
       const policy = {
         id: "p1",
         allowedAccessors: ["0xabc"],
@@ -88,13 +88,12 @@ describe("PolicyService - checkAndIncrementReads atomicity", () => {
         readsConsumed: 10,
       };
       mockGetLatest([policy]);
-      // Atomic update fails (no row updated because readsConsumed >= maxReads)
-      mockAtomicUpdate([]);
 
       const result = await service.checkAndIncrementReads("uuid-1", "0xabc");
       expect(result.allowed).toBe(false);
       expect(result.policy).toEqual(policy);
-      expect(mockUpdate).toHaveBeenCalled();
+      // validatePolicyAccess catches maxReads reached before hitting DB
+      expect(mockUpdate).not.toHaveBeenCalled();
     });
 
     it("should return allowed=true with unlimited reads (maxReads null)", async () => {

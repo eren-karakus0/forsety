@@ -23,6 +23,8 @@ import { Download, Layers, Check, ChevronRight, Eye, Loader2, Database } from "l
 import { computeDatasetStatus, statusConfig } from "../datasets/dataset-status";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
+import { triggerDownload } from "@/lib/download";
+import { formatDateTime } from "@/lib/format";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
 
 interface DatasetDetail {
@@ -189,15 +191,11 @@ export default function DatasetDetailPage() {
 
   const downloadEvidence = () => {
     if (!evidence) return;
-    const blob = new Blob([JSON.stringify(evidence.json, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `evidence-pack-${id.slice(0, 8)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(
+      JSON.stringify(evidence.json, null, 2),
+      `evidence-pack-${id.slice(0, 8)}.json`,
+      "application/json"
+    );
   };
 
   if (loading) {
@@ -290,7 +288,7 @@ export default function DatasetDetailPage() {
                             {log.operationType}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            {log.timestamp ? new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-"}
+                            {log.timestamp ? formatDateTime(log.timestamp) : "-"}
                           </span>
                         </div>
                         <p className="mt-1 font-mono text-xs text-muted-foreground truncate">
@@ -397,10 +395,7 @@ export default function DatasetDetailPage() {
                     <MetadataRow label="Owner" value={dataset.ownerAddress} mono />
                     <MetadataRow
                       label="Created"
-                      value={new Date(dataset.createdAt).toLocaleString("en-US", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                      value={formatDateTime(dataset.createdAt)}
                     />
                   </div>
                 </CardContent>

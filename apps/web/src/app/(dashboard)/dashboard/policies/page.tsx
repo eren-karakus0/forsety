@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { fetchAllPolicies, fetchDatasetsList, fetchViolationCount } from "../actions";
 import { CreatePolicyDialog } from "./create-policy-dialog";
 import { EditPolicyDialog } from "./edit-policy-dialog";
+import { ErrorBanner } from "../../components/error-banner";
 import {
   Button,
   Card,
@@ -74,15 +75,18 @@ export default function PoliciesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editPolicy, setEditPolicy] = useState<PolicyRow | null>(null);
   const [violationCount, setViolationCount] = useState(0);
+  const [error, setError] = useState(false);
 
   const loadData = () => {
     setLoading(true);
+    setError(false);
     Promise.all([fetchAllPolicies(), fetchDatasetsList(), fetchViolationCount()])
       .then(([pols, ds, violations]) => {
         setPolicies(pols as PolicyRow[]);
         setDatasets(ds);
         setViolationCount(violations);
       })
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   };
 
@@ -112,6 +116,14 @@ export default function PoliciesPage() {
           <Skeleton className="h-20 rounded-xl" />
         </div>
         <Skeleton className="h-96 rounded-xl" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <ErrorBanner message="Unable to load policies. Please try again." onRetry={loadData} />
       </div>
     );
   }

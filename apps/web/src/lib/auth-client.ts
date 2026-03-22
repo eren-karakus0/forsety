@@ -62,6 +62,11 @@ export function useForsetyAuth() {
         chainId: true,
       });
 
+      // 3a. Debug: warn if wallet did not include chain_id in envelope
+      if (typeof signResult.fullMessage === "string" && !signResult.fullMessage.includes("chain_id:")) {
+        console.warn("[ForsetyAuth] Wallet did not include chain_id in envelope");
+      }
+
       // 4. Normalize signature to hex string
       const signatureHex = normalizeSignature(signResult.signature);
 

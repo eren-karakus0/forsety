@@ -1,5 +1,5 @@
 import { eq, and, gt } from "drizzle-orm";
-import { createHmac, randomBytes } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Database } from "@forsety/db";
 import { sharedEvidenceLinks, evidencePacks } from "@forsety/db";
 import { ForsetyValidationError } from "../errors.js";
@@ -39,12 +39,11 @@ export class ShareService {
       throw new ForsetyValidationError("Evidence pack not found");
     }
 
-    const payload = randomBytes(32).toString("hex");
-    const token = createHmac("sha256", this.hmacSecret)
-      .update(payload)
-      .digest("hex");
-
     const expiresAt = new Date(Date.now() + input.ttlHours * 60 * 60 * 1000);
+    const derivation = `${input.evidencePackId}:${expiresAt.toISOString()}:${input.mode}:${randomBytes(16).toString("hex")}`;
+    const token = createHmac("sha256", this.hmacSecret)
+      .update(derivation)
+      .digest("hex");
 
     const [link] = await this.db
       .insert(sharedEvidenceLinks)
@@ -72,6 +71,9 @@ export class ShareService {
   }
 
   async resolveShareLink(token: string) {
+    // Reject non-hex or wrong-length tokens before hitting DB
+    if (!token || !/^[0-9a-f]{64}$/.test(token)) return null;
+
     const [link] = await this.db
       .select()
       .from(sharedEvidenceLinks)
@@ -84,6 +86,13 @@ export class ShareService {
       .limit(1);
 
     if (!link) return null;
+
+    // Constant-time token comparison (defense against timing attacks)
+    const tokenBuf = Buffer.from(token, "hex");
+    const dbTokenBuf = Buffer.from(link.token, "hex");
+    if (tokenBuf.length !== dbTokenBuf.length || !timingSafeEqual(tokenBuf, dbTokenBuf)) {
+      return null;
+    }
 
     const [pack] = await this.db
       .select()

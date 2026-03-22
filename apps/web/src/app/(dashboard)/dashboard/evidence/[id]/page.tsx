@@ -41,9 +41,12 @@ import {
   Copy,
   FileText,
 } from "lucide-react";
-import { generateEvidencePackPdf } from "@/lib/pdf-export";
+// Dynamically imported on button click to reduce bundle size
+type PdfExportModule = typeof import("@/lib/pdf-export");
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
+import { triggerDownload } from "@/lib/download";
+import { formatDateTime } from "@/lib/format";
 import { ConnectWalletCTA } from "../../../components/connect-wallet-cta";
 
 interface EvidencePackDetail {
@@ -143,19 +146,16 @@ export default function EvidenceDetailPage() {
 
   const downloadJson = () => {
     if (!data) return;
-    const blob = new Blob([JSON.stringify(data.packJson, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `evidence-pack-${data.packHash.slice(0, 8)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(
+      JSON.stringify(data.packJson, null, 2),
+      `evidence-pack-${data.packHash.slice(0, 8)}.json`,
+      "application/json"
+    );
   };
 
   const downloadPdf = async () => {
     if (!data) return;
+    const { generateEvidencePackPdf } = await import("@/lib/pdf-export") as PdfExportModule;
     const pdf = await generateEvidencePackPdf(data.packJson as Parameters<typeof generateEvidencePackPdf>[0], data.packHash);
     pdf.save(`evidence-pack-${data.packHash.slice(0, 8)}.pdf`);
     toast.success("PDF exported");
@@ -344,7 +344,7 @@ export default function EvidenceDetailPage() {
                           </Badge>
                           {log.timestamp && (
                             <span className="text-xs text-muted-foreground">
-                              {new Date(log.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                              {formatDateTime(log.timestamp)}
                             </span>
                           )}
                         </div>
@@ -390,7 +390,7 @@ export default function EvidenceDetailPage() {
                           <span className="font-mono text-[10px]">{activity.agentId.slice(0, 8)}...</span>
                         )}
                         {activity.timestamp && (
-                          <span>{new Date(activity.timestamp).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
+                          <span>{formatDateTime(activity.timestamp)}</span>
                         )}
                       </div>
                     </div>
@@ -601,7 +601,7 @@ export default function EvidenceDetailPage() {
                 <div className="flex items-start justify-between border-b border-border/30 pb-3">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Generated</span>
                   <span className="text-sm text-foreground">
-                    {new Date(data.generatedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                    {formatDateTime(data.generatedAt)}
                   </span>
                 </div>
                 <div className="flex items-start justify-between">

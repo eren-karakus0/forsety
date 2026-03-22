@@ -30,6 +30,12 @@ function assertSafeBlobName(name: string): void {
       "Invalid blob name: only alphanumeric, dots, hyphens, underscores, and forward slashes allowed"
     );
   }
+  // Reject path traversal segments
+  if (name.includes("..")) {
+    throw new ForsetyValidationError(
+      "Invalid blob name: path traversal (..) is not allowed"
+    );
+  }
 }
 
 function toWslPath(windowsPath: string): string {
@@ -38,9 +44,8 @@ function toWslPath(windowsPath: string): string {
     .replace(/^([A-Za-z]):/, (_m, d: string) => `/mnt/${d.toLowerCase()}`);
 }
 
-/** Shell-quote a single argument for bash (POSIX single-quote escaping). */
+/** Shell-quote a single argument for bash (POSIX single-quote escaping). Always wrap. */
 function shellQuote(arg: string): string {
-  if (/^[A-Za-z0-9_./:@=-]+$/.test(arg)) return arg;
   return `'${arg.replace(/'/g, "'\\''")}'`;
 }
 

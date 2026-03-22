@@ -113,12 +113,9 @@ export class DatasetService {
     return this.db.select().from(datasets).orderBy(datasets.createdAt);
   }
 
-  async listWithLicenses() {
-    const allDatasets = await this.list();
-    if (allDatasets.length === 0) return [];
-
-    // Only fetch licenses for listed datasets (scoped)
-    const datasetIds = allDatasets.map((d) => d.id);
+  /** Build a map of datasetId → spdxType for a batch of dataset IDs. */
+  private async buildLicenseMap(datasetIds: string[]): Promise<Map<string, string>> {
+    if (datasetIds.length === 0) return new Map();
     const datasetLicenses = await this.db
       .select()
       .from(licenses)
@@ -134,11 +131,7 @@ export class DatasetService {
     for (const lic of datasetLicenses) {
       licenseMap.set(lic.datasetId, lic.spdxType);
     }
-
-    return allDatasets.map((d) => ({
-      ...d,
-      licenseSpdx: licenseMap.get(d.id) ?? null,
-    }));
+    return licenseMap;
   }
 
   /** Efficient COUNT of datasets owned by address (avoids fetching all rows). */
@@ -171,23 +164,7 @@ export class DatasetService {
     const ownerDatasets = await this.listByOwner(ownerAddress);
     if (ownerDatasets.length === 0) return [];
 
-    // Only fetch licenses for owner's datasets (not all licenses)
-    const datasetIds = ownerDatasets.map((d) => d.id);
-    const datasetLicenses = await this.db
-      .select()
-      .from(licenses)
-      .where(
-        and(
-          inArray(licenses.datasetId, datasetIds),
-          isNull(licenses.revokedAt)
-        )
-      )
-      .orderBy(licenses.createdAt);
-
-    const licenseMap = new Map<string, string>();
-    for (const lic of datasetLicenses) {
-      licenseMap.set(lic.datasetId, lic.spdxType);
-    }
+    const licenseMap = await this.buildLicenseMap(ownerDatasets.map((d) => d.id));
 
     return ownerDatasets.map((d) => ({
       ...d,

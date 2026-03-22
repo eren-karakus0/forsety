@@ -90,7 +90,7 @@ describe("ShelbyWrapper", () => {
       await wrapper.getBalance();
 
       const cmd = getShellCommand(0);
-      expect(cmd).toBe("shelby account balance");
+      expect(cmd).toBe("'shelby' 'account' 'balance'");
     });
   });
 
@@ -112,7 +112,7 @@ describe("ShelbyWrapper", () => {
       await wrapper.getAccountBlobs("myaccount");
 
       const cmd = getShellCommand(0);
-      expect(cmd).toBe("shelby account blobs -a myaccount");
+      expect(cmd).toBe("'shelby' 'account' 'blobs' '-a' 'myaccount'");
     });
 
     it("should omit -a flag when no account specified", async () => {
@@ -121,7 +121,7 @@ describe("ShelbyWrapper", () => {
       await wrapper.getAccountBlobs();
 
       const cmd = getShellCommand(0);
-      expect(cmd).toBe("shelby account blobs");
+      expect(cmd).toBe("'shelby' 'account' 'blobs'");
     });
   });
 
@@ -135,10 +135,10 @@ describe("ShelbyWrapper", () => {
 
       const cmd = getShellCommand(0);
       // Contract: shelby upload [source] [destination] -e <expiration> --output-commitments <file> --assume-yes
-      expect(cmd).toContain("shelby upload /mnt/c/test/file.txt forsety/test");
-      expect(cmd).toContain("-e");
-      expect(cmd).toContain("in 30 days");
-      expect(cmd).toContain("--assume-yes");
+      expect(cmd).toContain("'shelby' 'upload' '/mnt/c/test/file.txt' 'forsety/test'");
+      expect(cmd).toContain("'-e'");
+      expect(cmd).toContain("'in 30 days'");
+      expect(cmd).toContain("'--assume-yes'");
       // Must NOT contain --name (deprecated/nonexistent flag)
       expect(cmd).not.toContain("--name");
     });
@@ -176,7 +176,7 @@ describe("ShelbyWrapper", () => {
 
       const cmd = getShellCommand(0);
       // Contract: shelby download [source] [destination] -f
-      expect(cmd).toContain("shelby download forsety/my-data /mnt/c/output/data.txt -f");
+      expect(cmd).toContain("'shelby' 'download' 'forsety/my-data' '/mnt/c/output/data.txt' '-f'");
       // Must NOT have account as first positional arg
       expect(cmd).not.toMatch(/download\s+\S+\s+forsety/);
     });
@@ -189,7 +189,7 @@ describe("ShelbyWrapper", () => {
       await wrapper.deleteBlob("forsety/test-blob");
 
       const cmd = getShellCommand(0);
-      expect(cmd).toBe("shelby delete forsety/test-blob --assume-yes");
+      expect(cmd).toBe("'shelby' 'delete' 'forsety/test-blob' '--assume-yes'");
     });
   });
 
@@ -204,7 +204,7 @@ describe("ShelbyWrapper", () => {
       const result = await wrapper.generateCommitments("C:\\test\\file.txt");
 
       const cmd = getShellCommand(0);
-      expect(cmd).toContain("shelby commitment /mnt/c/test/file.txt /tmp/forsety-commitment-output.json");
+      expect(cmd).toContain("'shelby' 'commitment' '/mnt/c/test/file.txt' '/tmp/forsety-commitment-output.json'");
       expect(result.commitments).toEqual(["c1", "c2"]);
       expect(result.hash).toBe("hashval");
     });

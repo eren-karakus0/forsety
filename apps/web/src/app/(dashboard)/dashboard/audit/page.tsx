@@ -33,6 +33,8 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { triggerDownload } from "@/lib/download";
+import { formatDateTimeLong } from "@/lib/format";
 import { GuestStatCard } from "../../components/guest-stat-card";
 import { StatCardCompact } from "../../components/stat-card";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
@@ -169,15 +171,11 @@ function AuditPageContent() {
     agentId ? (agents.find((a) => a.id === agentId)?.name ?? agentId.slice(0, 8)) : "Anonymous";
 
   const handleExportJson = () => {
-    const blob = new Blob([JSON.stringify(logs, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `audit-trail-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(
+      JSON.stringify(logs, null, 2),
+      `audit-trail-${new Date().toISOString().slice(0, 10)}.json`,
+      "application/json"
+    );
   };
 
   const handleExportCsv = () => {
@@ -201,13 +199,7 @@ function AuditPageContent() {
       ),
     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `audit-trail-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(csvContent, `audit-trail-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv");
   };
 
   return (
@@ -317,6 +309,7 @@ function AuditPageContent() {
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
           placeholder="From"
+          aria-label="Filter from date"
           className="w-full rounded-lg sm:w-[150px]"
         />
         <Input
@@ -324,6 +317,7 @@ function AuditPageContent() {
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
           placeholder="To"
+          aria-label="Filter to date"
           className="w-full rounded-lg sm:w-[150px]"
         />
 
@@ -391,13 +385,7 @@ function AuditPageContent() {
               {logs.map((log) => (
                 <TableRow key={log.id} className="border-border/30 transition-colors hover:bg-muted/20">
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(log.timestamp).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })}
+                    {formatDateTimeLong(log.timestamp)}
                   </TableCell>
                   <TableCell>
                     {log.agentId ? (

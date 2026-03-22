@@ -112,35 +112,6 @@ export class PolicyService {
       .offset(offset);
   }
 
-  async getLatestPerDataset() {
-    // Subquery: max version per dataset
-    const maxVersions = this.db
-      .select({
-        datasetId: policies.datasetId,
-        maxVersion: max(policies.version).as("max_version"),
-      })
-      .from(policies)
-      .groupBy(policies.datasetId)
-      .as("mv");
-
-    const results = await this.db
-      .select()
-      .from(policies)
-      .innerJoin(
-        maxVersions,
-        and(
-          eq(policies.datasetId, maxVersions.datasetId),
-          eq(policies.version, maxVersions.maxVersion)
-        )
-      );
-
-    const map = new Map<string, typeof policies.$inferSelect>();
-    for (const r of results) {
-      map.set(r.policies.datasetId, r.policies);
-    }
-    return map;
-  }
-
   /** Get latest policy per dataset, scoped to datasets owned by ownerAddress. */
   async getLatestPerDatasetByOwner(ownerAddress: string) {
     const maxVersions = this.db
@@ -201,36 +172,31 @@ export class PolicyService {
     return result[0] ?? null;
   }
 
+  /** Shared policy validation logic for both checkAccess and checkAndIncrementReads. */
+  private validatePolicyAccess(
+    policy: typeof policies.$inferSelect,
+    accessorAddress: string
+  ): { allowed: boolean } {
+    const isAllowed =
+      policy.allowedAccessors.includes(accessorAddress) ||
+      policy.allowedAccessors.includes("*");
+
+    if (!isAllowed) return { allowed: false };
+    if (policy.expiresAt && new Date() > policy.expiresAt) return { allowed: false };
+    if (policy.maxReads != null && policy.readsConsumed >= policy.maxReads) return { allowed: false };
+
+    return { allowed: true };
+  }
+
   async checkAccess(
     datasetId: string,
     accessorAddress: string
   ): Promise<{ allowed: boolean; policy: typeof policies.$inferSelect | null }> {
     const latestPolicy = await this.getLatest(datasetId);
+    if (!latestPolicy) return { allowed: false, policy: null };
 
-    if (!latestPolicy) {
-      return { allowed: false, policy: null };
-    }
-
-    const isAllowed =
-      latestPolicy.allowedAccessors.includes(accessorAddress) ||
-      latestPolicy.allowedAccessors.includes("*");
-
-    if (!isAllowed) {
-      return { allowed: false, policy: latestPolicy };
-    }
-
-    if (latestPolicy.expiresAt && new Date() > latestPolicy.expiresAt) {
-      return { allowed: false, policy: latestPolicy };
-    }
-
-    if (
-      latestPolicy.maxReads != null &&
-      latestPolicy.readsConsumed >= latestPolicy.maxReads
-    ) {
-      return { allowed: false, policy: latestPolicy };
-    }
-
-    return { allowed: true, policy: latestPolicy };
+    const { allowed } = this.validatePolicyAccess(latestPolicy, accessorAddress);
+    return { allowed, policy: latestPolicy };
   }
 
   async incrementReads(policyId: string) {
@@ -256,22 +222,10 @@ export class PolicyService {
     policy: typeof policies.$inferSelect | null;
   }> {
     const latestPolicy = await this.getLatest(datasetId);
+    if (!latestPolicy) return { allowed: false, policy: null };
 
-    if (!latestPolicy) {
-      return { allowed: false, policy: null };
-    }
-
-    const isAllowed =
-      latestPolicy.allowedAccessors.includes(accessorAddress) ||
-      latestPolicy.allowedAccessors.includes("*");
-
-    if (!isAllowed) {
-      return { allowed: false, policy: latestPolicy };
-    }
-
-    if (latestPolicy.expiresAt && new Date() > latestPolicy.expiresAt) {
-      return { allowed: false, policy: latestPolicy };
-    }
+    const { allowed } = this.validatePolicyAccess(latestPolicy, accessorAddress);
+    if (!allowed) return { allowed: false, policy: latestPolicy };
 
     // If maxReads is set, atomically check + increment in a single UPDATE
     if (latestPolicy.maxReads != null) {
