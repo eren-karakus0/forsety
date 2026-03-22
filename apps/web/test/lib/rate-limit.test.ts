@@ -168,7 +168,7 @@ describe("rate-limit.ts", () => {
 
     it("should have correct public tier config", () => {
       expect(RATE_LIMIT_TIERS.public).toEqual({
-        maxRequests: 20,
+        maxRequests: 5,
         windowMs: 60_000,
       });
     });

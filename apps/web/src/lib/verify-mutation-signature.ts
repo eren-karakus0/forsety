@@ -27,10 +27,18 @@ function validatePayload(sig: SignaturePayload): string | null {
   }
 
   // Validate domain and chain binding using Aptos envelope format (lowercase fields)
-  if (!/\napplication:\s*\S+/.test(sig.fullMessage)) {
+  const appMatch = sig.fullMessage.match(/\napplication:\s*(\S+)/);
+  if (!appMatch) {
     return "Invalid application binding";
   }
-  if (!/\nchain_id:\s*2\b/.test(sig.fullMessage)) {
+  // Reject if application is empty or contains suspicious characters
+  const app = appMatch[1];
+  if (!app || app.length < 3) {
+    return "Invalid application binding";
+  }
+
+  const chainMatch = sig.fullMessage.match(/\nchain_id:\s*(\d+)/);
+  if (!chainMatch || chainMatch[1] !== "2") {
     return "Invalid chain binding";
   }
 
