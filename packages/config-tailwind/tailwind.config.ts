@@ -181,6 +181,10 @@ const config: Config = {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
         },
+        "watermark-float": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "50%": { transform: "translateY(-8px) rotate(0.5deg)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.5s ease-out",
@@ -199,6 +203,7 @@ const config: Config = {
         "mesh-float-2": "mesh-float-2 18s ease-in-out infinite",
         marquee: "marquee 30s linear infinite",
         blink: "blink 1s step-end infinite",
+        "watermark-float": "watermark-float 12s ease-in-out infinite",
       },
     },
   },

@@ -7,10 +7,11 @@ const mockListByOwner = vi.fn();
 const mockUpload = vi.fn();
 const mockGetById = vi.fn();
 const mockAuthenticate = vi.fn();
+const mockCountByOwner = vi.fn().mockResolvedValue(0);
 
 vi.mock("@/lib/forsety", () => ({
   getForsetyClient: () => ({
-    datasets: { listByOwner: mockListByOwner, upload: mockUpload, getById: mockGetById },
+    datasets: { listByOwner: mockListByOwner, upload: mockUpload, getById: mockGetById, countByOwner: mockCountByOwner },
     agents: { authenticate: mockAuthenticate },
   }),
 }));

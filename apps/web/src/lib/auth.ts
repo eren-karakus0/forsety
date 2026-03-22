@@ -10,7 +10,10 @@ function safeCompare(a: string, b: string): boolean {
   const bufB = Buffer.alloc(maxLen);
   bufA.write(a);
   bufB.write(b);
-  return a.length === b.length && timingSafeEqual(bufA, bufB);
+  // Evaluate both conditions independently to prevent short-circuit timing leak
+  const lengthMatch = a.length === b.length;
+  const contentMatch = timingSafeEqual(bufA, bufB);
+  return lengthMatch && contentMatch;
 }
 
 /**

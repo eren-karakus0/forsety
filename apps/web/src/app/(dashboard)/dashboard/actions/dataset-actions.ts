@@ -3,6 +3,7 @@
 import { writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import * as Sentry from "@sentry/nextjs";
 import { getForsetyClient } from "@/lib/forsety";
 import { verifyMutationSignature } from "@/lib/verify-mutation-signature";
 import { withSignedMutation } from "@/lib/with-mutation";
@@ -60,6 +61,7 @@ export async function uploadDataset(formData: FormData, sig: SignaturePayload): 
 
     return { success: true, datasetId: result.dataset.id };
   } catch (error) {
+    Sentry.captureException(error, { extra: { action: "uploadDataset" } });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Upload failed",
@@ -88,6 +90,7 @@ export async function fetchDatasetDetail(id: string) {
     };
   }, null).catch((err) => {
     console.error("[fetchDatasetDetail]", err);
+    Sentry.captureException(err, { extra: { action: "fetchDatasetDetail" } });
     return null;
   });
 }
@@ -135,6 +138,7 @@ export async function fetchDatasetsWithStatus() {
     });
   }, [] as never[]).catch((err) => {
     console.error("[fetchDatasetsWithStatus]", err);
+    Sentry.captureException(err, { extra: { action: "fetchDatasetsWithStatus" } });
     return [];
   });
 }
@@ -146,6 +150,7 @@ export async function fetchDatasetsList() {
     return list.map((d) => ({ id: d.id, name: d.name }));
   }, []).catch((err) => {
     console.error("[fetchDatasetsList]", err);
+    Sentry.captureException(err, { extra: { action: "fetchDatasetsList" } });
     return [];
   });
 }
@@ -199,6 +204,7 @@ export async function bulkExportDatasets(ids: string[]) {
 
     return { success: true, data };
   } catch (error) {
+    Sentry.captureException(error, { extra: { action: "bulkExportDatasets" } });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Bulk export failed",

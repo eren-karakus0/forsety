@@ -65,7 +65,15 @@ export async function POST(request: NextRequest) {
       });
       Sentry.captureMessage("Auth verification failed", {
         level: "warning",
-        extra: { error: result.error, host, address, network: "testnet" },
+        extra: {
+          error: result.error,
+          host,
+          address,
+          network: "testnet",
+          pubKeyLength: pubKeyHex.length,
+          sigLength: sigHex.length,
+          hasFullMessage: !!fullMessage,
+        },
       });
       return NextResponse.json(
         { error: result.error ?? "Verification failed" },

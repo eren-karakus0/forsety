@@ -78,6 +78,9 @@
   .glass {
     @apply bg-white/70 backdrop-blur-xl border border-navy-200/50 shadow-sm;
   }
+  .dark .glass {
+    @apply bg-white/5 border-white/10;
+  }
 
   .glass-card {
     @apply glass rounded-2xl shadow-xl;
@@ -155,6 +158,9 @@
   .glass-card-premium {
     @apply glass-card relative;
   }
+  .dark .glass-card-premium {
+    @apply bg-white/5 border-white/10;
+  }
   .glass-card-premium::before {
     content: "";
     position: absolute;
@@ -178,6 +184,9 @@
   .section-tinted {
     background: linear-gradient(180deg, rgba(253, 249, 239, 0.5) 0%, rgba(240, 243, 249, 0.6) 100%);
   }
+  .dark .section-tinted {
+    background: linear-gradient(180deg, rgba(30, 35, 50, 0.5) 0%, rgba(25, 30, 45, 0.6) 100%);
+  }
 
   /* Section transition - gradient fade instead of border-t */
   .section-divider {
@@ -189,17 +198,29 @@
     @apply border-l-[3px] border-l-gold-500;
     background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, transparent 60%);
   }
+  .dark .stat-card-gold {
+    background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, transparent 60%);
+  }
   .stat-card-teal {
     @apply border-l-[3px] border-l-teal-500;
     background: linear-gradient(135deg, rgba(55,170,212,0.06) 0%, transparent 60%);
+  }
+  .dark .stat-card-teal {
+    background: linear-gradient(135deg, rgba(55,170,212,0.1) 0%, transparent 60%);
   }
   .stat-card-violet {
     @apply border-l-[3px] border-l-violet-500;
     background: linear-gradient(135deg, rgba(97,55,212,0.06) 0%, transparent 60%);
   }
+  .dark .stat-card-violet {
+    background: linear-gradient(135deg, rgba(97,55,212,0.1) 0%, transparent 60%);
+  }
   .stat-card-navy {
     @apply border-l-[3px] border-l-navy-500;
     background: linear-gradient(135deg, rgba(39,60,107,0.06) 0%, transparent 60%);
+  }
+  .dark .stat-card-navy {
+    background: linear-gradient(135deg, rgba(39,60,107,0.15) 0%, transparent 60%);
   }
 
   /* Dashboard page header with accent underline */
@@ -220,6 +241,9 @@
   /* Dashboard table header */
   .table-header-row {
     background: linear-gradient(135deg, rgba(240,243,249,0.8) 0%, rgba(253,249,239,0.4) 100%);
+  }
+  .dark .table-header-row {
+    background: linear-gradient(135deg, rgba(30,40,60,0.8) 0%, rgba(30,35,50,0.4) 100%);
   }
 
   /* Animated gradient border */
@@ -274,6 +298,11 @@
 
   .preserve-3d {
     transform-style: preserve-3d;
+  }
+
+  /* Global focus-visible for keyboard accessibility */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
   /* Respect reduced motion preferences */

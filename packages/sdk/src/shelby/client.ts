@@ -19,6 +19,12 @@ function assertSafePath(filePath: string): void {
 
 /** Reject unsafe blob names (only alphanumeric, dots, hyphens, underscores, forward slashes allowed). */
 function assertSafeBlobName(name: string): void {
+  // Defense-in-depth: explicitly reject shell metacharacters before allowlist check
+  if (/[;|&`$(){}!<>\\'"#~\n\r]/.test(name)) {
+    throw new ForsetyValidationError(
+      "Invalid blob name: shell metacharacters are not allowed"
+    );
+  }
   if (!/^[a-zA-Z0-9._\-/]+$/.test(name)) {
     throw new ForsetyValidationError(
       "Invalid blob name: only alphanumeric, dots, hyphens, underscores, and forward slashes allowed"

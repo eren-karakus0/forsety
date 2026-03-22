@@ -1,5 +1,6 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { getForsetyClient } from "@/lib/forsety";
 import { withSignedMutation } from "@/lib/with-mutation";
 import { withAuth } from "@/lib/with-auth";
@@ -16,6 +17,7 @@ export async function fetchAllPolicies() {
     }));
   }, []).catch((err) => {
     console.error("[fetchAllPolicies]", err);
+    Sentry.captureException(err, { extra: { action: "fetchAllPolicies" } });
     return [];
   });
 }
@@ -28,6 +30,7 @@ export async function fetchPolicies(datasetId: string) {
     return client.policies.getByDatasetId(datasetId);
   }, []).catch((err) => {
     console.error("[fetchPolicies]", err);
+    Sentry.captureException(err, { extra: { action: "fetchPolicies" } });
     return [];
   });
 }

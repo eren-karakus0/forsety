@@ -46,8 +46,8 @@ vi.mock("@sentry/nextjs", () => ({
 
 import { GET, POST } from "../../src/app/api/policies/route";
 
-const OWNER = "0xowner";
-const STRANGER = "0xstranger";
+const OWNER = "0xaaa111bbb222ccc333ddd444eee555fff666";
+const STRANGER = "0xfff666eee555ddd444ccc333bbb222aaa111";
 
 describe("GET /api/policies", () => {
   beforeEach(() => {

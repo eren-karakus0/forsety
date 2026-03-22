@@ -1,5 +1,6 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { getForsetyClient } from "@/lib/forsety";
 import { withAuth } from "@/lib/with-auth";
 
@@ -27,6 +28,7 @@ export async function fetchAllAuditLogs(
     }));
   }, []).catch((err) => {
     console.error("[fetchAllAuditLogs]", err);
+    Sentry.captureException(err, { extra: { action: "fetchAllAuditLogs" } });
     return [];
   });
 }
@@ -51,6 +53,7 @@ export async function countAuditLogs(
     });
   }, 0).catch((err) => {
     console.error("[countAuditLogs]", err);
+    Sentry.captureException(err, { extra: { action: "countAuditLogs" } });
     return 0;
   });
 }

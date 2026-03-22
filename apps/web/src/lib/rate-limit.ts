@@ -7,7 +7,7 @@ export const RATE_LIMIT_TIERS = {
   auth: { maxRequests: 3, windowMs: 60_000 },
   write: { maxRequests: 10, windowMs: 60_000 },
   read: { maxRequests: 60, windowMs: 60_000 },
-  public: { maxRequests: 20, windowMs: 60_000 },
+  public: { maxRequests: 5, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
 
 interface RateLimitEntry {

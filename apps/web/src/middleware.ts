@@ -7,7 +7,7 @@ const APP_DOMAIN = "app.forsety.xyz";
 const WWW_DOMAIN = "www.forsety.xyz";
 
 function generateNonce(): string {
-  const array = new Uint8Array(16);
+  const array = new Uint8Array(32); // 256-bit entropy
   crypto.getRandomValues(array);
   // Edge-safe: use btoa instead of Buffer.from
   return btoa(String.fromCharCode(...array));
@@ -124,7 +124,10 @@ export async function middleware(request: NextRequest) {
 
   // ── 1. www.forsety.xyz → 301 redirect to forsety.xyz ──
   if (bareHost === WWW_DOMAIN) {
-    const url = new URL(`https://${LANDING_DOMAIN}${pathname}${request.nextUrl.search}`);
+    // Sanitize pathname: strip control chars and collapse double slashes
+    // eslint-disable-next-line no-control-regex
+    const safePath = pathname.replace(/[\x00-\x1f\x7f]/g, "").replace(/\/+/g, "/");
+    const url = new URL(`https://${LANDING_DOMAIN}${safePath}${request.nextUrl.search}`);
     return NextResponse.redirect(url, 301);
   }
 

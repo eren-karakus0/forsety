@@ -4,9 +4,14 @@ import { getForsetyClient } from "@/lib/forsety";
 import { apiError, validationError } from "@/lib/api-error";
 import { z } from "zod";
 
+const aptosAddressOrWildcard = z.string().regex(
+  /^(0x[a-fA-F0-9]{1,64}|\*)$/,
+  "Must be an Aptos address (0x...) or wildcard (*)"
+);
+
 const createPolicySchema = z.object({
   datasetId: z.string().uuid(),
-  allowedAccessors: z.array(z.string().min(1)).min(1),
+  allowedAccessors: z.array(aptosAddressOrWildcard).min(1),
   maxReads: z.number().int().min(0).nullable().optional(),
   expiresAt: z.string().datetime().optional(),
 });

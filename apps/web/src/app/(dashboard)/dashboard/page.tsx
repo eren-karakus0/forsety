@@ -48,6 +48,7 @@ interface OverviewData {
   totalDatasets: number;
   registeredAgents: number;
   activeAgents: number;
+  totalAuditEvents: number;
   recentLogs: RecentLog[];
   error: boolean;
 }
@@ -135,6 +136,7 @@ export default function OverviewPage() {
           totalDatasets: stats.totalDatasets,
           registeredAgents: stats.registeredAgents,
           activeAgents: stats.activeAgents,
+          totalAuditEvents: stats.totalAuditEvents,
           recentLogs: logs as RecentLog[],
           error: false,
         });
@@ -145,6 +147,7 @@ export default function OverviewPage() {
           totalDatasets: 0,
           registeredAgents: 0,
           activeAgents: 0,
+          totalAuditEvents: 0,
           recentLogs: [],
           error: true,
         });
@@ -257,7 +260,7 @@ export default function OverviewPage() {
             { label: "Total Datasets", value: data.totalDatasets, icon: Database, cardClass: "stat-card-gold", iconBgClass: "bg-gold-50", iconColor: "text-gold-500" },
             { label: "Registered Agents", value: data.registeredAgents, icon: Users, cardClass: "stat-card-teal", iconBgClass: "bg-teal-50", iconColor: "text-teal-500" },
             { label: "Active Agents", value: data.activeAgents, icon: Activity, cardClass: "stat-card-violet", iconBgClass: "bg-violet-50", iconColor: "text-violet-500" },
-            { label: "Audit Events", value: data.recentLogs.length, icon: ClipboardList, cardClass: "stat-card-navy", iconBgClass: "bg-navy-50", iconColor: "text-navy-500" },
+            { label: "Audit Events", value: data.totalAuditEvents, icon: ClipboardList, cardClass: "stat-card-navy", iconBgClass: "bg-navy-50", iconColor: "text-navy-500" },
           ].map((stat) => (
             <StaggerItemWrapper key={stat.label}>
               <StatCard

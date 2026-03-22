@@ -58,14 +58,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Reject executable content types (defense-in-depth)
+    const BLOCKED_TYPES = [
+      "application/x-executable",
+      "application/x-msdos-program",
+      "application/x-msdownload",
+      "application/x-sh",
+      "application/x-shellscript",
+    ];
+    if (file.type && BLOCKED_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Executable files are not allowed" },
+        { status: 415 }
+      );
+    }
+
+    const client = getForsetyClient();
+
+    // Per-user daily upload quota
+    const DAILY_UPLOAD_LIMIT = 50;
+    const dailyCount = await client.datasets.countByOwner(ownerAddress);
+    if (dailyCount >= DAILY_UPLOAD_LIMIT) {
+      return NextResponse.json(
+        { error: "Daily upload limit reached" },
+        { status: 429 }
+      );
+    }
+
     const uploadDir = join(tmpdir(), "forsety-uploads");
     mkdirSync(uploadDir, { recursive: true });
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     tempPath = join(uploadDir, `${randomUUID()}-${safeName}`);
     const buffer = Buffer.from(await file.arrayBuffer());
     writeFileSync(tempPath, buffer);
-
-    const client = getForsetyClient();
     const result = await client.datasets.upload({
       filePath: tempPath,
       name,

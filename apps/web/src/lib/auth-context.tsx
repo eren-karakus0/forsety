@@ -16,6 +16,8 @@ import { useForsetyAuth } from "./auth-client";
 export interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
+  retrySignIn: () => void;
   guard: () => boolean;
   selectorOpen: boolean;
   setSelectorOpen: (open: boolean) => void;
@@ -29,10 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     isAuthenticated: hasSignedIn,
     isLoading: signInLoading,
+    error: signInError,
   } = useForsetyAuth();
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [sessionValid, setSessionValid] = useState(false);
   const [sessionChecking, setSessionChecking] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const signInAttempted = useRef(false);
   const freshHandled = useRef(false);
 
@@ -80,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function checkSession() {
       setSessionChecking(true);
+      setAuthError(null);
       try {
         const res = await fetch("/api/auth/session", {
           credentials: "include",
@@ -91,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!data.authenticated && !signInAttempted.current) {
             signInAttempted.current = true;
             await signIn();
+            // signIn error is captured in signInError state from useForsetyAuth
           }
         }
       } catch {
@@ -111,13 +117,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hasSignedIn) {
       setSessionValid(true);
+      setAuthError(null);
     }
   }, [hasSignedIn]);
+
+  // Propagate signIn errors to auth context
+  useEffect(() => {
+    if (signInError) {
+      setAuthError(signInError);
+    }
+  }, [signInError]);
 
   // Reset on disconnect
   useEffect(() => {
     if (!connected) {
       setSessionValid(false);
+      setAuthError(null);
       signInAttempted.current = false;
       freshHandled.current = false;
     }
@@ -126,6 +141,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = connected && !!account && sessionValid;
   const isLoading = sessionChecking || signInLoading;
 
+  const retrySignIn = useCallback(() => {
+    signInAttempted.current = false;
+    setAuthError(null);
+    signIn();
+  }, [signIn]);
+
   const guard = useCallback((): boolean => {
     if (isAuthenticated) return true;
     setSelectorOpen(true);
@@ -133,8 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated]);
 
   const value = useMemo(
-    () => ({ isAuthenticated, isLoading, guard, selectorOpen, setSelectorOpen }),
-    [isAuthenticated, isLoading, guard, selectorOpen, setSelectorOpen],
+    () => ({ isAuthenticated, isLoading, error: authError, retrySignIn, guard, selectorOpen, setSelectorOpen }),
+    [isAuthenticated, isLoading, authError, retrySignIn, guard, selectorOpen, setSelectorOpen],
   );
 
   return (
