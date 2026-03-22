@@ -7,9 +7,10 @@ import { withAuth } from "@/lib/with-auth";
 export async function fetchDashboardStats() {
   return withAuth(async (wallet) => {
     const client = getForsetyClient();
-    const [datasetCount, agents] = await Promise.all([
+    const [datasetCount, agents, auditCount] = await Promise.all([
       client.datasets.countByOwner(wallet),
       client.agents.listByOwner(wallet),
+      client.agentAudit.countByOwner(wallet),
     ]);
 
     const activeAgents = agents.filter((a) => a.isActive).length;
@@ -18,11 +19,12 @@ export async function fetchDashboardStats() {
       totalDatasets: datasetCount,
       registeredAgents: agents.length,
       activeAgents,
+      totalAuditEvents: auditCount,
     };
-  }, { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 }).catch((err) => {
+  }, { totalDatasets: 0, registeredAgents: 0, activeAgents: 0, totalAuditEvents: 0 }).catch((err) => {
     console.error("[fetchDashboardStats]", err);
     Sentry.captureException(err, { extra: { action: "fetchDashboardStats" } });
-    return { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 };
+    return { totalDatasets: 0, registeredAgents: 0, activeAgents: 0, totalAuditEvents: 0 };
   });
 }
 

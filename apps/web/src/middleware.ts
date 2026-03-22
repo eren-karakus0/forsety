@@ -125,6 +125,7 @@ export async function middleware(request: NextRequest) {
   // ── 1. www.forsety.xyz → 301 redirect to forsety.xyz ──
   if (bareHost === WWW_DOMAIN) {
     // Sanitize pathname: strip control chars and collapse double slashes
+    // eslint-disable-next-line no-control-regex
     const safePath = pathname.replace(/[\x00-\x1f\x7f]/g, "").replace(/\/+/g, "/");
     const url = new URL(`https://${LANDING_DOMAIN}${safePath}${request.nextUrl.search}`);
     return NextResponse.redirect(url, 301);
