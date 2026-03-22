@@ -85,10 +85,12 @@ export function useForsetyAuth() {
 
       setAuthState({ isAuthenticated: true, isLoading: false, error: null });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Sign in failed";
+      console.error("[ForsetyAuth] Sign-in failed:", message);
       setAuthState({
         isAuthenticated: false,
         isLoading: false,
-        error: error instanceof Error ? error.message : "Sign in failed",
+        error: message,
       });
     }
   }, [account, connected, signMessage, changeNetwork, chainId]);

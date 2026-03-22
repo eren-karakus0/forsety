@@ -1,5 +1,6 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { getForsetyClient } from "@/lib/forsety";
 import { withAuth } from "@/lib/with-auth";
 
@@ -20,6 +21,7 @@ export async function fetchDashboardStats() {
     };
   }, { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 }).catch((err) => {
     console.error("[fetchDashboardStats]", err);
+    Sentry.captureException(err, { extra: { action: "fetchDashboardStats" } });
     return { totalDatasets: 0, registeredAgents: 0, activeAgents: 0 };
   });
 }
@@ -30,6 +32,7 @@ export async function fetchViolationCount() {
     return client.agentAudit.countByOwner(wallet, { status: "denied" });
   }, 0).catch((err) => {
     console.error("[fetchViolationCount]", err);
+    Sentry.captureException(err, { extra: { action: "fetchViolationCount" } });
     return 0;
   });
 }

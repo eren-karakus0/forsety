@@ -1,5 +1,6 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { getForsetyClient } from "@/lib/forsety";
 import { withSignedMutation } from "@/lib/with-mutation";
 import { withAuth } from "@/lib/with-auth";
@@ -37,6 +38,7 @@ export async function fetchAllEvidencePacks(filters?: { limit?: number; offset?:
     }));
   }, []).catch((err) => {
     console.error("[fetchAllEvidencePacks]", err);
+    Sentry.captureException(err, { extra: { action: "fetchAllEvidencePacks" } });
     return [];
   });
 }
@@ -57,6 +59,7 @@ export async function fetchEvidencePackById(id: string) {
     };
   }, null).catch((err) => {
     console.error("[fetchEvidencePackById]", err);
+    Sentry.captureException(err, { extra: { action: "fetchEvidencePackById" } });
     return null;
   });
 }
@@ -74,6 +77,7 @@ export async function fetchAccessLogs(datasetId: string) {
     }));
   }, []).catch((err) => {
     console.error("[fetchAccessLogs]", err);
+    Sentry.captureException(err, { extra: { action: "fetchAccessLogs" } });
     return [];
   });
 }

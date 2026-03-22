@@ -1,5 +1,6 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { getForsetyClient } from "@/lib/forsety";
 import { sanitizeAgent } from "@forsety/sdk";
 import { withSignedMutation } from "@/lib/with-mutation";
@@ -10,13 +11,17 @@ export async function fetchAgents() {
   return withAuth(async (wallet) => {
     const client = getForsetyClient();
     const agents = await client.agents.listByOwner(wallet);
-    return agents.map((a) => ({
-      ...sanitizeAgent(a),
-      createdAt: a.createdAt.toISOString(),
-      lastSeenAt: a.lastSeenAt?.toISOString() ?? null,
-    }));
+    return agents.map((a) => {
+      const safe = sanitizeAgent(a);
+      return {
+        ...safe,
+        createdAt: a.createdAt?.toISOString() ?? new Date().toISOString(),
+        lastSeenAt: a.lastSeenAt?.toISOString() ?? null,
+      };
+    });
   }, []).catch((err) => {
     console.error("[fetchAgents]", err);
+    Sentry.captureException(err, { extra: { action: "fetchAgents" } });
     return [];
   });
 }
@@ -32,19 +37,20 @@ export async function fetchAgentDetail(id: string) {
     return {
       agent: {
         ...sanitizeAgent(agent),
-        createdAt: agent.createdAt.toISOString(),
+        createdAt: agent.createdAt?.toISOString() ?? new Date().toISOString(),
         lastSeenAt: agent.lastSeenAt?.toISOString() ?? null,
       },
       auditSummary: {
         ...auditSummary,
-        recentActions: auditSummary.recentActions.map((a) => ({
+        recentActions: (auditSummary.recentActions ?? []).map((a) => ({
           ...a,
-          timestamp: a.timestamp.toISOString(),
+          timestamp: a.timestamp?.toISOString() ?? new Date().toISOString(),
         })),
       },
     };
   }, null).catch((err) => {
     console.error("[fetchAgentDetail]", err);
+    Sentry.captureException(err, { extra: { action: "fetchAgentDetail", agentId: id } });
     return null;
   });
 }
@@ -64,6 +70,7 @@ export async function fetchAgentAuditLogs(
     }));
   }, []).catch((err) => {
     console.error("[fetchAgentAuditLogs]", err);
+    Sentry.captureException(err, { extra: { action: "fetchAgentAuditLogs", agentId } });
     return [];
   });
 }

@@ -33,6 +33,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { NetworkSelector, NetworkSelectorCompact } from "@/components/network-selector";
 import { WalletSelector } from "@/components/wallet-selector";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { AuthErrorBanner } from "./components/auth-error-banner";
 
 // Dynamic import with ssr:false ensures wallet providers (Aptos adapter)
 // never evaluate on the server, preventing indexedDB/storage errors during build.
@@ -201,6 +202,7 @@ export default function DashboardLayout({
             {/* Content */}
             <main id="main-content" className="relative z-10 lg:pl-56">
               <div className="mx-auto max-w-6xl px-6 py-8 pt-8 lg:pt-20 animate-fade-in">
+                <AuthErrorBanner />
                 {children}
               </div>
             </main>
