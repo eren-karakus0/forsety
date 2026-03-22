@@ -79,29 +79,28 @@ export class EvidenceService {
       throw new ForsetyValidationError(`Dataset not found: ${datasetId}`);
     }
 
-    const datasetLicenses = await this.db
-      .select()
-      .from(licenses)
-      .where(eq(licenses.datasetId, datasetId));
-
-    const datasetPolicies = await this.db
-      .select()
-      .from(policies)
-      .where(eq(policies.datasetId, datasetId))
-      .orderBy(policies.version);
-
-    const datasetAccessLogs = await this.db
-      .select()
-      .from(accessLogs)
-      .where(eq(accessLogs.datasetId, datasetId))
-      .orderBy(accessLogs.timestamp);
-
-    // Agent audit logs related to this dataset
-    const datasetAuditLogs = await this.db
-      .select()
-      .from(agentAuditLogs)
-      .where(eq(agentAuditLogs.resourceId, datasetId))
-      .orderBy(agentAuditLogs.timestamp);
+    // Parallel fetch: all four queries are independent reads
+    const [datasetLicenses, datasetPolicies, datasetAccessLogs, datasetAuditLogs] = await Promise.all([
+      this.db
+        .select()
+        .from(licenses)
+        .where(eq(licenses.datasetId, datasetId)),
+      this.db
+        .select()
+        .from(policies)
+        .where(eq(policies.datasetId, datasetId))
+        .orderBy(policies.version),
+      this.db
+        .select()
+        .from(accessLogs)
+        .where(eq(accessLogs.datasetId, datasetId))
+        .orderBy(accessLogs.timestamp),
+      this.db
+        .select()
+        .from(agentAuditLogs)
+        .where(eq(agentAuditLogs.resourceId, datasetId))
+        .orderBy(agentAuditLogs.timestamp),
+    ]);
 
     const now = new Date().toISOString();
 
