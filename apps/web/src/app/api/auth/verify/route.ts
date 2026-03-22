@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       expectedAddress: address,
       expectedDomain: host,
       expectedChainId,
-      strictChainId: true,
+      strictChainId: false,
     });
 
     if (!result.success || !result.address || !result.nonce) {

@@ -83,20 +83,20 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-navy-200 bg-white sm:max-w-md">
+      <DialogContent className="border-border bg-background sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-display text-navy-800">
+          <DialogTitle className="flex items-center gap-2 font-display text-foreground">
             <Wallet className="h-5 w-5 text-gold-500" />
             Connect Wallet
           </DialogTitle>
-          <DialogDescription className="text-navy-500">
+          <DialogDescription className="text-muted-foreground">
             Connect to Forsety on {networkDisplayName}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-2 pt-2">
           {!hasAnyWallet && (
-            <p className="py-4 text-center text-sm text-navy-500">
+            <p className="py-4 text-center text-sm text-muted-foreground">
               No Aptos wallets detected. Install Petra or another Aptos wallet.
             </p>
           )}
@@ -128,7 +128,7 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                       <Wallet className="h-4 w-4 text-navy-600" />
                     </div>
                   )}
-                  <span className="flex-1 text-sm font-medium text-navy-500">
+                  <span className="flex-1 text-sm font-medium text-muted-foreground">
                     {wallet.name}
                   </span>
                   <span className="text-xs text-navy-400">Coming Soon</span>
@@ -169,7 +169,7 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                       <Wallet className="h-4 w-4 text-navy-600" />
                     </div>
                   )}
-                  <span className="flex-1 text-sm font-medium text-navy-800">
+                  <span className="flex-1 text-sm font-medium text-foreground">
                     {wallet.name}
                   </span>
                   {connecting === wallet.name ? (
@@ -211,7 +211,7 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                   <Wallet className="h-4 w-4 text-navy-400" />
                 </div>
               )}
-              <span className="flex-1 text-sm font-medium text-navy-500">
+              <span className="flex-1 text-sm font-medium text-muted-foreground">
                 {wallet.name}
               </span>
               <span className="flex items-center gap-1 text-xs text-navy-400">

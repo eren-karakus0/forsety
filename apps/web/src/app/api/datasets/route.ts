@@ -58,6 +58,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // File extension allowlist
+    const ALLOWED_EXTENSIONS = [".csv", ".json", ".txt", ".parquet", ".arrow", ".zip", ".tar.gz", ".jsonl", ".tsv"];
+    const fileName = file.name.toLowerCase();
+    const hasAllowedExt = ALLOWED_EXTENSIONS.some((ext) => fileName.endsWith(ext));
+    if (!hasAllowedExt) {
+      return NextResponse.json(
+        { error: `File type not allowed. Accepted: ${ALLOWED_EXTENSIONS.join(", ")}` },
+        { status: 415 }
+      );
+    }
+
     // Reject executable content types (defense-in-depth)
     const BLOCKED_TYPES = [
       "application/x-executable",
@@ -90,6 +101,18 @@ export async function POST(request: NextRequest) {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     tempPath = join(uploadDir, `${randomUUID()}-${safeName}`);
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Magic byte check: reject PE executables (MZ header) and ELF binaries
+    if (buffer.length >= 2) {
+      const magic = buffer.subarray(0, 4);
+      if (magic[0] === 0x4d && magic[1] === 0x5a) { // MZ (PE executable)
+        return NextResponse.json({ error: "Executable files are not allowed" }, { status: 415 });
+      }
+      if (magic[0] === 0x7f && magic[1] === 0x45 && magic[2] === 0x4c && magic[3] === 0x46) { // ELF
+        return NextResponse.json({ error: "Executable files are not allowed" }, { status: 415 });
+      }
+    }
+
     writeFileSync(tempPath, buffer);
     const result = await client.datasets.upload({
       filePath: tempPath,

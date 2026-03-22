@@ -15,6 +15,11 @@ const NONCE_TTL_MS = 90 * 1000;
 /** Probabilistic cleanup: ~10% chance per request */
 const CLEANUP_PROBABILITY = 0.1;
 
+/** Global rate limit: max nonces per minute across all wallets */
+const GLOBAL_MAX_PER_MINUTE = 100;
+let globalNonceCount = 0;
+let globalWindowStart = Date.now();
+
 export async function GET() {
   try {
     const cookieStore = await cookies();
@@ -31,6 +36,20 @@ export async function GET() {
 
     const walletAddress = payload.sub.toLowerCase();
     const db = getDb();
+
+    // Global rate limit: sliding window per minute
+    const now = Date.now();
+    if (now - globalWindowStart > 60_000) {
+      globalNonceCount = 0;
+      globalWindowStart = now;
+    }
+    if (globalNonceCount >= GLOBAL_MAX_PER_MINUTE) {
+      return NextResponse.json(
+        { error: "System is busy. Please try again shortly." },
+        { status: 429 }
+      );
+    }
+    globalNonceCount++;
 
     // Enforce per-wallet nonce limit to prevent flooding
     const [{ count }] = await db

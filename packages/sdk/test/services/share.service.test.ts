@@ -197,7 +197,7 @@ describe("ShareService", () => {
                 limit: vi.fn().mockResolvedValue([{
                   id: "link-1",
                   evidencePackId: "pack-1",
-                  token: "valid-token",
+                  token: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
                   mode: "full",
                   expiresAt: new Date(Date.now() + 60000),
                 }]),
@@ -215,7 +215,7 @@ describe("ShareService", () => {
         };
       });
 
-      const result = await service.resolveShareLink("valid-token");
+      const result = await service.resolveShareLink("a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2");
       expect(result).not.toBeNull();
       expect(result!.pack.packJson).toEqual(mockPack.packJson);
       expect(result!.pack.packJsonCanonical).toBe(mockPack.packJsonCanonical);
@@ -249,7 +249,7 @@ describe("ShareService", () => {
                 limit: vi.fn().mockResolvedValue([{
                   id: "link-1",
                   evidencePackId: "pack-1",
-                  token: "redacted-token",
+                  token: "f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2",
                   mode: "redacted",
                   expiresAt: new Date(Date.now() + 60000),
                 }]),
@@ -266,7 +266,7 @@ describe("ShareService", () => {
         };
       });
 
-      const result = await service.resolveShareLink("redacted-token");
+      const result = await service.resolveShareLink("f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2");
       expect(result).not.toBeNull();
 
       const packJson = result!.pack.packJson as Record<string, any>;
