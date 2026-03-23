@@ -52,6 +52,19 @@ describe("GET /api/evidence/[id]", () => {
     expect(body.error).toContain("not found");
   });
 
+  it("should return 403 when dataset not found (null)", async () => {
+    mockResolveAccessor.mockResolvedValue({ accessor: "0xowner" });
+    mockEvidenceGetById.mockResolvedValue({ id: "pack-1", datasetId: "ds-1" });
+    mockDatasetGetById.mockResolvedValue(null);
+
+    const req = new NextRequest("http://localhost/api/evidence/pack-1");
+    const res = await GET(req, { params: Promise.resolve({ id: "pack-1" }) });
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body.error).toBe("Forbidden");
+  });
+
   it("should return 403 when not dataset owner", async () => {
     mockResolveAccessor.mockResolvedValue({ accessor: "0xother" });
     mockEvidenceGetById.mockResolvedValue({ id: "pack-1", datasetId: "ds-1" });

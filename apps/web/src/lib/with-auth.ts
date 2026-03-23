@@ -37,16 +37,3 @@ export async function withAuth<T>(
   return handler(wallet);
 }
 
-export async function withAuthFull<T>(
-  handler: (session: SessionInfo) => Promise<T>,
-  fallback?: T
-): Promise<T> {
-  const session = await getWalletFromSession({ full: true });
-  if (!session) {
-    if (fallback !== undefined) return fallback;
-    throw new Error("Not authenticated");
-  }
-  return handler(session);
-}
-
-export type { SessionInfo };

@@ -16,7 +16,7 @@ vi.mock("@/lib/env", () => ({
   getEnv: () => mockGetEnv(),
 }));
 
-const { getWalletFromSession, withAuth, withAuthFull } = await import("@/lib/with-auth");
+const { getWalletFromSession, withAuth } = await import("@/lib/with-auth");
 
 describe("getWalletFromSession", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -83,25 +83,3 @@ describe("withAuth", () => {
   });
 });
 
-describe("withAuthFull", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("calls handler with session info", async () => {
-    mockGet.mockReturnValue({ value: "token" });
-    mockVerifyJwt.mockResolvedValue({ sub: "0xABC", network: "testnet" });
-    const handler = vi.fn().mockResolvedValue("ok");
-    await withAuthFull(handler);
-    expect(handler).toHaveBeenCalledWith({ wallet: "0xABC", network: "testnet" });
-  });
-
-  it("throws when not authenticated and no fallback", async () => {
-    mockGet.mockReturnValue(undefined);
-    await expect(withAuthFull(vi.fn())).rejects.toThrow("Not authenticated");
-  });
-
-  it("returns fallback when not authenticated", async () => {
-    mockGet.mockReturnValue(undefined);
-    const result = await withAuthFull(vi.fn(), "fallback");
-    expect(result).toBe("fallback");
-  });
-});
