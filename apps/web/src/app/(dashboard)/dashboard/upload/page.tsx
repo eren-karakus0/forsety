@@ -80,9 +80,16 @@ export default function UploadPage() {
     }
   };
 
-  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB (must match server limit)
+  const ALLOWED_EXTENSIONS = [".csv", ".json", ".txt", ".parquet", ".arrow", ".zip", ".tar.gz", ".jsonl", ".tsv"];
   const nameError = name.length > 0 && name.trim().length < 2 ? "Name must be at least 2 characters" : null;
-  const fileError = file && file.size > MAX_FILE_SIZE ? "File exceeds 100 MB limit" : null;
+  const fileError = file
+    ? file.size > MAX_FILE_SIZE
+      ? "File exceeds 50 MB limit"
+      : !ALLOWED_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))
+        ? "File type not allowed"
+        : null
+    : null;
   const isValid = name.trim().length >= 2 && license && file && !fileError;
 
   return (
@@ -178,7 +185,7 @@ export default function UploadPage() {
                       Drop your file here, or click to browse
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Any file type supported
+                      Supported: CSV, JSON, JSONL, TSV, TXT, Parquet, Arrow, ZIP, TAR.GZ
                     </p>
                   </>
                 )}
