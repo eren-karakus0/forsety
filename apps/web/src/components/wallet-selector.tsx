@@ -86,20 +86,20 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border bg-background sm:max-w-md">
+      <DialogContent className="border-navy-200 bg-white sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-display text-foreground">
+          <DialogTitle className="flex items-center gap-2 font-display text-navy-800">
             <Wallet className="h-5 w-5 text-gold-500" />
             Connect Wallet
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription className="text-navy-500">
             Connect to Forsety on {networkDisplayName}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-2 pt-2">
           {!hasAnyWallet && (
-            <p className="py-4 text-center text-sm text-muted-foreground">
+            <p className="py-4 text-center text-sm text-navy-500">
               No Aptos wallets detected. Install Petra or another Aptos wallet.
             </p>
           )}
@@ -108,16 +108,16 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
           {isAptosConnectSupported && socialWallets.length > 0 && (
             <>
               <div className="flex items-center gap-2">
-                <div className="h-px flex-1 bg-navy-100 dark:bg-navy-800" />
+                <div className="h-px flex-1 bg-navy-100" />
                 <span className="text-xs text-navy-400">Sign in with</span>
-                <div className="h-px flex-1 bg-navy-100 dark:bg-navy-800" />
+                <div className="h-px flex-1 bg-navy-100" />
               </div>
 
               {socialWallets.map((wallet) => (
                 <button
                   key={wallet.name}
                   disabled
-                  className="flex items-center gap-3 rounded-lg border border-navy-200 dark:border-navy-700 px-4 py-3 text-left opacity-50 cursor-not-allowed"
+                  className="flex items-center gap-3 rounded-lg border border-navy-200 px-4 py-3 text-left opacity-50 cursor-not-allowed"
                 >
                   {wallet.icon ? (
                     /* eslint-disable-next-line @next/next/no-img-element -- wallet icons are data URIs from adapter */
@@ -127,11 +127,11 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                       className="h-8 w-8 rounded-lg"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-100 dark:bg-navy-800">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-100">
                       <Wallet className="h-4 w-4 text-navy-600" />
                     </div>
                   )}
-                  <span className="flex-1 text-sm font-medium text-muted-foreground">
+                  <span className="flex-1 text-sm font-medium text-navy-500">
                     {wallet.name}
                   </span>
                   <span className="text-xs text-navy-400">Coming Soon</span>
@@ -145,9 +145,9 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
             <>
               {isAptosConnectSupported && socialWallets.length > 0 && (
                 <div className="flex items-center gap-2 pt-1">
-                  <div className="h-px flex-1 bg-navy-100 dark:bg-navy-800" />
+                  <div className="h-px flex-1 bg-navy-100" />
                   <span className="text-xs text-navy-400">Or connect a wallet</span>
-                  <div className="h-px flex-1 bg-navy-100 dark:bg-navy-800" />
+                  <div className="h-px flex-1 bg-navy-100" />
                 </div>
               )}
 
@@ -158,7 +158,7 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                   disabled={connecting !== null}
                   data-umami-event="connect-wallet"
                   data-umami-event-wallet={wallet.name}
-                  className="flex items-center gap-3 rounded-lg border border-navy-200 dark:border-navy-700 px-4 py-3 text-left transition-colors hover:border-gold-400 hover:bg-navy-50 disabled:opacity-50"
+                  className="flex items-center gap-3 rounded-lg border border-navy-200 px-4 py-3 text-left transition-colors hover:border-gold-400 hover:bg-navy-50 disabled:opacity-50"
                 >
                   {wallet.icon ? (
                     /* eslint-disable-next-line @next/next/no-img-element -- wallet icons are data URIs from adapter */
@@ -168,11 +168,11 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                       className="h-8 w-8 rounded-lg"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-100 dark:bg-navy-800">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-100">
                       <Wallet className="h-4 w-4 text-navy-600" />
                     </div>
                   )}
-                  <span className="flex-1 text-sm font-medium text-foreground">
+                  <span className="flex-1 text-sm font-medium text-navy-800">
                     {wallet.name}
                   </span>
                   {connecting === wallet.name ? (
@@ -188,9 +188,9 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
           {/* Not-installed wallets (show install links) */}
           {notInstalledWallets.length > 0 && allConnectable.length > 0 && (
             <div className="flex items-center gap-2 pt-2">
-              <div className="h-px flex-1 bg-navy-100 dark:bg-navy-800" />
+              <div className="h-px flex-1 bg-navy-100" />
               <span className="text-xs text-navy-400">More wallets</span>
-              <div className="h-px flex-1 bg-navy-100 dark:bg-navy-800" />
+              <div className="h-px flex-1 bg-navy-100" />
             </div>
           )}
 
@@ -200,7 +200,7 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
               href={wallet.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-dashed border-navy-200 dark:border-navy-700 px-4 py-3 text-left transition-colors hover:border-navy-300 hover:bg-navy-50"
+              className="flex items-center gap-3 rounded-lg border border-dashed border-navy-200 px-4 py-3 text-left transition-colors hover:border-navy-300 hover:bg-navy-50"
             >
               {wallet.icon ? (
                 /* eslint-disable-next-line @next/next/no-img-element -- wallet icons are data URIs from adapter */
@@ -210,11 +210,11 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
                   className="h-8 w-8 rounded-lg opacity-50"
                 />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-100 dark:bg-navy-800">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-100">
                   <Wallet className="h-4 w-4 text-navy-400" />
                 </div>
               )}
-              <span className="flex-1 text-sm font-medium text-muted-foreground">
+              <span className="flex-1 text-sm font-medium text-navy-500">
                 {wallet.name}
               </span>
               <span className="flex items-center gap-1 text-xs text-navy-400">
@@ -225,7 +225,7 @@ export function WalletSelector({ open, onOpenChange }: WalletSelectorProps) {
           ))}
         </div>
 
-        <div className="border-t border-navy-100 dark:border-navy-800 pt-3">
+        <div className="border-t border-navy-100 pt-3">
           <p className="text-center text-xs text-navy-400">
             Powered by Shelby Protocol on Aptos
           </p>
