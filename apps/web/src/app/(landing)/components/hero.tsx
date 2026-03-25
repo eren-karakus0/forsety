@@ -11,6 +11,7 @@ import { Magnetic } from "@/components/motion/magnetic";
 import { TextReveal } from "@/components/motion/text-reveal";
 import { motion, useMotionValue, useTransform, useScroll } from "framer-motion";
 import { TiwazBackground } from "./tiwaz-background";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 function useMouseParallax(strength: number = 0.02) {
   const x = useMotionValue(0);
@@ -28,6 +29,7 @@ function useMouseParallax(strength: number = 0.02) {
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
+  const isMobile = useIsMobile();
   const { x, y, handleMouse } = useMouseParallax(0.03);
 
   // Scroll-linked opacity fade for transition to next section
@@ -47,25 +49,29 @@ export function Hero() {
     <motion.section
       ref={sectionRef}
       className="relative flex min-h-screen items-center overflow-hidden pt-16"
-      onMouseMove={handleMouse}
-      style={{ opacity: heroOpacity }}
+      onMouseMove={isMobile ? undefined : handleMouse}
+      style={isMobile ? undefined : { opacity: heroOpacity }}
     >
-      {/* Animated Gradient Orbs with mouse parallax */}
-      <motion.div className="pointer-events-none" style={{ x, y }}>
-        <GradientOrb color="gold" size={600} className="-left-[10%] top-[10%]" blur={120} />
-      </motion.div>
-      <motion.div
-        className="pointer-events-none"
-        style={{ x: tealOrbX, y: tealOrbY }}
-      >
-        <GradientOrb color="teal" size={500} className="-right-[5%] top-[30%]" blur={100} />
-      </motion.div>
-      <motion.div
-        className="pointer-events-none"
-        style={{ x: violetOrbX, y: violetOrbY }}
-      >
-        <GradientOrb color="violet" size={400} className="bottom-[10%] left-[20%]" blur={90} />
-      </motion.div>
+      {/* Animated Gradient Orbs with mouse parallax — desktop only */}
+      {!isMobile && (
+        <>
+          <motion.div className="pointer-events-none" style={{ x, y }}>
+            <GradientOrb color="gold" size={600} className="-left-[10%] top-[10%]" blur={120} />
+          </motion.div>
+          <motion.div
+            className="pointer-events-none"
+            style={{ x: tealOrbX, y: tealOrbY }}
+          >
+            <GradientOrb color="teal" size={500} className="-right-[5%] top-[30%]" blur={100} />
+          </motion.div>
+          <motion.div
+            className="pointer-events-none"
+            style={{ x: violetOrbX, y: violetOrbY }}
+          >
+            <GradientOrb color="violet" size={400} className="bottom-[10%] left-[20%]" blur={90} />
+          </motion.div>
+        </>
+      )}
 
       {/* Tiwaz geometric pattern - large parallax background */}
       <TiwazBackground variant="light" side="right" />

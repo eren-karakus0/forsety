@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface GradientOrbProps {
   color: "gold" | "teal" | "violet";
@@ -22,6 +23,23 @@ export function GradientOrb({
   blur = 80,
 }: GradientOrbProps) {
   const prefersReducedMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+
+  if (isMobile || prefersReducedMotion) {
+    const mobileSize = Math.round(size * 0.6);
+    const mobileBlur = Math.min(blur, 50);
+    return (
+      <div
+        className={`pointer-events-none absolute rounded-full ${colorMap[color]} ${className}`}
+        style={{
+          width: mobileSize,
+          height: mobileSize,
+          filter: `blur(${mobileBlur}px)`,
+          opacity: 0.25,
+        }}
+      />
+    );
+  }
 
   return (
     <motion.div
@@ -31,14 +49,10 @@ export function GradientOrb({
         height: size,
         filter: `blur(${blur}px)`,
       }}
-      animate={
-        prefersReducedMotion
-          ? {}
-          : {
-              scale: [1, 1.18, 1],
-              opacity: [0.22, 0.38, 0.22],
-            }
-      }
+      animate={{
+        scale: [1, 1.18, 1],
+        opacity: [0.22, 0.38, 0.22],
+      }}
       transition={{
         duration: 8,
         repeat: Infinity,

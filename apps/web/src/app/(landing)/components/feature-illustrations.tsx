@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 /* ─── Color tokens ─── */
 const colors = {
@@ -9,9 +10,19 @@ const colors = {
   violet: { primary: "#A77BFF", glow: "rgba(167,123,255,0.3)", muted: "rgba(167,123,255,0.12)" },
 };
 
+/* ─── Shared breathe transition ─── */
+const breathe = (duration: number, delay = 0) => ({
+  duration,
+  repeat: Infinity,
+  ease: "easeInOut" as const,
+  delay,
+});
+
 /* ─── 01 · VERIFY - Runic Seal ─── */
 export function VerifyIllustration() {
   const reduced = useReducedMotion();
+  const isMobile = useIsMobile();
+  const shouldAnimate = !reduced && !isMobile;
 
   return (
     <div className="relative flex items-center justify-center">
@@ -23,70 +34,107 @@ export function VerifyIllustration() {
         {/* Outer glow circle */}
         <circle cx="200" cy="200" r="185" stroke={colors.gold.primary} strokeWidth="1" opacity="0.2" />
 
-        {/* Outer rotating ring */}
-        <motion.g
-          animate={reduced ? {} : { rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          style={{ originX: "200px", originY: "200px" }}
-        >
-          <circle cx="200" cy="200" r="170" stroke={colors.gold.primary} strokeWidth="1" opacity="0.45" />
-          {/* Tick marks around outer ring */}
-          {Array.from({ length: 36 }).map((_, i) => {
-            const angle = (i * 10 * Math.PI) / 180;
-            const x1 = 200 + 163 * Math.cos(angle);
-            const y1 = 200 + 163 * Math.sin(angle);
-            const x2 = 200 + (i % 3 === 0 ? 155 : 159) * Math.cos(angle);
-            const y2 = 200 + (i % 3 === 0 ? 155 : 159) * Math.sin(angle);
-            return (
-              <line
-                key={i}
-                x1={x1} y1={y1} x2={x2} y2={y2}
-                stroke={colors.gold.primary}
-                strokeWidth={i % 3 === 0 ? "2" : "0.8"}
-                opacity={i % 3 === 0 ? "0.8" : "0.4"}
-              />
-            );
-          })}
-        </motion.g>
+        {/* Outer ring — desktop: breathe opacity, mobile: static */}
+        {shouldAnimate ? (
+          <motion.g
+            animate={{ opacity: [0.4, 0.55, 0.4] }}
+            transition={breathe(6)}
+          >
+            <circle cx="200" cy="200" r="170" stroke={colors.gold.primary} strokeWidth="1" opacity="0.45" />
+            {Array.from({ length: 36 }).map((_, i) => {
+              const angle = (i * 10 * Math.PI) / 180;
+              const x1 = 200 + 163 * Math.cos(angle);
+              const y1 = 200 + 163 * Math.sin(angle);
+              const x2 = 200 + (i % 3 === 0 ? 155 : 159) * Math.cos(angle);
+              const y2 = 200 + (i % 3 === 0 ? 155 : 159) * Math.sin(angle);
+              return (
+                <line
+                  key={i}
+                  x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke={colors.gold.primary}
+                  strokeWidth={i % 3 === 0 ? "2" : "0.8"}
+                  opacity={i % 3 === 0 ? "0.8" : "0.4"}
+                />
+              );
+            })}
+          </motion.g>
+        ) : (
+          <g>
+            <circle cx="200" cy="200" r="170" stroke={colors.gold.primary} strokeWidth="1" opacity="0.45" />
+            {Array.from({ length: 36 }).map((_, i) => {
+              const angle = (i * 10 * Math.PI) / 180;
+              const x1 = 200 + 163 * Math.cos(angle);
+              const y1 = 200 + 163 * Math.sin(angle);
+              const x2 = 200 + (i % 3 === 0 ? 155 : 159) * Math.cos(angle);
+              const y2 = 200 + (i % 3 === 0 ? 155 : 159) * Math.sin(angle);
+              return (
+                <line
+                  key={i}
+                  x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke={colors.gold.primary}
+                  strokeWidth={i % 3 === 0 ? "2" : "0.8"}
+                  opacity={i % 3 === 0 ? "0.8" : "0.4"}
+                />
+              );
+            })}
+          </g>
+        )}
 
-        {/* Inner counter-rotating ring */}
-        <motion.g
-          animate={reduced ? {} : { rotate: -360 }}
-          transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
-          style={{ originX: "200px", originY: "200px" }}
-        >
-          <circle cx="200" cy="200" r="130" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.35" />
-          {/* Rune markers on inner ring */}
-          {[0, 60, 120, 180, 240, 300].map((deg) => {
-            const angle = (deg * Math.PI) / 180;
-            const x = 200 + 130 * Math.cos(angle);
-            const y = 200 + 130 * Math.sin(angle);
-            return (
-              <g key={deg} transform={`translate(${x},${y})`}>
-                <line x1="0" y1="-7" x2="0" y2="7" stroke={colors.gold.primary} strokeWidth="1.5" opacity="0.7" />
-                <line x1="-4" y1="-4" x2="4" y2="4" stroke={colors.gold.primary} strokeWidth="1" opacity="0.5" />
-              </g>
-            );
-          })}
-        </motion.g>
+        {/* Inner ring — desktop: breathe opacity, mobile: static */}
+        {shouldAnimate ? (
+          <motion.g
+            animate={{ opacity: [0.3, 0.5, 0.3] }}
+            transition={breathe(5, 1.5)}
+          >
+            <circle cx="200" cy="200" r="130" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.35" />
+            {[0, 60, 120, 180, 240, 300].map((deg) => {
+              const angle = (deg * Math.PI) / 180;
+              const x = 200 + 130 * Math.cos(angle);
+              const y = 200 + 130 * Math.sin(angle);
+              return (
+                <g key={deg} transform={`translate(${x},${y})`}>
+                  <line x1="0" y1="-7" x2="0" y2="7" stroke={colors.gold.primary} strokeWidth="1.5" opacity="0.7" />
+                  <line x1="-4" y1="-4" x2="4" y2="4" stroke={colors.gold.primary} strokeWidth="1" opacity="0.5" />
+                </g>
+              );
+            })}
+          </motion.g>
+        ) : (
+          <g>
+            <circle cx="200" cy="200" r="130" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.35" />
+            {[0, 60, 120, 180, 240, 300].map((deg) => {
+              const angle = (deg * Math.PI) / 180;
+              const x = 200 + 130 * Math.cos(angle);
+              const y = 200 + 130 * Math.sin(angle);
+              return (
+                <g key={deg} transform={`translate(${x},${y})`}>
+                  <line x1="0" y1="-7" x2="0" y2="7" stroke={colors.gold.primary} strokeWidth="1.5" opacity="0.7" />
+                  <line x1="-4" y1="-4" x2="4" y2="4" stroke={colors.gold.primary} strokeWidth="1" opacity="0.5" />
+                </g>
+              );
+            })}
+          </g>
+        )}
 
         {/* Static middle ring */}
         <circle cx="200" cy="200" r="95" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.25" />
 
-        {/* Verification pulse ring */}
-        <motion.circle
-          cx="200" cy="200" r="95"
-          stroke={colors.gold.primary}
-          strokeWidth="1"
-          fill="none"
-          opacity={0}
-          animate={reduced ? {} : {
-            r: [95, 140, 170],
-            opacity: [0.6, 0.2, 0],
-            strokeWidth: [1.5, 0.8, 0.3],
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeOut", repeatDelay: 2 }}
-        />
+        {/* Verification pulse ring — desktop only */}
+        {shouldAnimate && (
+          <motion.circle
+            cx="200" cy="200" r="95"
+            stroke={colors.gold.primary}
+            strokeWidth="1"
+            fill="none"
+            opacity={0}
+            animate={{
+              r: [95, 140, 170],
+              opacity: [0.6, 0.2, 0],
+              strokeWidth: [1.5, 0.8, 0.3],
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeOut", repeatDelay: 3 }}
+          />
+        )}
 
         {/* Central Tiwaz Rune - bold and prominent */}
         <g opacity="0.9">
@@ -97,13 +145,17 @@ export function VerifyIllustration() {
           <line x1="200" y1="162" x2="226" y2="192" stroke={colors.gold.primary} strokeWidth="2.5" strokeLinecap="round" />
         </g>
 
-        {/* Glowing center dot */}
-        <motion.circle
-          cx="200" cy="200" r="3"
-          fill={colors.gold.primary}
-          animate={reduced ? {} : { opacity: [0.6, 1, 0.6], r: [4, 5.5, 4] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
+        {/* Glowing center dot — desktop: breathe, mobile: static */}
+        {shouldAnimate ? (
+          <motion.circle
+            cx="200" cy="200" r="4"
+            fill={colors.gold.primary}
+            animate={{ opacity: [0.6, 1, 0.6] }}
+            transition={breathe(4)}
+          />
+        ) : (
+          <circle cx="200" cy="200" r="4" fill={colors.gold.primary} opacity="0.8" />
+        )}
 
         {/* Corner accent runes - small Elder Futhark marks */}
         {/* Fehu (ᚠ) - top right */}
@@ -145,31 +197,38 @@ export function VerifyIllustration() {
 /* ─── 02 · RECALL - Memory Constellation ─── */
 export function RecallIllustration() {
   const reduced = useReducedMotion();
+  const isMobile = useIsMobile();
+  const shouldAnimate = !reduced && !isMobile;
 
   /* Node positions - Yggdrasil-like tree structure */
   const nodes = [
-    { x: 200, y: 80, r: 4, delay: 0 },       // top (root)
-    { x: 140, y: 150, r: 3, delay: 0.5 },     // branch left
-    { x: 260, y: 140, r: 3, delay: 0.8 },     // branch right
-    { x: 100, y: 220, r: 2.5, delay: 1.2 },   // leaf left-left
-    { x: 175, y: 230, r: 2.5, delay: 1 },     // leaf left-right
-    { x: 240, y: 210, r: 2.5, delay: 1.4 },   // leaf right-left
-    { x: 310, y: 225, r: 2.5, delay: 0.6 },   // leaf right-right
-    { x: 200, y: 200, r: 5, delay: 0.2 },     // center (Tiwaz)
-    { x: 155, y: 300, r: 2.5, delay: 1.6 },   // lower-left
-    { x: 245, y: 310, r: 2.5, delay: 1.3 },   // lower-right
-    { x: 200, y: 340, r: 3, delay: 0.9 },     // bottom
+    { x: 200, y: 80, r: 4, delay: 0 },       // 0: top (root) — KEY
+    { x: 140, y: 150, r: 3, delay: 0.5 },     // 1: branch left
+    { x: 260, y: 140, r: 3, delay: 0.8 },     // 2: branch right
+    { x: 100, y: 220, r: 2.5, delay: 1.2 },   // 3: leaf left-left
+    { x: 175, y: 230, r: 2.5, delay: 1 },     // 4: leaf left-right
+    { x: 240, y: 210, r: 2.5, delay: 1.4 },   // 5: leaf right-left
+    { x: 310, y: 225, r: 2.5, delay: 0.6 },   // 6: leaf right-right
+    { x: 200, y: 200, r: 5, delay: 0.2 },     // 7: center (Tiwaz) — KEY
+    { x: 155, y: 300, r: 2.5, delay: 1.6 },   // 8: lower-left
+    { x: 245, y: 310, r: 2.5, delay: 1.3 },   // 9: lower-right
+    { x: 200, y: 340, r: 3, delay: 0.9 },     // 10: bottom — KEY
   ];
 
   /* Connections between nodes (index pairs) */
   const edges: [number, number][] = [
-    [0, 1], [0, 2], [0, 7],
+    [0, 1], [0, 2], [0, 7],       // 0,1,2 — key edges (root→center)
     [1, 3], [1, 4],
     [2, 5], [2, 6],
     [7, 1], [7, 2], [7, 4], [7, 5],
     [7, 8], [7, 9],
-    [8, 10], [9, 10],
+    [8, 10], [9, 10],             // 13,14 — key edges (→bottom)
   ];
+
+  /* Desktop: only 3 key edges breathe (indices 0, 2, 13) */
+  const keyEdgeIndices = new Set([0, 2, 13]);
+  /* Desktop: only 3 key nodes breathe (root=0, center=7, bottom=10) */
+  const keyNodeIndices = new Set([0, 7, 10]);
 
   return (
     <div className="relative flex items-center justify-center">
@@ -183,73 +242,83 @@ export function RecallIllustration() {
         <circle cx="200" cy="210" r="160" stroke={colors.teal.primary} strokeWidth="0.8" opacity="0.3" strokeDasharray="4 8" />
 
         {/* Connection lines */}
-        {edges.map(([from, to], i) => (
-          <motion.line
-            key={i}
-            x1={nodes[from].x} y1={nodes[from].y}
-            x2={nodes[to].x} y2={nodes[to].y}
-            stroke={colors.teal.primary}
-            strokeWidth="1.5"
-            opacity={0}
-            animate={reduced ? { opacity: 0.45 } : {
-              opacity: [0.3, 0.65, 0.3],
-              strokeWidth: [1.5, 2.5, 1.5],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.3,
-            }}
-          />
-        ))}
-
-        {/* Data flow particles along edges */}
-        {!reduced && [0, 3, 6, 9, 12].map((edgeIdx) => {
-          const [from, to] = edges[edgeIdx];
+        {edges.map(([from, to], i) => {
+          const isKey = keyEdgeIndices.has(i);
+          if (shouldAnimate && isKey) {
+            return (
+              <motion.line
+                key={i}
+                x1={nodes[from].x} y1={nodes[from].y}
+                x2={nodes[to].x} y2={nodes[to].y}
+                stroke={colors.teal.primary}
+                strokeWidth="1.5"
+                animate={{ opacity: [0.3, 0.65, 0.3] }}
+                transition={breathe(3, i * 0.3)}
+              />
+            );
+          }
           return (
-            <motion.circle
-              key={`particle-${edgeIdx}`}
-              r="2.5"
-              fill={colors.teal.primary}
-              animate={{
-                cx: [nodes[from].x, nodes[to].x],
-                cy: [nodes[from].y, nodes[to].y],
-                opacity: [0, 0.9, 0],
-              }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: edgeIdx * 0.6,
-                repeatDelay: 1.5,
-              }}
+            <line
+              key={i}
+              x1={nodes[from].x} y1={nodes[from].y}
+              x2={nodes[to].x} y2={nodes[to].y}
+              stroke={colors.teal.primary}
+              strokeWidth="1.5"
+              opacity="0.45"
             />
           );
         })}
 
+        {/* Data flow particle — desktop: 1 particle on root→center edge, mobile: none */}
+        {shouldAnimate && (
+          <motion.circle
+            r="2.5"
+            fill={colors.teal.primary}
+            animate={{
+              cx: [nodes[0].x, nodes[7].x],
+              cy: [nodes[0].y, nodes[7].y],
+              opacity: [0, 0.9, 0],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              repeatDelay: 2,
+            }}
+          />
+        )}
+
         {/* Memory nodes */}
-        {nodes.map((node, i) => (
-          <g key={i}>
-            {/* Node glow */}
-            <motion.circle
-              cx={node.x} cy={node.y} r={node.r * 3}
-              fill={colors.teal.glow}
-              animate={reduced ? {} : { opacity: [0.5, 0.8, 0.5], r: [node.r * 2.5, node.r * 3.5, node.r * 2.5] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
-            />
-            {/* Node core */}
-            <motion.circle
-              cx={node.x} cy={node.y} r={node.r}
-              fill={i === 7 ? colors.teal.primary : "none"}
-              stroke={colors.teal.primary}
-              strokeWidth={i === 7 ? 0 : 2}
-              opacity={i === 7 ? 0.95 : 0.75}
-              animate={reduced ? {} : { opacity: i === 7 ? [0.85, 1, 0.85] : [0.6, 0.9, 0.6] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
-            />
-          </g>
-        ))}
+        {nodes.map((node, i) => {
+          const isKey = keyNodeIndices.has(i);
+          return (
+            <g key={i}>
+              {/* Node glow — only key nodes breathe on desktop */}
+              {shouldAnimate && isKey ? (
+                <motion.circle
+                  cx={node.x} cy={node.y} r={node.r * 3}
+                  fill={colors.teal.glow}
+                  animate={{ opacity: [0.5, 0.8, 0.5] }}
+                  transition={breathe(4, node.delay)}
+                />
+              ) : (
+                <circle
+                  cx={node.x} cy={node.y} r={node.r * 3}
+                  fill={colors.teal.glow}
+                  opacity="0.6"
+                />
+              )}
+              {/* Node core — static for all */}
+              <circle
+                cx={node.x} cy={node.y} r={node.r}
+                fill={i === 7 ? colors.teal.primary : "none"}
+                stroke={colors.teal.primary}
+                strokeWidth={i === 7 ? 0 : 2}
+                opacity={i === 7 ? 0.95 : 0.75}
+              />
+            </g>
+          );
+        })}
 
         {/* Central Tiwaz rune at node[7] (center node) */}
         <g opacity="1">
@@ -281,6 +350,8 @@ export function RecallIllustration() {
 /* ─── 03 · SHIELD - Aegis Barrier ─── */
 export function ShieldIllustration() {
   const reduced = useReducedMotion();
+  const isMobile = useIsMobile();
+  const shouldAnimate = !reduced && !isMobile;
 
   return (
     <div className="relative flex items-center justify-center">
@@ -289,75 +360,114 @@ export function ShieldIllustration() {
         className="h-[320px] w-[320px] sm:h-[380px] sm:w-[380px] lg:h-[420px] lg:w-[420px]"
         fill="none"
       >
-        {/* Outer defensive ring - slowly rotating */}
-        <motion.g
-          animate={reduced ? {} : { rotate: 360 }}
-          transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
-          style={{ originX: "200px", originY: "200px" }}
-        >
-          {/* Octagonal shield border */}
-          <polygon
-            points="200,30 310,80 360,190 310,300 200,350 90,300 40,190 90,80"
-            stroke={colors.violet.primary}
-            strokeWidth="1"
-            opacity="0.3"
-          />
-          {/* Rune inscriptions along outer octagon */}
-          {[
-            { x: 255, y: 50, r: -20 },
-            { x: 340, y: 130, r: 25 },
-            { x: 340, y: 250, r: -25 },
-            { x: 255, y: 330, r: 20 },
-            { x: 145, y: 330, r: -20 },
-            { x: 60, y: 250, r: 25 },
-            { x: 60, y: 130, r: -25 },
-            { x: 145, y: 50, r: 20 },
-          ].map((pos, i) => (
-            <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.r})`} opacity="0.45">
-              <line x1="0" y1="-5" x2="0" y2="5" stroke={colors.violet.primary} strokeWidth="1.2" strokeLinecap="round" />
-              <line x1="-3" y1="-3" x2="3" y2="3" stroke={colors.violet.primary} strokeWidth="0.8" strokeLinecap="round" />
-            </g>
-          ))}
-        </motion.g>
+        {/* Outer octagonal ring — desktop: breathe, mobile: static */}
+        {shouldAnimate ? (
+          <motion.g
+            animate={{ opacity: [0.25, 0.4, 0.25] }}
+            transition={breathe(7)}
+          >
+            <polygon
+              points="200,30 310,80 360,190 310,300 200,350 90,300 40,190 90,80"
+              stroke={colors.violet.primary}
+              strokeWidth="1"
+              opacity="0.3"
+            />
+            {[
+              { x: 255, y: 50, r: -20 },
+              { x: 340, y: 130, r: 25 },
+              { x: 340, y: 250, r: -25 },
+              { x: 255, y: 330, r: 20 },
+              { x: 145, y: 330, r: -20 },
+              { x: 60, y: 250, r: 25 },
+              { x: 60, y: 130, r: -25 },
+              { x: 145, y: 50, r: 20 },
+            ].map((pos, i) => (
+              <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.r})`} opacity="0.45">
+                <line x1="0" y1="-5" x2="0" y2="5" stroke={colors.violet.primary} strokeWidth="1.2" strokeLinecap="round" />
+                <line x1="-3" y1="-3" x2="3" y2="3" stroke={colors.violet.primary} strokeWidth="0.8" strokeLinecap="round" />
+              </g>
+            ))}
+          </motion.g>
+        ) : (
+          <g>
+            <polygon
+              points="200,30 310,80 360,190 310,300 200,350 90,300 40,190 90,80"
+              stroke={colors.violet.primary}
+              strokeWidth="1"
+              opacity="0.3"
+            />
+            {[
+              { x: 255, y: 50, r: -20 },
+              { x: 340, y: 130, r: 25 },
+              { x: 340, y: 250, r: -25 },
+              { x: 255, y: 330, r: 20 },
+              { x: 145, y: 330, r: -20 },
+              { x: 60, y: 250, r: 25 },
+              { x: 60, y: 130, r: -25 },
+              { x: 145, y: 50, r: 20 },
+            ].map((pos, i) => (
+              <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.r})`} opacity="0.45">
+                <line x1="0" y1="-5" x2="0" y2="5" stroke={colors.violet.primary} strokeWidth="1.2" strokeLinecap="round" />
+                <line x1="-3" y1="-3" x2="3" y2="3" stroke={colors.violet.primary} strokeWidth="0.8" strokeLinecap="round" />
+              </g>
+            ))}
+          </g>
+        )}
 
-        {/* Middle hexagonal layer - counter rotation */}
-        <motion.g
-          animate={reduced ? {} : { rotate: -360 }}
-          transition={{ duration: 55, repeat: Infinity, ease: "linear" }}
-          style={{ originX: "200px", originY: "200px" }}
-        >
-          <polygon
-            points="200,70 290,115 290,265 200,310 110,265 110,115"
-            stroke={colors.violet.primary}
-            strokeWidth="0.8"
-            opacity="0.25"
-          />
-          {/* Vertex markers */}
-          {[
-            [200, 70], [290, 115], [290, 265], [200, 310], [110, 265], [110, 115],
-          ].map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="3" fill={colors.violet.primary} opacity="0.5" />
-          ))}
-        </motion.g>
+        {/* Middle hexagonal layer — desktop: breathe, mobile: static */}
+        {shouldAnimate ? (
+          <motion.g
+            animate={{ opacity: [0.2, 0.35, 0.2] }}
+            transition={breathe(6)}
+          >
+            <polygon
+              points="200,70 290,115 290,265 200,310 110,265 110,115"
+              stroke={colors.violet.primary}
+              strokeWidth="0.8"
+              opacity="0.25"
+            />
+            {[
+              [200, 70], [290, 115], [290, 265], [200, 310], [110, 265], [110, 115],
+            ].map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="3" fill={colors.violet.primary} opacity="0.5" />
+            ))}
+          </motion.g>
+        ) : (
+          <g>
+            <polygon
+              points="200,70 290,115 290,265 200,310 110,265 110,115"
+              stroke={colors.violet.primary}
+              strokeWidth="0.8"
+              opacity="0.25"
+            />
+            {[
+              [200, 70], [290, 115], [290, 265], [200, 310], [110, 265], [110, 115],
+            ].map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="3" fill={colors.violet.primary} opacity="0.5" />
+            ))}
+          </g>
+        )}
 
         {/* Inner shield ring - static */}
         <circle cx="200" cy="190" r="100" stroke={colors.violet.primary} strokeWidth="0.8" opacity="0.2" />
 
-        {/* Defensive pulse rings */}
-        <motion.polygon
-          points="200,110 260,145 260,235 200,270 140,235 140,145"
-          stroke={colors.violet.primary}
-          strokeWidth="1"
-          fill="none"
-          opacity={0}
-          animate={reduced ? {} : {
-            opacity: [0.5, 0.15, 0],
-            strokeWidth: [1.5, 0.8, 0.3],
-            scale: [1, 1.3, 1.6],
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeOut", repeatDelay: 3 }}
-          style={{ originX: "200px", originY: "190px" }}
-        />
+        {/* Defensive pulse ring — desktop only */}
+        {shouldAnimate && (
+          <motion.polygon
+            points="200,110 260,145 260,235 200,270 140,235 140,145"
+            stroke={colors.violet.primary}
+            strokeWidth="1"
+            fill="none"
+            opacity={0}
+            animate={{
+              opacity: [0.5, 0.15, 0],
+              strokeWidth: [1.5, 0.8, 0.3],
+              scale: [1, 1.3, 1.6],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeOut", repeatDelay: 3 }}
+            style={{ originX: "200px", originY: "190px" }}
+          />
+        )}
 
         {/* Shield cross-guard lines */}
         {[0, 60, 120].map((deg) => {
@@ -408,13 +518,17 @@ export function ShieldIllustration() {
           </g>
         ))}
 
-        {/* Glowing center point */}
-        <motion.circle
-          cx="200" cy="190" r="2.5"
-          fill={colors.violet.primary}
-          animate={reduced ? {} : { opacity: [0.6, 1, 0.6], r: [3.5, 5, 3.5] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-        />
+        {/* Glowing center point — desktop: breathe, mobile: static */}
+        {shouldAnimate ? (
+          <motion.circle
+            cx="200" cy="190" r="3.5"
+            fill={colors.violet.primary}
+            animate={{ opacity: [0.6, 1, 0.6] }}
+            transition={breathe(3.5)}
+          />
+        ) : (
+          <circle cx="200" cy="190" r="3.5" fill={colors.violet.primary} opacity="0.8" />
+        )}
       </svg>
     </div>
   );
