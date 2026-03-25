@@ -57,23 +57,6 @@ export default function AgentsPage() {
     loadData();
   }, [isAuthenticated]);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="mt-2 h-4 w-64" />
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
-    );
-  }
-
   const activeCount = agents.filter((a) => a.isActive).length;
   const inactiveCount = agents.filter((a) => !a.isActive).length;
   const activePercent = agents.length > 0 ? Math.round((activeCount / agents.length) * 100) : 0;
@@ -94,6 +77,23 @@ export default function AgentsPage() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
   }, [permissionCounts]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="mt-2 h-4 w-64" />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
