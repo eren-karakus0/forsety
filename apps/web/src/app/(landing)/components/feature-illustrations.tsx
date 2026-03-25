@@ -34,11 +34,12 @@ export function VerifyIllustration() {
         {/* Outer glow circle */}
         <circle cx="200" cy="200" r="185" stroke={colors.gold.primary} strokeWidth="1" opacity="0.2" />
 
-        {/* Outer ring — desktop: breathe opacity, mobile: static */}
+        {/* Outer ring — desktop: slow rotation, mobile: static */}
         {shouldAnimate ? (
           <motion.g
-            animate={{ opacity: [0.4, 0.55, 0.4] }}
-            transition={breathe(6)}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+            style={{ originX: "200px", originY: "200px" }}
           >
             <circle cx="200" cy="200" r="170" stroke={colors.gold.primary} strokeWidth="1" opacity="0.45" />
             {Array.from({ length: 36 }).map((_, i) => {
@@ -80,11 +81,12 @@ export function VerifyIllustration() {
           </g>
         )}
 
-        {/* Inner ring — desktop: breathe opacity, mobile: static */}
+        {/* Inner ring — desktop: reverse rotation, mobile: static */}
         {shouldAnimate ? (
           <motion.g
-            animate={{ opacity: [0.3, 0.5, 0.3] }}
-            transition={breathe(5, 1.5)}
+            animate={{ rotate: -360 }}
+            transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+            style={{ originX: "200px", originY: "200px" }}
           >
             <circle cx="200" cy="200" r="130" stroke={colors.gold.primary} strokeWidth="0.8" opacity="0.35" />
             {[0, 60, 120, 180, 240, 300].map((deg) => {
@@ -145,13 +147,13 @@ export function VerifyIllustration() {
           <line x1="200" y1="162" x2="226" y2="192" stroke={colors.gold.primary} strokeWidth="2.5" strokeLinecap="round" />
         </g>
 
-        {/* Glowing center dot — desktop: breathe, mobile: static */}
+        {/* Glowing center dot — desktop: glow pulse + scale, mobile: static */}
         {shouldAnimate ? (
           <motion.circle
-            cx="200" cy="200" r="4"
+            cx="200" cy="200"
             fill={colors.gold.primary}
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={breathe(4)}
+            animate={{ opacity: [0.4, 1, 0.4], r: [3, 6, 3] }}
+            transition={breathe(3)}
           />
         ) : (
           <circle cx="200" cy="200" r="4" fill={colors.gold.primary} opacity="0.8" />
@@ -225,10 +227,9 @@ export function RecallIllustration() {
     [8, 10], [9, 10],             // 13,14 — key edges (→bottom)
   ];
 
-  /* Desktop: only 3 key edges breathe (indices 0, 2, 13) */
-  const keyEdgeIndices = new Set([0, 2, 13]);
-  /* Desktop: only 3 key nodes breathe (root=0, center=7, bottom=10) */
-  const keyNodeIndices = new Set([0, 7, 10]);
+  /* Desktop: all edges get staggered animation */
+  /* Desktop: 5 key nodes get glow animation (root=0, branch-right=2, center=7, lower-right=9, bottom=10) */
+  const keyNodeIndices = new Set([0, 2, 7, 9, 10]);
 
   return (
     <div className="relative flex items-center justify-center">
@@ -241,18 +242,19 @@ export function RecallIllustration() {
         <circle cx="200" cy="210" r="180" stroke={colors.teal.primary} strokeWidth="1.2" opacity="0.4" />
         <circle cx="200" cy="210" r="160" stroke={colors.teal.primary} strokeWidth="0.8" opacity="0.3" strokeDasharray="4 8" />
 
-        {/* Connection lines */}
+        {/* Connection lines — desktop: all staggered breathe, mobile: static */}
         {edges.map(([from, to], i) => {
-          const isKey = keyEdgeIndices.has(i);
-          if (shouldAnimate && isKey) {
+          if (shouldAnimate) {
             return (
               <motion.line
                 key={i}
                 x1={nodes[from].x} y1={nodes[from].y}
                 x2={nodes[to].x} y2={nodes[to].y}
                 stroke={colors.teal.primary}
-                strokeWidth="1.5"
-                animate={{ opacity: [0.3, 0.65, 0.3] }}
+                animate={{
+                  opacity: [0.3, 0.65, 0.3],
+                  strokeWidth: [1.5, 2.5, 1.5],
+                }}
                 transition={breathe(3, i * 0.3)}
               />
             );
@@ -269,23 +271,43 @@ export function RecallIllustration() {
           );
         })}
 
-        {/* Data flow particle — desktop: 1 particle on root→center edge, mobile: none */}
+        {/* Data flow particles — desktop: 3 particles on different paths, mobile: none */}
         {shouldAnimate && (
-          <motion.circle
-            r="2.5"
-            fill={colors.teal.primary}
-            animate={{
-              cx: [nodes[0].x, nodes[7].x],
-              cy: [nodes[0].y, nodes[7].y],
-              opacity: [0, 0.9, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-              repeatDelay: 2,
-            }}
-          />
+          <>
+            {/* Particle 1: root → branch-left (edge 0) */}
+            <motion.circle
+              r="2.5"
+              fill={colors.teal.primary}
+              animate={{
+                cx: [nodes[0].x, nodes[1].x],
+                cy: [nodes[0].y, nodes[1].y],
+                opacity: [0, 0.9, 0],
+              }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 2.5 }}
+            />
+            {/* Particle 2: root → center (edge 2) */}
+            <motion.circle
+              r="2"
+              fill={colors.teal.primary}
+              animate={{
+                cx: [nodes[0].x, nodes[7].x],
+                cy: [nodes[0].y, nodes[7].y],
+                opacity: [0, 0.9, 0],
+              }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatDelay: 2, delay: 1 }}
+            />
+            {/* Particle 3: center → lower-left (edge 11) */}
+            <motion.circle
+              r="2"
+              fill={colors.teal.primary}
+              animate={{
+                cx: [nodes[7].x, nodes[8].x],
+                cy: [nodes[7].y, nodes[8].y],
+                opacity: [0, 0.85, 0],
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 3, delay: 2 }}
+            />
+          </>
         )}
 
         {/* Memory nodes */}
@@ -293,12 +315,12 @@ export function RecallIllustration() {
           const isKey = keyNodeIndices.has(i);
           return (
             <g key={i}>
-              {/* Node glow — only key nodes breathe on desktop */}
+              {/* Node glow — 5 key nodes breathe wider range on desktop */}
               {shouldAnimate && isKey ? (
                 <motion.circle
                   cx={node.x} cy={node.y} r={node.r * 3}
                   fill={colors.teal.glow}
-                  animate={{ opacity: [0.5, 0.8, 0.5] }}
+                  animate={{ opacity: [0.3, 0.9, 0.3] }}
                   transition={breathe(4, node.delay)}
                 />
               ) : (
@@ -308,14 +330,23 @@ export function RecallIllustration() {
                   opacity="0.6"
                 />
               )}
-              {/* Node core — static for all */}
-              <circle
-                cx={node.x} cy={node.y} r={node.r}
-                fill={i === 7 ? colors.teal.primary : "none"}
-                stroke={colors.teal.primary}
-                strokeWidth={i === 7 ? 0 : 2}
-                opacity={i === 7 ? 0.95 : 0.75}
-              />
+              {/* Node core — center (7) pulses on desktop, rest static */}
+              {shouldAnimate && i === 7 ? (
+                <motion.circle
+                  cx={node.x} cy={node.y} r={node.r}
+                  fill={colors.teal.primary}
+                  animate={{ opacity: [0.85, 1, 0.85] }}
+                  transition={breathe(3)}
+                />
+              ) : (
+                <circle
+                  cx={node.x} cy={node.y} r={node.r}
+                  fill={i === 7 ? colors.teal.primary : "none"}
+                  stroke={colors.teal.primary}
+                  strokeWidth={i === 7 ? 0 : 2}
+                  opacity={i === 7 ? 0.95 : 0.75}
+                />
+              )}
             </g>
           );
         })}
@@ -360,11 +391,12 @@ export function ShieldIllustration() {
         className="h-[320px] w-[320px] sm:h-[380px] sm:w-[380px] lg:h-[420px] lg:w-[420px]"
         fill="none"
       >
-        {/* Outer octagonal ring — desktop: breathe, mobile: static */}
+        {/* Outer octagonal ring — desktop: slow rotation, mobile: static */}
         {shouldAnimate ? (
           <motion.g
-            animate={{ opacity: [0.25, 0.4, 0.25] }}
-            transition={breathe(7)}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+            style={{ originX: "200px", originY: "190px" }}
           >
             <polygon
               points="200,30 310,80 360,190 310,300 200,350 90,300 40,190 90,80"
@@ -414,11 +446,12 @@ export function ShieldIllustration() {
           </g>
         )}
 
-        {/* Middle hexagonal layer — desktop: breathe, mobile: static */}
+        {/* Middle hexagonal layer — desktop: reverse rotation, mobile: static */}
         {shouldAnimate ? (
           <motion.g
-            animate={{ opacity: [0.2, 0.35, 0.2] }}
-            transition={breathe(6)}
+            animate={{ rotate: -360 }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            style={{ originX: "200px", originY: "190px" }}
           >
             <polygon
               points="200,70 290,115 290,265 200,310 110,265 110,115"
@@ -518,13 +551,13 @@ export function ShieldIllustration() {
           </g>
         ))}
 
-        {/* Glowing center point — desktop: breathe, mobile: static */}
+        {/* Glowing center point — desktop: glow pulse + scale, mobile: static */}
         {shouldAnimate ? (
           <motion.circle
-            cx="200" cy="190" r="3.5"
+            cx="200" cy="190"
             fill={colors.violet.primary}
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={breathe(3.5)}
+            animate={{ opacity: [0.4, 1, 0.4], r: [2.5, 5, 2.5] }}
+            transition={breathe(3)}
           />
         ) : (
           <circle cx="200" cy="190" r="3.5" fill={colors.violet.primary} opacity="0.8" />
