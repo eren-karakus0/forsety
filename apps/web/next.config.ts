@@ -14,6 +14,13 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "@aptos-labs/wallet-adapter-react",
+    ],
+  },
   transpilePackages: ["@forsety/ui", "@forsety/db", "@forsety/auth"],
   serverExternalPackages: [
     "@huggingface/transformers",
