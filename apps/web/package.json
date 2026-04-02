@@ -38,7 +38,7 @@
     "@forsety/config-tailwind": "workspace:*",
     "@forsety/config-typescript": "workspace:*",
     "@tailwindcss/typography": "^0.5.15",
-    "@types/node": "^22.0.0",
+    "@types/node": "^25.5.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
