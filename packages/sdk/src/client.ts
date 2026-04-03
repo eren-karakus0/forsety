@@ -16,6 +16,7 @@ import { LocalEmbedder } from "./embeddings/local-embedder.js";
 import type { Embedder } from "./embeddings/local-embedder.js";
 import { ShieldStoreService } from "./services/shield-store.service.js";
 import { ShareService } from "./services/share.service.js";
+import { NotificationService } from "./services/notification.service.js";
 
 export class ForsetyClient {
   private config: ForsetyConfig;
@@ -33,6 +34,7 @@ export class ForsetyClient {
   private _vectorSearch: VectorSearchService | null = null;
   private _shieldStore: ShieldStoreService | null = null;
   public readonly share: ShareService;
+  public readonly notifications: NotificationService;
 
   /** Lazy-initialized VectorSearch — avoids loading LocalEmbedder until first use. */
   get vectorSearch(): VectorSearchService {
@@ -100,6 +102,7 @@ export class ForsetyClient {
       config.hmacSecret,
       this.agentAudit
     );
+    this.notifications = new NotificationService(this.db);
   }
 
   getDb(): Database {

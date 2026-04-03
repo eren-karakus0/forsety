@@ -9,6 +9,7 @@ import type { SignaturePayload } from "@/lib/types";
 export interface EvidenceResult {
   success: boolean;
   error?: string;
+  id?: string;
   json?: Record<string, unknown>;
   hash?: string;
 }
@@ -22,6 +23,7 @@ export async function generateEvidencePack(datasetId: string, sig: SignaturePayl
 
     const result = await client.evidence.generatePack(datasetId);
     return {
+      id: result.id,
       json: result.json as unknown as Record<string, unknown>,
       hash: result.hash,
     };

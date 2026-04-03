@@ -44,6 +44,7 @@ describe("AgentService", () => {
       const result = await service.register({
         name: "agent-1",
         ownerAddress: "0xabc",
+        allowedDatasets: ["ds-1"],
       });
 
       expect(result.agent).toEqual(mockAgent);
@@ -62,6 +63,7 @@ describe("AgentService", () => {
       await service.register({
         name: "agent-1",
         ownerAddress: "0xabc",
+        allowedDatasets: ["ds-1"],
       });
 
       const valuesCall = mockInsert.mock.results[0].value.values;
@@ -72,6 +74,18 @@ describe("AgentService", () => {
         "dataset.read",
         "policy.read",
       ]);
+    });
+
+    it("should reject registration without allowedDatasets", async () => {
+      await expect(
+        service.register({ name: "agent-1", ownerAddress: "0xabc" })
+      ).rejects.toThrow("allowedDatasets is required");
+    });
+
+    it("should reject registration with empty allowedDatasets", async () => {
+      await expect(
+        service.register({ name: "agent-1", ownerAddress: "0xabc", allowedDatasets: [] })
+      ).rejects.toThrow("allowedDatasets is required");
     });
   });
 

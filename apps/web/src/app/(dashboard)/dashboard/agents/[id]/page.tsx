@@ -14,9 +14,10 @@ import {
   Skeleton,
   Separator,
 } from "@forsety/ui";
-import { ChevronRight, Users } from "lucide-react";
+import { ChevronRight, Users, Settings } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { ConnectWalletCTA } from "../../../components/connect-wallet-cta";
+import { EditAgentDialog } from "./edit-agent-dialog";
 
 interface AgentData {
   agent: {
@@ -66,12 +67,9 @@ export default function AgentDetailPage() {
   const [data, setData] = useState<AgentData | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
+  function loadData() {
     Promise.all([
       fetchAgentDetail(id),
       fetchAgentAuditLogs(id, { limit: 20 }),
@@ -81,6 +79,14 @@ export default function AgentDetailPage() {
         setAuditLogs(logs);
       })
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    loadData();
   }, [id, isAuthenticated]);
 
   if (loading) {
@@ -161,6 +167,15 @@ export default function AgentDetailPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setEditOpen(true)}
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
                   <div
                     className={`h-2 w-2 rounded-full ${
                       agent.isActive
@@ -277,28 +292,57 @@ export default function AgentDetailPage() {
               <h2 className="mb-4 font-display text-base font-semibold text-foreground">
                 Audit Summary
               </h2>
+
+              {/* SVG Pie Chart */}
+              {auditSummary.totalActions > 0 && (() => {
+                const total = auditSummary.totalActions || 1;
+                const successPct = auditSummary.successCount / total;
+                const deniedPct = auditSummary.deniedCount / total;
+                const r = 36; const c = 2 * Math.PI * r;
+                return (
+                  <div className="flex justify-center mb-4">
+                    <svg width="88" height="88" viewBox="0 0 88 88">
+                      <circle cx="44" cy="44" r={r} fill="none" stroke="#f59e0b" strokeWidth="12"
+                        strokeDasharray={`${c * (1 - successPct - deniedPct)} ${c * (successPct + deniedPct)}`}
+                        strokeDashoffset={c * 0.25} />
+                      <circle cx="44" cy="44" r={r} fill="none" stroke="#ef4444" strokeWidth="12"
+                        strokeDasharray={`${c * deniedPct} ${c * (1 - deniedPct)}`}
+                        strokeDashoffset={c * 0.25 - c * (1 - successPct - deniedPct)} />
+                      <circle cx="44" cy="44" r={r} fill="none" stroke="#10b981" strokeWidth="12"
+                        strokeDasharray={`${c * successPct} ${c * (1 - successPct)}`}
+                        strokeDashoffset={c * 0.25 - c * (1 - successPct)} />
+                      <text x="44" y="44" textAnchor="middle" dy="4" className="fill-foreground text-xs font-bold">
+                        {total}
+                      </text>
+                    </svg>
+                  </div>
+                );
+              })()}
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Total Actions</span>
-                  <span className="font-display text-lg font-bold text-foreground">
-                    {auditSummary.totalActions}
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    Successful
                   </span>
-                </div>
-                <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Successful</span>
                   <span className="font-display text-lg font-bold text-emerald-500">
                     {auditSummary.successCount}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Denied</span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                    Denied
+                  </span>
                   <span className="font-display text-lg font-bold text-red-500">
                     {auditSummary.deniedCount}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Errors</span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    Errors
+                  </span>
                   <span className="font-display text-lg font-bold text-amber-500">
                     {auditSummary.errorCount}
                   </span>
@@ -324,6 +368,13 @@ export default function AgentDetailPage() {
           )}
         </div>
       </div>
+
+      <EditAgentDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        agent={agent}
+        onUpdated={loadData}
+      />
     </div>
   );
 }

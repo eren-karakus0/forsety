@@ -28,6 +28,7 @@ export {
   fetchAgentDetail,
   fetchAgentAuditLogs,
   registerAgent,
+  updateAgentPermissions,
 } from "./agent-actions";
 
 export {
@@ -43,3 +44,8 @@ export {
 export {
   createShareLink,
 } from "./share-actions";
+
+export {
+  fetchDatasetAnalytics,
+  fetchDashboardTrends,
+} from "./analytics-actions";

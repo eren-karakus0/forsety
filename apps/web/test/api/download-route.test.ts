@@ -1,16 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
-// --- Mock node:fs to control statSync for download size limit tests ---
-const actualFs = await vi.importActual<typeof import("node:fs")>("node:fs");
-const mockStatSync = vi.fn().mockImplementation((...args: unknown[]) =>
-  (actualFs.statSync as Function)(...args)
-);
-vi.mock("node:fs", async () => {
-  const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
-  return { ...actual, statSync: (...args: unknown[]) => mockStatSync(...args) };
-});
-
 // --- Mock dependencies before importing route ---
 
 const mockGetById = vi.fn();
@@ -18,6 +8,7 @@ const mockCheckAccess = vi.fn();
 const mockLogAccess = vi.fn();
 const mockDownloadDataset = vi.fn();
 const mockAuthenticate = vi.fn();
+const mockNotificationsCreate = vi.fn().mockResolvedValue({});
 
 vi.mock("@/lib/forsety", () => ({
   getForsetyClient: () => ({
@@ -25,16 +16,19 @@ vi.mock("@/lib/forsety", () => ({
     policies: { checkAccess: mockCheckAccess },
     access: { logAccess: mockLogAccess },
     agents: { authenticate: mockAuthenticate },
+    notifications: { create: (...args: unknown[]) => mockNotificationsCreate(...args) },
     getShelby: () => ({ downloadDataset: mockDownloadDataset }),
   }),
 }));
 
 const mockResolveAccessor = vi.fn();
+const mockCheckAgentScope = vi.fn().mockReturnValue({ allowed: true });
 
 vi.mock("@/lib/auth", async () => {
   const { NextResponse } = await import("next/server");
   return {
-    resolveAccessorStrict: (...args: unknown[]) => mockResolveAccessor(...args),
+    resolveAccessor: (...args: unknown[]) => mockResolveAccessor(...args),
+    checkAgentScope: (...args: unknown[]) => mockCheckAgentScope(...args),
     unauthorizedResponse: vi.fn().mockReturnValue(
       NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     ),
@@ -76,12 +70,10 @@ const MOCK_DATASET = {
 describe("GET /api/datasets/[id]/download", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset statSync to delegate to real implementation
-    mockStatSync.mockImplementation((...args: unknown[]) =>
-      (actualFs.statSync as Function)(...args)
-    );
     // Default: JWT auth succeeds (trusted)
     mockResolveAccessor.mockResolvedValue({ accessor: "0xuser-wallet", trusted: true });
+    // Default: agent scope check passes
+    mockCheckAgentScope.mockReturnValue({ allowed: true });
   });
 
   it("should return 401 when no auth is provided", async () => {
@@ -205,39 +197,30 @@ describe("GET /api/datasets/[id]/download", () => {
     );
   });
 
-  it("should return 413 when downloaded file exceeds size limit", async () => {
-    mockGetById.mockResolvedValue(MOCK_DATASET);
-    mockCheckAccess.mockResolvedValue({ allowed: true, policy: { id: "p1" } });
-    mockDownloadDataset.mockImplementation((_blob: string, path: string) => {
-      actualFs.writeFileSync(path, "small-content");
+  it("should return 413 when dataset sizeBytes exceeds limit (pre-check)", async () => {
+    // Route checks dataset.sizeBytes BEFORE downloading to avoid wasted bandwidth
+    mockGetById.mockResolvedValue({
+      ...MOCK_DATASET,
+      sizeBytes: 200 * 1024 * 1024, // 200 MB > 100 MB limit
     });
-
-    // Override statSync to report file as > 100MB
-    mockStatSync.mockReturnValue({ size: 101 * 1024 * 1024 });
+    mockCheckAccess.mockResolvedValue({ allowed: true, policy: { id: "p1" } });
 
     const res = await GET(makeRequest(), makeParams());
 
     expect(res.status).toBe(413);
     const body = await res.json();
     expect(body.error).toContain("100 MB");
+    // Download must NOT have been attempted
+    expect(mockDownloadDataset).not.toHaveBeenCalled();
   });
 
-  it("should use untrusted accessor from global API key", async () => {
+  it("should reject untrusted accessor from global API key", async () => {
     mockResolveAccessor.mockResolvedValue({ accessor: "0xparam-addr", trusted: false });
-    mockGetById.mockResolvedValue(MOCK_DATASET);
-    mockCheckAccess.mockResolvedValue({ allowed: true, policy: { id: "p1" } });
-    mockDownloadDataset.mockImplementation((_blob: string, path: string) => {
-      const { writeFileSync } = require("node:fs");
-      writeFileSync(path, "content");
-    });
-    mockLogAccess.mockResolvedValue({ id: "log-2", operationType: "download" });
 
     const res = await GET(makeRequest(), makeParams());
 
-    expect(res.status).toBe(200);
-    expect(mockLogAccess).toHaveBeenCalledWith(
-      expect.objectContaining({ accessorAddress: "0xparam-addr" })
-    );
+    expect(res.status).toBe(401);
+    expect(mockGetById).not.toHaveBeenCalled();
   });
 });
 
@@ -245,6 +228,7 @@ describe("HEAD /api/datasets/[id]/download", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockResolveAccessor.mockResolvedValue({ accessor: "0xuser-wallet", trusted: true });
+    mockCheckAgentScope.mockReturnValue({ allowed: true });
   });
 
   it("should return 200 when auth + policy pass", async () => {

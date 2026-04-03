@@ -42,3 +42,6 @@ export type {
   SharedEvidenceLink,
   NewSharedEvidenceLink,
 } from "./shared-evidence-links";
+
+export { notifications } from "./notifications";
+export type { Notification, NewNotification } from "./notifications";

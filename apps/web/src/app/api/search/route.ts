@@ -44,7 +44,14 @@ export async function GET(request: NextRequest) {
       const datasetIds = auth.agentAllowedDatasets && auth.agentAllowedDatasets.length > 0
         ? auth.agentAllowedDatasets
         : undefined;
-      const results = await client.vectorSearch.searchDatasets(query, limit, auth.accessor, datasetIds);
+      const rawResults = await client.vectorSearch.searchDatasets(query, limit, auth.accessor, datasetIds);
+      // Normalize: flatten { item, score, textContent } → { id, name, type, score }
+      const results = rawResults.map((r) => ({
+        id: r.item.id,
+        name: r.item.name,
+        type: "dataset",
+        score: r.score,
+      }));
       return NextResponse.json({ type, query, results, total: results.length });
     }
 

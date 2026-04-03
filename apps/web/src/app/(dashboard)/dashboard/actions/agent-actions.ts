@@ -82,6 +82,10 @@ export async function registerAgent(input: {
   allowedDatasets?: string[];
 }, sig: SignaturePayload) {
   return withSignedMutation(sig, async (wallet, client) => {
+    if (!input.allowedDatasets || input.allowedDatasets.length === 0) {
+      throw new Error("Dataset scope is required. Select at least one dataset or use wildcard.");
+    }
+
     const result = await client.agents.register({
       name: input.name,
       description: input.description,
@@ -90,9 +94,50 @@ export async function registerAgent(input: {
       allowedDatasets: input.allowedDatasets,
     });
 
+    // Fire-and-forget notification
+    client.notifications.create({
+      recipientAddress: wallet,
+      type: "agent_registered",
+      title: "Agent Registered",
+      message: `New agent "${input.name}" has been registered successfully`,
+      relatedResourceType: "agent",
+      relatedResourceId: result.agent.id,
+    }).catch(() => {});
+
     return {
       agentId: result.agent.id,
       apiKey: result.apiKey,
+    };
+  });
+}
+
+export async function updateAgentPermissions(
+  agentId: string,
+  input: { permissions?: string[]; allowedDatasets?: string[] },
+  sig: SignaturePayload
+) {
+  return withSignedMutation(sig, async (wallet, client) => {
+    const agent = await client.agents.getById(agentId);
+    if (!agent || agent.ownerAddress !== wallet) {
+      throw new Error("Agent not found or access denied");
+    }
+
+    if (input.allowedDatasets && input.allowedDatasets.length === 0) {
+      throw new Error("Dataset scope is required. Select at least one dataset or use wildcard.");
+    }
+
+    const updated = await client.agents.updatePermissions(
+      agentId,
+      input.permissions ?? agent.permissions,
+      input.allowedDatasets
+    );
+
+    return {
+      agent: updated ? {
+        ...sanitizeAgent(updated),
+        createdAt: updated.createdAt?.toISOString() ?? new Date().toISOString(),
+        lastSeenAt: updated.lastSeenAt?.toISOString() ?? null,
+      } : null,
     };
   });
 }

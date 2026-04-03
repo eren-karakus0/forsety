@@ -74,7 +74,7 @@ describe("POST /api/agents", () => {
 
     const req = new NextRequest("http://localhost/api/agents", {
       method: "POST",
-      body: JSON.stringify({ name: "Bot", permissions: ["read"] }),
+      body: JSON.stringify({ name: "Bot", permissions: ["read"], allowedDatasets: ["ds-1"] }),
     });
     const res = await POST(req);
 
@@ -82,6 +82,32 @@ describe("POST /api/agents", () => {
     const body = await res.json();
     expect(body.apiKey).toBe("fsy_test123");
     expect(body.warning).toContain("Store this API key");
+  });
+
+  it("should return 400 when allowedDatasets is missing", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/agents", {
+      method: "POST",
+      body: JSON.stringify({ name: "Bot" }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("allowedDatasets");
+  });
+
+  it("should return 400 when allowedDatasets is empty", async () => {
+    mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+
+    const req = new NextRequest("http://localhost/api/agents", {
+      method: "POST",
+      body: JSON.stringify({ name: "Bot", allowedDatasets: [] }),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
   });
 
   it("should return 400 when name is missing", async () => {
@@ -117,7 +143,7 @@ describe("POST /api/agents", () => {
 
     const req = new NextRequest("http://localhost/api/agents", {
       method: "POST",
-      body: JSON.stringify({ name: "Bot2" }),
+      body: JSON.stringify({ name: "Bot2", allowedDatasets: ["ds-1"] }),
     });
     await POST(req);
 

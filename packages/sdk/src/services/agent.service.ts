@@ -40,6 +40,10 @@ export class AgentService {
       throw new ForsetyValidationError("name and ownerAddress are required");
     }
 
+    if (!input.allowedDatasets || input.allowedDatasets.length === 0) {
+      throw new ForsetyValidationError("allowedDatasets is required and must be a non-empty array");
+    }
+
     if (input.metadata) {
       const metadataSize = Buffer.byteLength(JSON.stringify(input.metadata), "utf-8");
       if (metadataSize > AgentService.MAX_METADATA_BYTES) {
@@ -65,7 +69,7 @@ export class AgentService {
           "dataset.read",
           "policy.read",
         ],
-        allowedDatasets: input.allowedDatasets ?? ["*"],
+        allowedDatasets: input.allowedDatasets,
         metadata: input.metadata,
       })
       .returning();

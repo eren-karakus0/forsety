@@ -16,9 +16,11 @@ describe("EvidenceService", () => {
     vi.clearAllMocks();
     service = new EvidenceService(mockDb);
 
-    // Setup default mock for insert
+    // Setup default mock for insert (with .returning() chain)
     mockInsert.mockReturnValue({
-      values: vi.fn().mockResolvedValue(undefined),
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{ id: "evidence-uuid" }]),
+      }),
     });
   });
 
@@ -141,6 +143,7 @@ describe("EvidenceService", () => {
 
       const result = await service.generatePack("uuid-1", "test-user");
 
+      expect(result.id).toBe("evidence-uuid");
       expect(result.json).toBeDefined();
       expect(result.hash).toBeDefined();
       expect(result.hash.length).toBe(64); // SHA-256 hex

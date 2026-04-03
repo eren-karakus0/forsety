@@ -80,6 +80,9 @@ export default function DatasetsPage() {
   const [licenseFilter, setLicenseFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Sort
+  const [sortBy, setSortBy] = useState<"name" | "newest" | "oldest" | "size">("newest");
+
   // Archive toggle
   const [showArchived, setShowArchived] = useState(false);
 
@@ -130,7 +133,7 @@ export default function DatasetsPage() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, licenseFilter, statusFilter, showArchived]);
+  }, [searchQuery, licenseFilter, statusFilter, showArchived, sortBy]);
 
   // Unique licenses for filter dropdown
   const uniqueLicenses = useMemo(
@@ -138,16 +141,30 @@ export default function DatasetsPage() {
     [datasets]
   );
 
-  // Filtered datasets
+  // Filtered + sorted datasets
   const filtered = useMemo(() => {
-    return datasets.filter((d) => {
+    const list = datasets.filter((d) => {
       if (!showArchived && d.archivedAt) return false;
       if (searchQuery && !d.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (licenseFilter !== "all" && d.license !== licenseFilter) return false;
       if (statusFilter !== "all" && d.status !== statusFilter) return false;
       return true;
     });
-  }, [datasets, searchQuery, licenseFilter, statusFilter, showArchived]);
+
+    return list.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "oldest":
+          return (a.createdAt ?? "").localeCompare(b.createdAt ?? "");
+        case "size":
+          return (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0);
+        case "newest":
+        default:
+          return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+      }
+    });
+  }, [datasets, searchQuery, licenseFilter, statusFilter, showArchived, sortBy]);
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -341,6 +358,17 @@ export default function DatasetsPage() {
               <SelectItem value="warning">Expiring Soon</SelectItem>
               <SelectItem value="expired">Expired</SelectItem>
               <SelectItem value="no-policy">No Policy</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="w-[140px] rounded-lg">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="name">Name (A-Z)</SelectItem>
+              <SelectItem value="size">Size (Largest)</SelectItem>
             </SelectContent>
           </Select>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">

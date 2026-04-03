@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   Input,
@@ -15,7 +15,7 @@ import {
   toast,
 } from "@forsety/ui";
 import { UserPlus, Copy, Check } from "lucide-react";
-import { registerAgent } from "../actions";
+import { registerAgent, fetchDatasetsList } from "../actions";
 import { useSignedAction } from "@/hooks/use-signed-action";
 
 const AVAILABLE_PERMISSIONS = [
@@ -38,6 +38,9 @@ export function RegisterAgentDialog() {
     "dataset.read",
     "policy.read",
   ]);
+  const [allDatasets, setAllDatasets] = useState(false);
+  const [selectedDatasets, setSelectedDatasets] = useState<string[]>([]);
+  const [datasets, setDatasets] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
     apiKey: string;
@@ -46,15 +49,29 @@ export function RegisterAgentDialog() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (open && !result) {
+      fetchDatasetsList().then(setDatasets).catch(() => {});
+    }
+  }, [open, result]);
+
   function togglePermission(perm: string) {
     setSelectedPermissions((prev) =>
       prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm]
     );
   }
 
+  function toggleDataset(datasetId: string) {
+    setSelectedDatasets((prev) =>
+      prev.includes(datasetId) ? prev.filter((d) => d !== datasetId) : [...prev, datasetId]
+    );
+  }
+
+  const scopeValid = allDatasets || selectedDatasets.length > 0;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !scopeValid) return;
 
     setLoading(true);
     setError(null);
@@ -66,6 +83,7 @@ export function RegisterAgentDialog() {
           name: name.trim(),
           description: description.trim() || undefined,
           permissions: selectedPermissions,
+          allowedDatasets: allDatasets ? ["*"] : selectedDatasets,
         }, sig)
       );
 
@@ -104,6 +122,8 @@ export function RegisterAgentDialog() {
           setName("");
           setDescription("");
           setSelectedPermissions(["memory.read", "memory.write", "dataset.read", "policy.read"]);
+          setAllDatasets(false);
+          setSelectedDatasets([]);
           setResult(null);
           setError(null);
           setCopied(false);
@@ -197,6 +217,52 @@ export function RegisterAgentDialog() {
                 ))}
               </div>
             </div>
+            <div>
+              <Label>Dataset Scope</Label>
+              <p className="mb-2 text-[11px] text-muted-foreground">
+                Select which datasets this agent can access
+              </p>
+              <label className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-xs transition-colors hover:bg-muted/50 mb-2">
+                <input
+                  type="checkbox"
+                  checked={allDatasets}
+                  onChange={(e) => {
+                    setAllDatasets(e.target.checked);
+                    if (e.target.checked) setSelectedDatasets([]);
+                  }}
+                  className="rounded"
+                />
+                All Datasets (wildcard)
+              </label>
+              {!allDatasets && (
+                <div className="max-h-32 overflow-y-auto space-y-1 rounded-md border p-2">
+                  {datasets.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground py-2 text-center">No datasets found</p>
+                  ) : (
+                    datasets.map((d) => (
+                      <label
+                        key={d.id}
+                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors hover:bg-muted/50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedDatasets.includes(d.id)}
+                          onChange={() => toggleDataset(d.id)}
+                          className="rounded"
+                        />
+                        <span className="truncate">{d.name}</span>
+                        <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+                          {d.id.slice(0, 8)}
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+              {!scopeValid && (
+                <p className="mt-1 text-[11px] text-amber-600">Select at least one dataset or enable wildcard</p>
+              )}
+            </div>
             {error && (
               <p className="text-sm text-red-500">{error}</p>
             )}
@@ -204,7 +270,7 @@ export function RegisterAgentDialog() {
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading || !name.trim()} data-umami-event="register-agent">
+              <Button type="submit" disabled={loading || !name.trim() || !scopeValid} data-umami-event="register-agent">
                 {loading ? "Registering..." : "Register"}
               </Button>
             </DialogFooter>
