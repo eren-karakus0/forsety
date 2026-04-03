@@ -19,6 +19,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Require explicit dataset scope — never default to wildcard
+    if (!allowedDatasets || !Array.isArray(allowedDatasets) || allowedDatasets.length === 0) {
+      return NextResponse.json(
+        { error: "allowedDatasets is required and must be a non-empty array" },
+        { status: 400 }
+      );
+    }
+
     const client = getForsetyClient();
     const result = await client.agents.register({
       name,

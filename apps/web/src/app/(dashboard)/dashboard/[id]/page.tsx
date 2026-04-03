@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchDatasetDetail, generateEvidencePack, fetchAccessLogs, fetchPolicies } from "../actions";
@@ -19,13 +19,19 @@ import {
   Alert,
   AlertDescription,
 } from "@forsety/ui";
-import { Download, Layers, Check, ChevronRight, Eye, Loader2, Database } from "lucide-react";
+import { Download, Layers, Check, ChevronRight, Eye, Loader2, Database, Plus, Pencil, Share2, Info, Users } from "lucide-react";
 import { computeDatasetStatus, statusConfig } from "../datasets/dataset-status";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
 import { triggerDownload } from "@/lib/download";
 import { formatDateTime } from "@/lib/format";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { SetupChecklist } from "./setup-checklist";
+import { ShareDatasetDialog } from "./share-dataset-dialog";
+import { FilePreview } from "./file-preview";
+import { AnalyticsPanel } from "./analytics-panel";
+import { CreatePolicyDialog } from "../policies/create-policy-dialog";
+import { EditPolicyDialog } from "../policies/edit-policy-dialog";
 
 interface DatasetDetail {
   dataset: {
@@ -50,6 +56,7 @@ interface DatasetDetail {
 interface EvidencePack {
   json: Record<string, unknown>;
   hash: string;
+  id?: string;
 }
 
 interface AccessLogEntry {
@@ -107,6 +114,12 @@ export default function DatasetDetailPage() {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // WS-1.3 + WS-2: Dialog states
+  const [createPolicyOpen, setCreatePolicyOpen] = useState(false);
+  const [editPolicyOpen, setEditPolicyOpen] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState<PolicyEntry | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated) {
       setLoading(false);
@@ -133,17 +146,31 @@ export default function DatasetDetailPage() {
     return () => { cancelled = true; };
   }, [id, isAuthenticated]);
 
+  // WS-2.2: Access summary computed from existing state
+  const accessSummary = useMemo(() => {
+    const uniqueAccessors = new Set(accessLogs.map((l) => l.accessorAddress));
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const recentLogs = accessLogs.filter((l) => new Date(l.timestamp) >= sevenDaysAgo);
+    const latestPolicy = policies[policies.length - 1];
+    return {
+      totalAccess: accessLogs.length,
+      uniqueAccessors: uniqueAccessors.size,
+      accessorList: Array.from(uniqueAccessors),
+      last7Days: recentLogs.length,
+      latestPolicy,
+    };
+  }, [accessLogs, policies]);
+
   const handleDownloadDataset = async () => {
     setDownloading(true);
     setDownloadError(null);
     try {
-      // Preflight: check auth + policy before triggering native download
       const check = await fetch(`/api/datasets/${id}/download`, {
         method: "HEAD",
         credentials: "include",
       });
       if (!check.ok) {
-        // HEAD may not return body; use status to determine error
         const messages: Record<number, string> = {
           400: "Accessor address required",
           401: "Unauthorized",
@@ -153,15 +180,12 @@ export default function DatasetDetailPage() {
         setDownloadError(messages[check.status] ?? "Download failed");
         return;
       }
-      // Native browser download: streams to disk without JS RAM buffering.
-      // Cookies are sent automatically by the browser.
       const a = document.createElement("a");
       a.href = `/api/datasets/${id}/download`;
       a.download = "";
       document.body.appendChild(a);
       a.click();
       a.remove();
-      // Refresh access logs after a short delay to show new download entry
       setTimeout(() => {
         fetchAccessLogs(id).then(setAccessLogs).catch(() => {});
       }, 2000);
@@ -181,7 +205,7 @@ export default function DatasetDetailPage() {
         (sig) => generateEvidencePack(id, sig)
       );
       if (!result.success) throw new Error(result.error ?? "Generation failed");
-      setEvidence({ json: result.json!, hash: result.hash! });
+      setEvidence({ id: result.id, json: result.json!, hash: result.hash! });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
@@ -196,6 +220,10 @@ export default function DatasetDetailPage() {
       `evidence-pack-${id.slice(0, 8)}.json`,
       "application/json"
     );
+  };
+
+  const refreshPolicies = () => {
+    fetchPolicies(id).then(setPolicies).catch(() => {});
   };
 
   if (loading) {
@@ -251,72 +279,153 @@ export default function DatasetDetailPage() {
         <span className="font-medium text-foreground">{dataset.name}</span>
       </div>
 
+      {/* WS-1.2: Setup Checklist Banner */}
+      <SetupChecklist
+        datasetId={id}
+        hasPolicy={policies.length > 0}
+        hasEvidence={!!evidence}
+        onCreatePolicy={() => setCreatePolicyOpen(true)}
+        onGenerateEvidence={handleGenerateEvidence}
+      />
+
       <Tabs defaultValue="overview">
         <TabsList className="mb-6 rounded-lg">
           <TabsTrigger value="overview" className="rounded-md">Overview</TabsTrigger>
           <TabsTrigger value="access" className="rounded-md">
-            Access Log ({accessLogs.length})
+            Access ({accessLogs.length})
           </TabsTrigger>
           <TabsTrigger value="policies" className="rounded-md">
             Policies ({policies.length})
           </TabsTrigger>
+          <TabsTrigger value="analytics" className="rounded-md">
+            Analytics
+          </TabsTrigger>
         </TabsList>
 
+        {/* ===== ACCESS TAB ===== */}
         <TabsContent value="access">
-          <Card className="overflow-hidden rounded-xl">
-            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent">
-              <CardTitle className="text-sm font-semibold">Access Log Timeline</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {accessLogs.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 px-5 py-12">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60">
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+          <div className="space-y-6">
+            {/* WS-2.2: Access Summary Panel */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Card className="rounded-xl">
+                <CardContent className="pt-5 pb-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Access</p>
+                  <p className="mt-1 font-display text-2xl font-bold text-foreground">{accessSummary.totalAccess}</p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-xl">
+                <CardContent className="pt-5 pb-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Unique Accessors</p>
+                  <p className="mt-1 font-display text-2xl font-bold text-foreground">{accessSummary.uniqueAccessors}</p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-xl">
+                <CardContent className="pt-5 pb-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Last 7 Days</p>
+                  <p className="mt-1 font-display text-2xl font-bold text-foreground">{accessSummary.last7Days}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Unique Accessors List */}
+            {accessSummary.accessorList.length > 0 && (
+              <Card className="rounded-xl">
+                <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent py-3">
+                  <CardTitle className="text-xs font-semibold flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5" />
+                    Unique Accessors
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border/30">
+                    {accessSummary.accessorList.slice(0, 10).map((addr) => (
+                      <div key={addr} className="flex items-center gap-2 px-5 py-2.5">
+                        <Badge variant="secondary" className="font-mono text-[10px]">
+                          {addr.slice(0, 16)}...{addr.slice(-6)}
+                        </Badge>
+                        <span className="ml-auto text-[10px] text-muted-foreground">
+                          {accessLogs.filter((l) => l.accessorAddress === addr).length} access(es)
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-sm text-muted-foreground">No access logs yet</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border/30">
-                  {accessLogs.map((log: AccessLogEntry) => (
-                    <div key={log.id} className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/20">
-                      <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted/60">
-                        <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="font-mono text-[10px] uppercase">
-                            {log.operationType}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {log.timestamp ? formatDateTime(log.timestamp) : "-"}
-                          </span>
-                        </div>
-                        <p className="mt-1 font-mono text-xs text-muted-foreground truncate">
-                          Accessor: {log.accessorAddress}
-                        </p>
-                        {log.readProof && (
-                          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground/70 truncate">
-                            Proof: {log.readProof.slice(0, 32)}...
-                          </p>
-                        )}
-                      </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Access Log Timeline */}
+            <Card className="overflow-hidden rounded-xl">
+              <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent">
+                <CardTitle className="text-sm font-semibold">Access Log Timeline</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {accessLogs.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 px-5 py-12">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60">
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <p className="text-sm text-muted-foreground">No access logs yet</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/30">
+                    {accessLogs.map((log: AccessLogEntry) => (
+                      <div key={log.id} className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/20">
+                        <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted/60">
+                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+                              {log.operationType}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {log.timestamp ? formatDateTime(log.timestamp) : "-"}
+                            </span>
+                          </div>
+                          <p className="mt-1 font-mono text-xs text-muted-foreground truncate">
+                            Accessor: {log.accessorAddress}
+                          </p>
+                          {log.readProof && (
+                            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground/70 truncate">
+                              Proof: {log.readProof.slice(0, 32)}...
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
+        {/* ===== POLICIES TAB with CTA buttons (WS-2.1) ===== */}
         <TabsContent value="policies">
           <Card className="overflow-hidden rounded-xl">
-            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent">
+            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-navy-50/50 to-transparent flex-row items-center justify-between">
               <CardTitle className="text-sm font-semibold">Policy Versions</CardTitle>
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setCreatePolicyOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Create Policy
+              </Button>
             </CardHeader>
             <CardContent className="p-0">
               {policies.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 px-5 py-12">
+                <div className="flex flex-col items-center gap-3 px-5 py-12">
                   <p className="text-sm text-muted-foreground">No policies defined</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCreatePolicyOpen(true)}
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    Create your first policy
+                  </Button>
                 </div>
               ) : (
                 <div className="divide-y divide-border/30">
@@ -331,13 +440,26 @@ export default function DatasetDetailPage() {
                             {pol.createdAt ? new Date(pol.createdAt).toLocaleDateString() : "-"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>{pol.readsConsumed ?? 0}/{pol.maxReads ?? "∞"} reads</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground">
+                            {pol.readsConsumed ?? 0}/{pol.maxReads ?? "\u221E"} reads
+                          </span>
                           {pol.expiresAt && (
-                            <span className={new Date(pol.expiresAt) < new Date() ? "text-red-500" : ""}>
+                            <span className={`text-xs ${new Date(pol.expiresAt) < new Date() ? "text-red-500" : "text-muted-foreground"}`}>
                               Expires: {new Date(pol.expiresAt).toLocaleDateString()}
                             </span>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              setEditingPolicy(pol);
+                              setEditPolicyOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
                         </div>
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -360,6 +482,7 @@ export default function DatasetDetailPage() {
           </Card>
         </TabsContent>
 
+        {/* ===== OVERVIEW TAB ===== */}
         <TabsContent value="overview">
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left: Metadata */}
@@ -375,12 +498,23 @@ export default function DatasetDetailPage() {
                         {dataset.name}
                       </h1>
                     </div>
-                    {(() => {
-                      const latestPolicy = policies[policies.length - 1];
-                      const status = computeDatasetStatus(latestPolicy);
-                      const cfg = statusConfig[status];
-                      return <Badge variant={cfg.variant} className={cfg.className}>{cfg.label}</Badge>;
-                    })()}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setShareOpen(true)}
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        Share
+                      </Button>
+                      {(() => {
+                        const latestPolicy = policies[policies.length - 1];
+                        const status = computeDatasetStatus(latestPolicy);
+                        const cfg = statusConfig[status];
+                        return <Badge variant={cfg.variant} className={cfg.className}>{cfg.label}</Badge>;
+                      })()}
+                    </div>
                   </div>
 
                   {dataset.description && (
@@ -433,6 +567,39 @@ export default function DatasetDetailPage() {
                       ))}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* WS-4.1: File Preview */}
+              <FilePreview
+                datasetId={dataset.id}
+                datasetName={dataset.name}
+                hasBlob={!!dataset.shelbyBlobName}
+              />
+
+              {/* WS-2.4: How to Access Info Panel */}
+              <Card className="rounded-xl border-border/50 bg-gradient-to-br from-navy-50/30 to-transparent">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Info className="h-4 w-4 text-navy-500" />
+                    <h2 className="font-display text-base font-semibold text-foreground">
+                      How to Access This Dataset
+                    </h2>
+                  </div>
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <div className="flex gap-3">
+                      <Badge variant="secondary" className="h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-[10px]">1</Badge>
+                      <p>Ensure an active policy includes the accessor&apos;s wallet address</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Badge variant="secondary" className="h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-[10px]">2</Badge>
+                      <p>Access via API: <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">GET /api/datasets/{id.slice(0, 8)}.../download</code></p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Badge variant="secondary" className="h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-[10px]">3</Badge>
+                      <p>Each download consumes one read quota and creates a verifiable proof</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -519,14 +686,24 @@ export default function DatasetDetailPage() {
                         </p>
                       </div>
 
-                      <Button
-                        variant="outline"
-                        onClick={downloadEvidence}
-                        className="w-full hover:border-gold-500/30 hover:text-gold-600"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download JSON
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={downloadEvidence}
+                          className="flex-1 hover:border-gold-500/30 hover:text-gold-600"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShareOpen(true)}
+                          className="flex-1 hover:border-gold-500/30 hover:text-gold-600"
+                        >
+                          <Share2 className="mr-2 h-4 w-4" />
+                          Share
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -556,7 +733,45 @@ export default function DatasetDetailPage() {
             </div>
           </div>
         </TabsContent>
+
+        {/* ===== ANALYTICS TAB (WS-6.3) ===== */}
+        <TabsContent value="analytics">
+          <AnalyticsPanel datasetId={id} />
+        </TabsContent>
       </Tabs>
+
+      {/* WS-1.3 + WS-2: Dialogs */}
+      <CreatePolicyDialog
+        open={createPolicyOpen}
+        onOpenChange={setCreatePolicyOpen}
+        datasets={[{ id: dataset.id, name: dataset.name }]}
+        onCreated={refreshPolicies}
+      />
+
+      {editingPolicy && (
+        <EditPolicyDialog
+          open={editPolicyOpen}
+          onOpenChange={setEditPolicyOpen}
+          policy={{
+            id: editingPolicy.id,
+            datasetId: dataset.id,
+            datasetName: dataset.name,
+            version: editingPolicy.version,
+            allowedAccessors: editingPolicy.allowedAccessors,
+            maxReads: editingPolicy.maxReads,
+            expiresAt: editingPolicy.expiresAt ? new Date(editingPolicy.expiresAt).toISOString() : null,
+          }}
+          onUpdated={refreshPolicies}
+        />
+      )}
+
+      <ShareDatasetDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        evidencePackId={evidence?.id ?? null}
+        datasetName={dataset.name}
+        onGenerateEvidence={handleGenerateEvidence}
+      />
     </div>
   );
 }

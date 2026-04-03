@@ -79,7 +79,7 @@ export class EvidenceService {
   async generatePack(
     datasetId: string,
     generatedBy?: string
-  ): Promise<{ json: EvidencePackData; hash: string }> {
+  ): Promise<{ id: string; json: EvidencePackData; hash: string }> {
     const [dataset] = await this.db
       .select()
       .from(datasets)
@@ -170,15 +170,15 @@ export class EvidenceService {
       .update(canonicalJson)
       .digest("hex");
 
-    await this.db.insert(evidencePacks).values({
+    const [inserted] = await this.db.insert(evidencePacks).values({
       datasetId,
       packJson: packJson as unknown as Record<string, unknown>,
       packJsonCanonical: canonicalJson,
       packHash,
       generatedBy,
-    });
+    }).returning({ id: evidencePacks.id });
 
-    return { json: packJson, hash: packHash };
+    return { id: inserted.id, json: packJson, hash: packHash };
   }
 
   async listAll(filters?: { limit?: number; offset?: number }) {

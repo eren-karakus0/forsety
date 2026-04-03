@@ -68,9 +68,8 @@ export default function UploadPage() {
         throw new Error(result.error ?? "Upload failed");
       }
 
-      toast.success("Dataset uploaded successfully");
-      router.push("/dashboard");
-      router.refresh();
+      toast.success("Dataset uploaded! Setting up...");
+      router.push(`/dashboard/${result.datasetId}?new=true`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Upload failed";
       toast.error(message);

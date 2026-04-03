@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchDashboardStats, fetchAllAuditLogs } from "./actions";
+import { fetchDashboardTrends, type DashboardTrends } from "./actions/analytics-actions";
+import { Sparkline } from "../components/sparkline";
 import {
   Card,
   CardContent,
@@ -120,6 +122,7 @@ const guestStats = [
 export default function OverviewPage() {
   const { isAuthenticated } = useAuthGuard();
   const [data, setData] = useState<OverviewData | null>(null);
+  const [trends, setTrends] = useState<DashboardTrends | null>(null);
   const [loading, setLoading] = useState(isAuthenticated);
 
   useEffect(() => {
@@ -129,8 +132,9 @@ export default function OverviewPage() {
     Promise.all([
       fetchDashboardStats(),
       fetchAllAuditLogs({ limit: 5 }),
+      fetchDashboardTrends(),
     ])
-      .then(([stats, logs]) => {
+      .then(([stats, logs, trendData]) => {
         if (cancelled) return;
         setData({
           totalDatasets: stats.totalDatasets,
@@ -140,6 +144,7 @@ export default function OverviewPage() {
           recentLogs: logs as RecentLog[],
           error: false,
         });
+        setTrends(trendData);
       })
       .catch(() => {
         if (cancelled) return;
@@ -275,6 +280,50 @@ export default function OverviewPage() {
           ))}
         </StaggerWrapper>
       ) : null}
+
+      {/* 7-Day Trends (WS-6.4) */}
+      {isAuthenticated && trends && (
+        <FadeInWrapper delay={0.1}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Card className="rounded-xl">
+              <CardContent className="flex items-center justify-between pt-5 pb-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    7-Day Access
+                  </p>
+                  <p className="font-display text-lg font-bold text-foreground">
+                    {trends.dailyAccess.reduce((s, d) => s + d.count, 0)}
+                  </p>
+                </div>
+                <Sparkline
+                  data={trends.dailyAccess.map((d) => d.count)}
+                  width={100}
+                  height={28}
+                  color="#d4af37"
+                />
+              </CardContent>
+            </Card>
+            <Card className="rounded-xl">
+              <CardContent className="flex items-center justify-between pt-5 pb-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    7-Day Audit
+                  </p>
+                  <p className="font-display text-lg font-bold text-foreground">
+                    {trends.dailyAudit.reduce((s, d) => s + d.count, 0)}
+                  </p>
+                </div>
+                <Sparkline
+                  data={trends.dailyAudit.map((d) => d.count)}
+                  width={100}
+                  height={28}
+                  color="#14b8a6"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </FadeInWrapper>
+      )}
 
       {/* Two-column: Quick Actions + Recent Activity */}
       <div className="grid gap-6 lg:grid-cols-5">

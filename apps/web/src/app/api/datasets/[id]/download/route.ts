@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
-import { resolveAccessorStrict, unauthorizedResponse } from "@/lib/auth";
+import { resolveAccessor, checkAgentScope, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
 import { ForsetyAuthError } from "@forsety/sdk";
@@ -27,9 +27,18 @@ async function preflight(
   request: NextRequest,
   id: string
 ): Promise<PreflightResult | NextResponse> {
-  const auth = await resolveAccessorStrict(request);
-  if (!auth) return unauthorizedResponse();
+  const auth = await resolveAccessor(request);
+  if (!auth || !auth.trusted) return unauthorizedResponse();
   const accessorAddress = auth.accessor;
+
+  // Agent scope check: verify agent has dataset.read permission and dataset access
+  const scope = checkAgentScope(auth, "dataset.read", id);
+  if (!scope.allowed) {
+    return NextResponse.json(
+      { error: scope.error ?? "Access denied" },
+      { status: 403 }
+    );
+  }
 
   const client = getForsetyClient();
 
@@ -58,6 +67,15 @@ async function preflight(
   // Policy check (read-only, no quota consumed)
   const { allowed } = await client.policies.checkAccess(id, accessorAddress);
   if (!allowed) {
+    // Fire-and-forget notification to dataset owner
+    client.notifications.create({
+      recipientAddress: dataset.ownerAddress,
+      type: "access_denied",
+      title: "Access Denied",
+      message: `Download attempt for "${dataset.name}" was denied (accessor: ${accessorAddress.slice(0, 10)}...)`,
+      relatedResourceType: "dataset",
+      relatedResourceId: id,
+    }).catch(() => {});
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 

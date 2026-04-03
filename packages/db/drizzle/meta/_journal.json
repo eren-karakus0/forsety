@@ -64,6 +64,27 @@
       "when": 1772876900000,
       "tag": "0008_add_enum_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772877000000,
+      "tag": "0009_add_missing_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772877100000,
+      "tag": "0010_add_session_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772877200000,
+      "tag": "0011_add_notifications",
+      "breakpoints": true
     }
   ]
 }

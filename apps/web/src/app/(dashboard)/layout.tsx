@@ -34,6 +34,8 @@ import { NetworkSelector, NetworkSelectorCompact } from "@/components/network-se
 import { WalletSelector } from "@/components/wallet-selector";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { AuthErrorBanner } from "./components/auth-error-banner";
+import { GlobalSearch } from "./components/global-search";
+import { NotificationBell } from "./components/notification-bell";
 
 // Dynamic import with ssr:false ensures wallet providers (Aptos adapter)
 // never evaluate on the server, preventing indexedDB/storage errors during build.
@@ -193,6 +195,8 @@ export default function DashboardLayout({
 
             {/* Desktop Top Bar */}
             <header className="fixed left-56 right-0 top-0 z-30 hidden h-14 items-center justify-end gap-3 border-b border-border/40 bg-background/70 px-6 backdrop-blur-xl lg:flex">
+              <GlobalSearch />
+              <NotificationBell />
               <NetworkSelectorCompact />
               <WalletDisplay />
             </header>
