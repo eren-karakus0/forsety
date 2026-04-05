@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { resolveAccessor, resolveAccessorStrict, unauthorizedResponse } from "@/lib/auth";
 import { getForsetyClient } from "@/lib/forsety";
 import { apiError } from "@/lib/api-error";
+import { hasAllowedExtension, ALLOWED_EXTENSIONS_SUMMARY } from "@/lib/allowed-extensions";
 
 export async function GET(request: NextRequest) {
   const auth = await resolveAccessor(request);
@@ -59,12 +60,9 @@ export async function POST(request: NextRequest) {
     }
 
     // File extension allowlist
-    const ALLOWED_EXTENSIONS = [".csv", ".json", ".txt", ".parquet", ".arrow", ".zip", ".tar.gz", ".jsonl", ".tsv"];
-    const fileName = file.name.toLowerCase();
-    const hasAllowedExt = ALLOWED_EXTENSIONS.some((ext) => fileName.endsWith(ext));
-    if (!hasAllowedExt) {
+    if (!hasAllowedExtension(file.name)) {
       return NextResponse.json(
-        { error: `File type not allowed. Accepted: ${ALLOWED_EXTENSIONS.join(", ")}` },
+        { error: `File type not allowed. Supported: ${ALLOWED_EXTENSIONS_SUMMARY}` },
         { status: 415 }
       );
     }
@@ -86,12 +84,13 @@ export async function POST(request: NextRequest) {
 
     const client = getForsetyClient();
 
-    // Per-user daily upload quota
+    // Per-user daily upload quota (rolling 24h window)
     const DAILY_UPLOAD_LIMIT = 50;
-    const dailyCount = await client.datasets.countByOwner(ownerAddress);
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const dailyCount = await client.datasets.countByOwnerSince(ownerAddress, oneDayAgo);
     if (dailyCount >= DAILY_UPLOAD_LIMIT) {
       return NextResponse.json(
-        { error: "Daily upload limit reached" },
+        { error: "Daily upload limit reached (50 uploads per 24 hours)" },
         { status: 429 }
       );
     }

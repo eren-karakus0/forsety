@@ -9,6 +9,7 @@ import { verifyMutationSignature } from "@/lib/verify-mutation-signature";
 import { withSignedMutation } from "@/lib/with-mutation";
 import { withAuth, getWalletFromSession } from "@/lib/with-auth";
 import type { SignaturePayload } from "@/lib/types";
+import { hasAllowedExtension, ALLOWED_EXTENSIONS_SUMMARY } from "@/lib/allowed-extensions";
 
 export interface UploadResult {
   success: boolean;
@@ -34,6 +35,10 @@ export async function uploadDataset(formData: FormData, sig: SignaturePayload): 
 
   if (!file || file.size === 0) {
     return { success: false, error: "File is required" };
+  }
+
+  if (!hasAllowedExtension(file.name)) {
+    return { success: false, error: `File type not allowed. Supported: ${ALLOWED_EXTENSIONS_SUMMARY}` };
   }
 
   let tempPath: string | null = null;

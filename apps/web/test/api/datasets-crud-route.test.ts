@@ -7,11 +7,11 @@ const mockListByOwner = vi.fn();
 const mockUpload = vi.fn();
 const mockGetById = vi.fn();
 const mockAuthenticate = vi.fn();
-const mockCountByOwner = vi.fn().mockResolvedValue(0);
+const mockCountByOwnerSince = vi.fn().mockResolvedValue(0);
 
 vi.mock("@/lib/forsety", () => ({
   getForsetyClient: () => ({
-    datasets: { listByOwner: mockListByOwner, upload: mockUpload, getById: mockGetById, countByOwner: mockCountByOwner },
+    datasets: { listByOwner: mockListByOwner, upload: mockUpload, getById: mockGetById, countByOwnerSince: mockCountByOwnerSince },
     agents: { authenticate: mockAuthenticate },
   }),
 }));
@@ -39,6 +39,21 @@ vi.mock("@sentry/nextjs", () => ({
 }));
 
 import { GET, POST } from "../../src/app/api/datasets/route";
+
+/** Create a File with working arrayBuffer() for Vitest jsdom. */
+function makeFile(content: string | Uint8Array, name: string, type = "text/csv"): File {
+  const buf = typeof content === "string" ? Buffer.from(content) : Buffer.from(content);
+  const file = new File([buf], name, { type });
+  file.arrayBuffer = () => Promise.resolve(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+  return file;
+}
+
+/** Create a FormData-backed POST request with formData() override. */
+function makePostRequest(fd: FormData) {
+  const req = new NextRequest("http://localhost:3000/api/datasets", { method: "POST" });
+  req.formData = async () => fd;
+  return req;
+}
 
 function makeRequest(method: string = "GET") {
   return new NextRequest("http://localhost:3000/api/datasets", { method });
@@ -80,36 +95,27 @@ describe("POST /api/datasets", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockResolveAccessorStrict.mockResolvedValue({ accessor: OWNER, trusted: true });
+    mockCountByOwnerSince.mockResolvedValue(0);
   });
 
   it("should return 401 when not authenticated", async () => {
     mockResolveAccessorStrict.mockResolvedValue(null);
 
-    const formData = new FormData();
-    formData.append("file", new Blob(["test content"]), "test.csv");
-    formData.append("name", "Test Dataset");
-    formData.append("spdxType", "MIT");
+    const fd = new FormData();
+    fd.append("file", makeFile("test content", "test.csv"));
+    fd.append("name", "Test Dataset");
+    fd.append("spdxType", "MIT");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-
-    const res = await POST(req);
-
+    const res = await POST(makePostRequest(fd));
     expect(res.status).toBe(401);
   });
 
   it("should return 400 when name is missing", async () => {
-    const formData = new FormData();
-    formData.append("file", new Blob(["content"]), "test.csv");
-    formData.append("spdxType", "MIT");
+    const fd = new FormData();
+    fd.append("file", makeFile("content", "test.csv"));
+    fd.append("spdxType", "MIT");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -117,15 +123,11 @@ describe("POST /api/datasets", () => {
   });
 
   it("should return 400 when spdxType is missing", async () => {
-    const formData = new FormData();
-    formData.append("file", new Blob(["content"]), "test.csv");
-    formData.append("name", "Test");
+    const fd = new FormData();
+    fd.append("file", makeFile("content", "test.csv"));
+    fd.append("name", "Test");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -133,14 +135,12 @@ describe("POST /api/datasets", () => {
   });
 
   it("should return 400 when file is missing", async () => {
-    const formData = new FormData();
-    formData.append("name", "Test Dataset");
-    formData.append("spdxType", "MIT");
+    const fd = new FormData();
+    fd.append("name", "Test Dataset");
+    fd.append("spdxType", "MIT");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
+    const req = new NextRequest("http://localhost:3000/api/datasets", { method: "POST" });
+    req.formData = async () => fd;
     const res = await POST(req);
 
     expect(res.status).toBe(400);
@@ -149,16 +149,14 @@ describe("POST /api/datasets", () => {
   });
 
   it("should return 400 when file is empty (zero bytes)", async () => {
-    const formData = new FormData();
-    formData.append("file", new Blob([]), "empty.csv");
-    formData.append("name", "Empty");
-    formData.append("spdxType", "MIT");
+    const file = makeFile("", "empty.csv");
+    Object.defineProperty(file, "size", { value: 0 });
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("name", "Empty");
+    fd.append("spdxType", "MIT");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -166,18 +164,14 @@ describe("POST /api/datasets", () => {
   });
 
   it("should return 413 when file exceeds 50MB limit", async () => {
-    // Create a blob that reports > 50MB size
-    const bigContent = new Uint8Array(50 * 1024 * 1024 + 1);
-    const formData = new FormData();
-    formData.append("file", new Blob([bigContent]), "big.bin");
-    formData.append("name", "Big File");
-    formData.append("spdxType", "MIT");
+    const file = makeFile("small", "big.csv");
+    Object.defineProperty(file, "size", { value: 51 * 1024 * 1024 });
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("name", "Big File");
+    fd.append("spdxType", "MIT");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     expect(res.status).toBe(413);
     const body = await res.json();
@@ -187,17 +181,13 @@ describe("POST /api/datasets", () => {
   it("should use ownerAddress from auth context, not formData", async () => {
     mockUpload.mockResolvedValue({ id: "ds-new", name: "Test" });
 
-    const formData = new FormData();
-    formData.append("file", new Blob(["content"]), "test.csv");
-    formData.append("name", "Test");
-    formData.append("spdxType", "MIT");
-    formData.append("ownerAddress", "0xattacker");
+    const fd = new FormData();
+    fd.append("file", makeFile("content", "test.csv"));
+    fd.append("name", "Test");
+    fd.append("spdxType", "MIT");
+    fd.append("ownerAddress", "0xattacker");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     expect(res.status).toBe(201);
     // Verify upload was called with auth accessor, not formData ownerAddress
@@ -208,16 +198,12 @@ describe("POST /api/datasets", () => {
   it("should sanitize filename (remove unsafe chars)", async () => {
     mockUpload.mockResolvedValue({ id: "ds-safe", name: "Safe" });
 
-    const formData = new FormData();
-    formData.append("file", new Blob(["data"]), "my file (1).csv");
-    formData.append("name", "Safe Name");
-    formData.append("spdxType", "MIT");
+    const fd = new FormData();
+    fd.append("file", makeFile("data", "my file (1).csv"));
+    fd.append("name", "Safe Name");
+    fd.append("spdxType", "MIT");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     expect(res.status).toBe(201);
   });
@@ -225,17 +211,13 @@ describe("POST /api/datasets", () => {
   it("should accept optional description field", async () => {
     mockUpload.mockResolvedValue({ id: "ds-desc", name: "With Desc" });
 
-    const formData = new FormData();
-    formData.append("file", new Blob(["data"]), "test.csv");
-    formData.append("name", "With Desc");
-    formData.append("spdxType", "MIT");
-    formData.append("description", "A detailed description");
+    const fd = new FormData();
+    fd.append("file", makeFile("data", "test.csv"));
+    fd.append("name", "With Desc");
+    fd.append("spdxType", "MIT");
+    fd.append("description", "A detailed description");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     expect(res.status).toBe(201);
     const uploadCall = mockUpload.mock.calls[0]![0];
@@ -245,16 +227,12 @@ describe("POST /api/datasets", () => {
   it("should cleanup temp file on upload failure", async () => {
     mockUpload.mockRejectedValue(new Error("Shelby upload failed"));
 
-    const formData = new FormData();
-    formData.append("file", new Blob(["data"]), "test.csv");
-    formData.append("name", "Failing");
-    formData.append("spdxType", "MIT");
+    const fd = new FormData();
+    fd.append("file", makeFile("data", "test.csv"));
+    fd.append("name", "Failing");
+    fd.append("spdxType", "MIT");
 
-    const req = new NextRequest("http://localhost:3000/api/datasets", {
-      method: "POST",
-      body: formData,
-    });
-    const res = await POST(req);
+    const res = await POST(makePostRequest(fd));
 
     // Should return 500 from apiError, not crash
     expect(res.status).toBe(500);

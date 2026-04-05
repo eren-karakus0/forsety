@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -9,7 +9,7 @@ import {
   Input,
   Badge,
 } from "@forsety/ui";
-import { Search, Database, Loader2 } from "lucide-react";
+import { Search, Database, Loader2, AlertCircle } from "lucide-react";
 
 interface SearchResult {
   id: string;
@@ -24,6 +24,9 @@ export function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const resultRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Cmd+K / Ctrl+K shortcut
   useEffect(() => {
@@ -37,22 +40,38 @@ export function GlobalSearch() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const search = useCallback(async (q: string) => {
-    if (q.length < 2) {
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setQuery("");
       setResults([]);
+      setError(null);
+      setSelectedIndex(-1);
+    }
+  }, [open]);
+
+  const search = useCallback(async (q: string) => {
+    const trimmed = q.trim();
+    if (trimmed.length < 2) {
+      setResults([]);
+      setError(null);
       return;
     }
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&type=dataset&limit=8`, {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}&type=dataset&limit=8`, {
         credentials: "include",
       });
-      if (res.ok) {
-        const data = await res.json();
-        setResults(data.results ?? []);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? `Search failed (${res.status})`);
       }
-    } catch {
-      // silently fail
+      const data = await res.json();
+      setResults(data.results ?? []);
+    } catch (err) {
+      setResults([]);
+      setError(err instanceof Error ? err.message : "Search failed");
     } finally {
       setLoading(false);
     }
@@ -63,10 +82,35 @@ export function GlobalSearch() {
     return () => clearTimeout(timer);
   }, [query, search]);
 
+  // Reset selectedIndex when results change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [results]);
+
   function handleSelect(result: SearchResult) {
     setOpen(false);
-    setQuery("");
     router.push(`/dashboard/${result.id}`);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => {
+        const next = prev < results.length - 1 ? prev + 1 : 0;
+        resultRefs.current[next]?.scrollIntoView({ block: "nearest" });
+        return next;
+      });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => {
+        const next = prev > 0 ? prev - 1 : results.length - 1;
+        resultRefs.current[next]?.scrollIntoView({ block: "nearest" });
+        return next;
+      });
+    } else if (e.key === "Enter" && selectedIndex >= 0 && results[selectedIndex]) {
+      e.preventDefault();
+      handleSelect(results[selectedIndex]);
+    }
   }
 
   return (
@@ -83,13 +127,14 @@ export function GlobalSearch() {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0">
+        <DialogContent className="sm:max-w-xl p-0 gap-0">
           <DialogTitle className="sr-only">Search datasets</DialogTitle>
           <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3">
             <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Search datasets..."
               className="border-0 bg-transparent p-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
               autoFocus
@@ -98,24 +143,37 @@ export function GlobalSearch() {
           </div>
 
           <div className="max-h-80 overflow-y-auto">
-            {results.length === 0 && query.length >= 2 && !loading && (
+            {error && (
+              <div className="flex items-center gap-2 px-4 py-3 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {error}
+              </div>
+            )}
+
+            {!error && results.length === 0 && query.trim().length >= 2 && !loading && (
               <div className="flex flex-col items-center gap-2 py-8">
                 <Database className="h-6 w-6 text-muted-foreground/40" />
                 <p className="text-sm text-muted-foreground">No results found</p>
               </div>
             )}
 
-            {results.length === 0 && query.length < 2 && (
+            {!error && results.length === 0 && query.trim().length < 2 && (
               <div className="flex flex-col items-center gap-2 py-8">
+                <Search className="h-5 w-5 text-muted-foreground/30" />
                 <p className="text-xs text-muted-foreground">Type to search datasets...</p>
               </div>
             )}
 
-            {results.map((r) => (
+            {results.map((r, i) => (
               <button
                 key={r.id}
+                ref={(el) => { resultRefs.current[i] = el; }}
                 onClick={() => handleSelect(r)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30 border-b border-border/20 last:border-0"
+                className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors border-b border-border/20 last:border-0 ${
+                  i === selectedIndex
+                    ? "bg-gold-50/60 dark:bg-gold-500/10"
+                    : "hover:bg-muted/30"
+                }`}
               >
                 <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gold-50">
                   <Database className="h-3.5 w-3.5 text-gold-500" />
@@ -130,6 +188,21 @@ export function GlobalSearch() {
               </button>
             ))}
           </div>
+
+          {/* Footer with keyboard hints */}
+          {(results.length > 0 || query.trim().length >= 2) && (
+            <div className="flex items-center gap-3 border-t border-border/40 px-4 py-2">
+              <span className="text-[10px] text-muted-foreground">
+                <kbd className="rounded border border-border/60 bg-muted/50 px-1 py-0.5 font-mono">{"\u2191\u2193"}</kbd> navigate
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                <kbd className="rounded border border-border/60 bg-muted/50 px-1 py-0.5 font-mono">{"\u21B5"}</kbd> select
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                <kbd className="rounded border border-border/60 bg-muted/50 px-1 py-0.5 font-mono">esc</kbd> close
+              </span>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

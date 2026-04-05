@@ -19,6 +19,7 @@ import { Upload, Check, Loader2, ArrowRight, FileUp } from "lucide-react";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSignedAction } from "@/hooks/use-signed-action";
 import { ConnectWalletCTA } from "../../components/connect-wallet-cta";
+import { hasAllowedExtension, ALLOWED_EXTENSIONS_SUMMARY } from "@/lib/allowed-extensions";
 
 const LICENSE_OPTIONS = [
   { value: "CC-BY-4.0", label: "CC BY 4.0", desc: "Attribution" },
@@ -80,13 +81,12 @@ export default function UploadPage() {
   };
 
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB (must match server limit)
-  const ALLOWED_EXTENSIONS = [".csv", ".json", ".txt", ".parquet", ".arrow", ".zip", ".tar.gz", ".jsonl", ".tsv"];
   const nameError = name.length > 0 && name.trim().length < 2 ? "Name must be at least 2 characters" : null;
   const fileError = file
     ? file.size > MAX_FILE_SIZE
       ? "File exceeds 50 MB limit"
-      : !ALLOWED_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))
-        ? "File type not allowed"
+      : !hasAllowedExtension(file.name)
+        ? `File type not allowed. Supported: ${ALLOWED_EXTENSIONS_SUMMARY}`
         : null
     : null;
   const isValid = name.trim().length >= 2 && license && file && !fileError;
@@ -184,7 +184,7 @@ export default function UploadPage() {
                       Drop your file here, or click to browse
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Supported: CSV, JSON, JSONL, TSV, TXT, Parquet, Arrow, ZIP, TAR.GZ
+                      Supported: {ALLOWED_EXTENSIONS_SUMMARY}
                     </p>
                   </>
                 )}
