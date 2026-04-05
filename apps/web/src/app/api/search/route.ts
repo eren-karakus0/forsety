@@ -10,17 +10,19 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get("q");
+  const rawQuery = searchParams.get("q");
   const type = searchParams.get("type") as "dataset" | "memory" | null;
   const limitStr = searchParams.get("limit");
   const agentId = searchParams.get("agentId");
 
-  if (!query) {
+  if (!rawQuery || rawQuery.trim().length < 1) {
     return NextResponse.json(
       { error: "Missing required query parameter: q" },
       { status: 400 }
     );
   }
+
+  const query = rawQuery.trim().slice(0, 500);
 
   if (!type || !["dataset", "memory"].includes(type)) {
     return NextResponse.json(
@@ -44,13 +46,12 @@ export async function GET(request: NextRequest) {
       const datasetIds = auth.agentAllowedDatasets && auth.agentAllowedDatasets.length > 0
         ? auth.agentAllowedDatasets
         : undefined;
-      const rawResults = await client.vectorSearch.searchDatasets(query, limit, auth.accessor, datasetIds);
-      // Normalize: flatten { item, score, textContent } → { id, name, type, score }
+
+      const rawResults = await client.datasets.searchByText(query, auth.accessor, limit, datasetIds);
       const results = rawResults.map((r) => ({
-        id: r.item.id,
-        name: r.item.name,
+        id: r.id,
+        name: r.name,
         type: "dataset",
-        score: r.score,
       }));
       return NextResponse.json({ type, query, results, total: results.length });
     }
@@ -74,7 +75,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const results = await client.vectorSearch.searchMemories(agentId, query, limit);
+    // Memory search via recall vault text search
+    const { items } = await client.recallVault.search(agentId, { keyPattern: query, limit });
+    const results = items.map((m) => ({
+      id: m.id,
+      name: m.key,
+      type: "memory",
+    }));
     return NextResponse.json({ type, query, results, total: results.length });
   } catch (error) {
     return apiError("Search failed", error);

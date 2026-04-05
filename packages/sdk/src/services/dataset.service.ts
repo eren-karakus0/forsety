@@ -1,4 +1,4 @@
-import { eq, and, isNull, inArray, count } from "drizzle-orm";
+import { eq, and, or, isNull, inArray, ilike, gte, count, desc } from "drizzle-orm";
 import type { Database } from "@forsety/db";
 import { datasets, licenses } from "@forsety/db";
 import type { ShelbyWrapper } from "../shelby/client.js";
@@ -6,6 +6,10 @@ import type { VectorSearchService } from "./vector-search.service.js";
 import { resolveVectorSearch } from "../utils/resolve-vector-search.js";
 import { ForsetyValidationError } from "../errors.js";
 import { canonicalHash } from "../crypto/canonical-hash.js";
+
+function escapeIlike(pattern: string): string {
+  return pattern.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
 
 export interface UploadDatasetInput {
   filePath: string;
@@ -76,6 +80,42 @@ export class DatasetService {
     return { dataset: dataset!, license: license! };
   }
 
+  /** Text search across dataset name and description using ILIKE (serverless-safe). */
+  async searchByText(
+    query: string,
+    ownerAddress: string,
+    limit: number = 10,
+    allowedDatasetIds?: string[]
+  ) {
+    const escaped = escapeIlike(query.trim());
+    const pattern = `%${escaped}%`;
+
+    const conditions = [
+      eq(datasets.ownerAddress, ownerAddress),
+      isNull(datasets.archivedAt),
+      or(
+        ilike(datasets.name, pattern),
+        ilike(datasets.description, pattern)
+      ),
+    ];
+
+    if (allowedDatasetIds && allowedDatasetIds.length > 0) {
+      conditions.push(inArray(datasets.id, allowedDatasetIds));
+    }
+
+    return this.db
+      .select({
+        id: datasets.id,
+        name: datasets.name,
+        description: datasets.description,
+        ownerAddress: datasets.ownerAddress,
+      })
+      .from(datasets)
+      .where(and(...conditions))
+      .orderBy(desc(datasets.createdAt))
+      .limit(limit);
+  }
+
   async getById(id: string) {
     const result = await this.db
       .select()
@@ -136,6 +176,20 @@ export class DatasetService {
       .select({ total: count() })
       .from(datasets)
       .where(and(eq(datasets.ownerAddress, ownerAddress), isNull(datasets.archivedAt)));
+    return result?.total ?? 0;
+  }
+
+  /** Count datasets created by owner since a given timestamp (for daily quota). */
+  async countByOwnerSince(ownerAddress: string, since: Date): Promise<number> {
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(datasets)
+      .where(
+        and(
+          eq(datasets.ownerAddress, ownerAddress),
+          gte(datasets.createdAt, since)
+        )
+      );
     return result?.total ?? 0;
   }
 
